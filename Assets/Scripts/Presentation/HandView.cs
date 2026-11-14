@@ -711,11 +711,10 @@ namespace Contigu.Presentation
             var anchor = _previewContainers[idx];
             if (traits.Count == 1)
             {
-                // Same card as a sprout on the grid: its rarity in a colored box at the corner, the kind of upgrade in a colored box under the title.
+                // Same card as a sprout on the grid: just its rarity, in a colored box at the corner (that it is a sprout upgrade is implicit).
                 var rarity = PieceTraitVisualDefaults.GetRarity(traits[0].Kind);
-                var chips = new List<TooltipChip> { new TooltipChip(UpgradeVisualDefaults.GetPoolLabel(UpgradePool.Grid), UpgradeVisualDefaults.GetPoolColor(UpgradePool.Grid)) };
                 _tooltip.Show(PieceTraitVisualDefaults.GetName(traits[0].Kind), TraitInfoText(traits[0]), anchor,
-                    chips: chips, badge: new TooltipChip(UpgradeVisualDefaults.GetRarityLabel(rarity), UpgradeVisualDefaults.GetRarityColor(rarity)));
+                    subtitleColor: UpgradeVisualDefaults.GetRarityColor(rarity), badge: new TooltipChip(UpgradeVisualDefaults.GetRarityLabel(rarity), UpgradeVisualDefaults.GetRarityColor(rarity)));
             }
             else
             {

@@ -34,10 +34,9 @@ namespace Contigu.Presentation
                 return;
             }
             var rarity = PieceTraitVisualDefaults.GetRarity(_trait.Kind);
-            string subtitle = UpgradeVisualDefaults.GetRarityLabel(rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(UpgradePool.Grid);
-            var chips = new System.Collections.Generic.List<TooltipChip> { new TooltipChip(UpgradeVisualDefaults.GetPoolLabel(UpgradePool.Grid), UpgradeVisualDefaults.GetPoolColor(UpgradePool.Grid)) };
+            // A sprout on the grid is obviously a sprout upgrade: only its rarity shows (the box at the title's corner, which also colors the line under it).
             var rarityBadge = new TooltipChip(UpgradeVisualDefaults.GetRarityLabel(rarity), UpgradeVisualDefaults.GetRarityColor(rarity));
-            _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(_trait), 14), _trait.Kind), (RectTransform)transform, subtitle, UpgradeVisualDefaults.GetRarityColor(rarity), chips: chips, badge: rarityBadge);
+            _tooltip.Show(PieceTraitVisualDefaults.GetName(_trait.Kind), TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(PieceTraitVisualDefaults.GetDescription(_trait), 14), _trait.Kind), (RectTransform)transform, null, UpgradeVisualDefaults.GetRarityColor(rarity), badge: rarityBadge);
         }
 
         public void OnPointerExit(PointerEventData eventData)
