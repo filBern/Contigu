@@ -1,3 +1,4 @@
+using Contigu.Core;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -19,9 +20,23 @@ namespace Contigu.Presentation
         private string _description;
         private string _lore;
         private string _footer;
+        private TooltipChip? _badge;
 
-        public void Init(TooltipView tooltip, string name, string description, string lore = null, string footer = null)
+        /// <summary>The enemy's role as a small colored box at the tooltip's corner: Boss (red), Creator (amber), Reactor (violet) or Basic (green).</summary>
+        private static TooltipChip RoleBadge(EnemyRole role)
         {
+            switch (role)
+            {
+                case EnemyRole.Boss: return new TooltipChip("Boss", new Color(0.86f, 0.36f, 0.32f));
+                case EnemyRole.Creator: return new TooltipChip("Creator", new Color(0.93f, 0.72f, 0.30f));
+                case EnemyRole.Reactor: return new TooltipChip("Reactor", new Color(0.66f, 0.50f, 0.80f));
+                default: return new TooltipChip("Basic", new Color(0.55f, 0.78f, 0.45f));
+            }
+        }
+
+        public void Init(TooltipView tooltip, string name, string description, string lore = null, string footer = null, EnemyRole? role = null)
+        {
+            _badge = role.HasValue ? RoleBadge(role.Value) : (TooltipChip?)null;
             _tooltip = tooltip;
             _name = name;
             _description = description;
@@ -35,7 +50,7 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            _tooltip.Show(_name, _description, (RectTransform)transform, lore: _lore, footer: _footer);
+            _tooltip.Show(_name, _description, (RectTransform)transform, lore: _lore, footer: _footer, badge: _badge);
         }
 
         public void OnPointerExit(PointerEventData eventData)

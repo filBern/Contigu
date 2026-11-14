@@ -72,6 +72,15 @@ namespace Contigu.Presentation
         private Image _footerDivider;
         private Text _footerLabel;
         private const float FooterHeight = 20f;
+        // "Details" (live state: With bonus, Level...) under the description, and the glossary of the game words used, both behind a divider.
+        private Image _detailsDivider;
+        private Text _detailsLabel;
+        private Image _glossDivider;
+        private Text _glossLabel;
+        // A mouse hover waits a moment before the tooltip shows (so a pointer crossing the board does not make it flicker); touch shows at once.
+        private CanvasGroup _panelGroup;
+        private float _revealAt;
+        private const float HoverDelay = 0.15f;
 
         public RectTransform Build(Transform parent)
         {
@@ -98,6 +107,8 @@ namespace Contigu.Presentation
             _panel.anchorMax = new Vector2(0.5f, 0.5f);
             _panel.pivot = new Vector2(0f, 1f);
             _panel.sizeDelta = new Vector2(Width, InitialHeight);
+            _panelGroup = panelImg.gameObject.AddComponent<CanvasGroup>();
+            _panelGroup.blocksRaycasts = false;
             if (bed == null)
             {
                 UIFactory.AddThickOutline(panelImg, UITheme.Border);
@@ -175,6 +186,11 @@ namespace Contigu.Presentation
             // preferredHeight, before that call gets to set it itself.
             _descLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 0f);
 
+            _detailsDivider = MakeDivider("DetailsDivider");
+            _detailsLabel = MakeSectionLabel("Details", 15, UITheme.TextPrimary);
+            _glossDivider = MakeDivider("GlossaryDivider");
+            _glossLabel = MakeSectionLabel("Glossary", 12, UITheme.TextMuted);
+
             _loreDivider = UIFactory.CreatePanel(_panel, "LoreDivider", UITheme.Border);
             _loreDivider.raycastTarget = false;
             _loreDivider.rectTransform.anchorMin = new Vector2(0f, 1f);
@@ -209,6 +225,30 @@ namespace Contigu.Presentation
             return _root;
         }
 
+        private Image MakeDivider(string name)
+        {
+            var divider = UIFactory.CreatePanel(_panel, name, UITheme.Border);
+            divider.raycastTarget = false;
+            divider.rectTransform.anchorMin = new Vector2(0f, 1f);
+            divider.rectTransform.anchorMax = new Vector2(1f, 1f);
+            divider.rectTransform.pivot = new Vector2(0f, 1f);
+            divider.gameObject.SetActive(false);
+            return divider;
+        }
+
+        private Text MakeSectionLabel(string name, int fontSize, Color color)
+        {
+            var label = UIFactory.CreateText(_panel, name, "", fontSize, color, TextAnchor.UpperLeft);
+            label.raycastTarget = false;
+            label.supportRichText = true;
+            label.rectTransform.anchorMin = new Vector2(0f, 1f);
+            label.rectTransform.anchorMax = new Vector2(1f, 1f);
+            label.rectTransform.pivot = new Vector2(0f, 1f);
+            label.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 0f);
+            label.gameObject.SetActive(false);
+            return label;
+        }
+
         /// <summary>
         /// Shows the tooltip anchored near <paramref name="anchor"/>. An
         /// optional <paramref name="subtitle"/> (e.g. "Rare · Tile Upgrade")
@@ -217,7 +257,7 @@ namespace Contigu.Presentation
         /// gap) when null/empty, so existing callers that don't pass one
         /// (modifier badges) keep their original, more compact layout.
         /// </summary>
-        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null, string footer = null, bool placeAbove = false, System.Collections.Generic.IReadOnlyList<TooltipChip> chips = null, TooltipChip? badge = null)
+        public void Show(string name, string description, RectTransform anchor, string subtitle = null, Color? subtitleColor = null, int? sellValue = null, string lore = null, string footer = null, bool placeAbove = false, System.Collections.Generic.IReadOnlyList<TooltipChip> chips = null, TooltipChip? badge = null, string details = null)
         {
             _nameLabel.text = DescriptionTextFormatter.ColorizeFlowers(name);
 
@@ -312,7 +352,6 @@ namespace Contigu.Presentation
                 _chips[i].Back.gameObject.SetActive(false);
             }
 
-            float usedHeight = contentTop - Padding;
             _descLabel.rectTransform.anchoredPosition = new Vector2(Padding, -contentTop);
             // Every tooltip gets the same coloring: points blue, Mult red, Pollen gold (already-colored text is left alone).
             // "Pollen" in a description is the Pollen icon (see InlineIconLabel).
@@ -323,40 +362,33 @@ namespace Contigu.Presentation
             // since UIFactory.CreateText sets horizontalOverflow = Wrap.
             float descHeight = Mathf.Ceil(_descLabel.preferredHeight);
             _descLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, descHeight);
-            float loreBlockHeight = 0f;
-            bool hasLore = !string.IsNullOrEmpty(lore);
-            _loreDivider.gameObject.SetActive(hasLore);
-            _loreLabel.gameObject.SetActive(hasLore);
-            if (hasLore)
-            {
-                _loreLabel.text = lore;
-                float loreHeight = _loreLabel.preferredHeight;
-                float dividerY = -Padding - usedHeight - descHeight - LoreGap;
-                _loreDivider.rectTransform.anchoredPosition = new Vector2(Padding, dividerY);
-                _loreDivider.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 1f);
-                _loreLabel.rectTransform.anchoredPosition = new Vector2(Padding, dividerY - LoreGap);
-                _loreLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, loreHeight);
-                loreBlockHeight = LoreGap * 2f + 1f + loreHeight;
-            }
-            float footerBlockHeight = 0f;
+            // Sections stacked under the description, each behind a thin divider: live details, the glossary of the game words used, the story line, the foot line.
+            float cursor = contentTop + descHeight;
+            cursor = PlaceSection(_detailsDivider, _detailsLabel, details == null ? null : DescriptionTextFormatter.Colorize(details, 15), cursor, true);
+            string glossary = BuildGlossary(description + " " + details);
+            cursor = PlaceSection(_glossDivider, _glossLabel, glossary, cursor, false);
+            cursor = PlaceSection(_loreDivider, _loreLabel, lore, cursor, false);
             bool hasFooter = !string.IsNullOrEmpty(footer);
             _footerDivider.gameObject.SetActive(hasFooter);
             _footerLabel.gameObject.SetActive(hasFooter);
             if (hasFooter)
             {
                 _footerLabel.text = footer;
-                float footerDividerY = -Padding - usedHeight - descHeight - loreBlockHeight - LoreGap;
+                float footerDividerY = -(cursor + LoreGap);
                 _footerDivider.rectTransform.anchoredPosition = new Vector2(Padding, footerDividerY);
                 _footerDivider.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 1f);
                 _footerLabel.rectTransform.anchoredPosition = new Vector2(Padding, footerDividerY - LoreGap + 2f);
                 _footerLabel.rectTransform.sizeDelta = new Vector2(-Padding * 2f, FooterHeight);
-                footerBlockHeight = LoreGap * 2f + 1f + FooterHeight - 4f;
+                cursor += LoreGap * 2f + 1f + FooterHeight - 4f;
             }
             // Whole pixels everywhere: a fractional size or position makes the text render soft.
-            _panel.sizeDelta = new Vector2(Width, Mathf.Ceil(Padding * 2f + BottomPadding + usedHeight + descHeight + loreBlockHeight + footerBlockHeight));
-            if (_popRoutine != null)
+            _panel.sizeDelta = new Vector2(Width, Mathf.Ceil(cursor + Padding + BottomPadding));
+            bool alreadyShowing = _root.gameObject.activeSelf;
+            if (!alreadyShowing)
             {
-                StopCoroutine(_popRoutine);
+                // A new tooltip: a mouse hover waits a moment (the text is already laid out, only hidden), touch shows it at once.
+                _revealAt = Time.unscaledTime + (MobileSetup.IsTouchDevice ? 0f : HoverDelay);
+                _panelGroup.alpha = 0f;
             }
 
             _root.gameObject.SetActive(true);
@@ -364,7 +396,78 @@ namespace Contigu.Presentation
             // overlays (draft/removal cards) built after this tooltip.
             _root.SetAsLastSibling();
             PositionNear(anchor, placeAbove);
+            if (_panelGroup.alpha < 1f && Time.unscaledTime >= _revealAt)
+            {
+                Reveal();
+            }
+        }
+
+        private void Update()
+        {
+            if (_root != null && _root.gameObject.activeSelf && _panelGroup != null && _panelGroup.alpha < 1f && Time.unscaledTime >= _revealAt)
+            {
+                Reveal();
+            }
+        }
+
+        private void Reveal()
+        {
+            _panelGroup.alpha = 1f;
+            if (_popRoutine != null)
+            {
+                StopCoroutine(_popRoutine);
+                _popRoutine = null;
+            }
+            if (MotionSettings.Reduced)
+            {
+                _panel.localScale = Vector3.one;
+                return;
+            }
             _popRoutine = StartCoroutine(PopIn());
+        }
+
+        /// <summary>Lays one optional section (a divider and its text) under <paramref name="cursor"/> (distance from the panel's top) and returns the new cursor; hides it and returns the cursor unchanged when there is no text.</summary>
+        private float PlaceSection(Image divider, Text label, string text, float cursor, bool withIcons)
+        {
+            bool has = !string.IsNullOrEmpty(text);
+            divider.gameObject.SetActive(has);
+            label.gameObject.SetActive(has);
+            if (!has)
+            {
+                return cursor;
+            }
+            if (withIcons)
+            {
+                InlineIconLabel.Set(label, text, Contigu.Data.VisualDefaults.PollenSprite);
+            }
+            else
+            {
+                label.text = text;
+            }
+            float height = Mathf.Ceil(label.preferredHeight);
+            float dividerY = -(cursor + LoreGap);
+            divider.rectTransform.anchoredPosition = new Vector2(Padding, dividerY);
+            divider.rectTransform.sizeDelta = new Vector2(-Padding * 2f, 1f);
+            label.rectTransform.anchoredPosition = new Vector2(Padding, dividerY - LoreGap);
+            label.rectTransform.sizeDelta = new Vector2(-Padding * 2f, height);
+            return cursor + LoreGap * 2f + 1f + height;
+        }
+
+        /// <summary>The definitions of the game words used in <paramref name="text"/>, one per line (the word in color), or null when there are none.</summary>
+        private static string BuildGlossary(string text)
+        {
+            var terms = TooltipGlossary.Lookup(text);
+            if (terms.Count == 0)
+            {
+                return null;
+            }
+            var lines = new System.Text.StringBuilder();
+            for (int i = 0; i < terms.Count; i++)
+            {
+                if (i > 0) { lines.Append('\n'); }
+                lines.Append("<color=#8a4f12>").Append(terms[i].Name).Append("</color> ").Append(terms[i].Definition);
+            }
+            return lines.ToString();
         }
 
         /// <summary>Dark lettering on a light box, cream on a dark one.</summary>

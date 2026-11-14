@@ -611,7 +611,7 @@ namespace Contigu.Presentation
                 // CurrentMaxHp, not Definition.MaxHp — Reclaimer's ceiling can grow past the shared Definition's value.
                 _enemyIconLabels[i].text = enemy.CurrentHp + "/" + enemy.CurrentMaxHp;
                 SetRatio(_enemyHpBarFills[i], enemy.CurrentMaxHp > 0 ? (float)enemy.CurrentHp / enemy.CurrentMaxHp : 0f);
-                _enemyIconViews[i].Init(_tooltip, IsEnraged(enemy) ? enemy.Definition.Name + " (ENRAGED)" : enemy.Definition.Name, HaterDescription(enemy) + (hasTimedTrick ? "\nNext timed trick in " + _enemyTickCountdown + (_enemyTickCountdown == 1 ? " seed." : " seeds.") : ""), IsEnraged(enemy) ? "Wounded, it stops being shy. Its feathers bristle and its eyes burn red." : enemy.Definition.Lore);
+                _enemyIconViews[i].Init(_tooltip, IsEnraged(enemy) ? enemy.Definition.Name + " (ENRAGED)" : enemy.Definition.Name, HaterDescription(enemy) + (hasTimedTrick ? "\nNext timed trick in " + _enemyTickCountdown + (_enemyTickCountdown == 1 ? " seed." : " seeds.") : ""), IsEnraged(enemy) ? "Wounded, it stops being shy. Its feathers bristle and its eyes burn red." : enemy.Definition.Lore, null, enemy.Definition.Role);
             }
         }
 

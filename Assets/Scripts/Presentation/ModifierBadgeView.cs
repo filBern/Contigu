@@ -116,34 +116,26 @@ namespace Contigu.Presentation
             };
             var rarityBadge = new TooltipChip(ModifierVisualDefaults.GetRarityLabel(_def.Id), ModifierVisualDefaults.GetRarityColor(_def.Id));
             string description = DescriptionTextFormatter.Colorize(_def.Description, 14);
-            // Progressive/incremental modifiers get an extra line showing
-            // their current effective state, appended to the description
-            // rather than the fixed-height subtitle slot, since the
-            // description label already auto-sizes around its text.
+            // What the description cannot say (its numbers are the base ones): the live state, in a section of its own under the description.
+            // Progressive/incremental modifiers report their current effective state; the others a level line ("Level 2 - x1.5 effect", only past
+            // level 1, skipped when the progressive line already reports the true value); then "With bonus" (level + growth + Roots).
+            var details = new System.Collections.Generic.List<string>();
             string progressiveState = _progressiveStateProvider != null ? _progressiveStateProvider(_def.Id) : null;
             if (!string.IsNullOrEmpty(progressiveState))
             {
-                description = description + "\n\n" + DescriptionTextFormatter.Colorize(progressiveState, 14);
+                details.Add(progressiveState);
             }
             else
             {
-                // Every other (non-progressive) modifier's Description is
-                // static text baked at base (level-1) numbers, so this
-                // generic level line fills in the level-scaled value.
-                // Skipped when progressiveState already fired above, since
-                // that line already reports the true value.
                 string levelState = _levelStateProvider != null ? _levelStateProvider(_def.Id) : null;
-                if (!string.IsNullOrEmpty(levelState))
-                {
-                    description = description + "\n\n" + DescriptionTextFormatter.Colorize(levelState, 14);
-                }
+                if (!string.IsNullOrEmpty(levelState)) { details.Add(levelState); }
             }
             string bonusLine = _bonusLineProvider != null ? _bonusLineProvider(_def.Id) : null;
             if (!string.IsNullOrEmpty(bonusLine))
             {
-                description = description + "\n\n" + DescriptionTextFormatter.Colorize(bonusLine, 14);
+                details.Add(bonusLine);
             }
-            _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle, chips: chips, badge: rarityBadge);
+            _tooltip.Show(_def.Name, description, (RectTransform)transform, subtitle, chips: chips, badge: rarityBadge, details: details.Count > 0 ? string.Join("\n", details) : null);
         }
     }
 }
