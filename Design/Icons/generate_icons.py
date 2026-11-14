@@ -106,7 +106,7 @@ M['monoline'] = lambda: ''.join(tile(12 + i * 20, 34, 18, GREY) for i in range(4
 def devotion(col): return lambda: heart(50, 44, 28, col) + leaf(50, 76, 18, -70, LEAF1)
 M['dev_R'] = devotion(R); M['dev_B'] = devotion(B); M['dev_Y'] = devotion(Y); M['dev_G'] = devotion(G)
 def slot(n): return lambda: rect(22, 18, 56, 58, CREAM, 8, 4) + rect(30, 26, 40, 42, '#e0d6bf', 5, 3) + num(50, 62, n, 40)
-M['slot1'] = slot('1'); M['slot2'] = slot('2'); M['slot3'] = slot('3')
+
 M['overgrowth'] = lambda: sprout(50, 82, 1.9) + leaf(50, 60, 34, -20, LEAF1) + leaf(50, 52, 30, -160, LEAF2)
 M['mutant'] = lambda: star(50, 46, 40, '#b9e04a', 0.5, 7) + circ(40, 40, 6, '#fff', 2.5) + circ(60, 40, 6, '#fff', 2.5) + circ(40, 40, 2.5, O, 1) + circ(60, 40, 2.5, O, 1)
 def glow(col): return lambda: star(50, 46, 36, col, 0.38, 4) + star(22, 22, 12, '#fff1b0', 0.4, 4, 3) + star(80, 70, 10, '#fff1b0', 0.4, 4, 3)
@@ -168,7 +168,20 @@ M['hoardjar'] = lambda: rect(26, 22, 48, 56, '#e6f4ff', 10) + rect(32, 12, 36, 1
 M['metronome'] = lambda: poly([(30, 84), (40, 14), (60, 14), (70, 84)], '#8a5a2b') + line(50, 70, 64, 24, O, 4) + circ(60, 34, 6, GOLD, 3)
 M['echo'] = lambda: sprout(30, 64, 1.0) + ''.join('<path d="M%g %g A%g %g 0 0 1 %g %g" fill="none" stroke="%s" stroke-width="5" stroke-linecap="round"/>' % (52 + i * 10, 46 - 10 - i * 8, 14 + i * 8, 14 + i * 8, 52 + i * 10, 46 + 10 + i * 8, O) for i in range(3))
 M['siphon'] = lambda: drop(30, 70, 20, '#7ad0e8') + path('M36 56 C44 30 56 22 74 22', 'none', 7) + path('M36 56 C44 30 56 22 74 22', 'none', 3).replace(O, '#e8c070') + pollen_grain(78, 22, 10)
-M['slot4'] = lambda: rect(22, 18, 56, 58, CREAM, 8, 4) + rect(30, 26, 40, 42, '#e0d6bf', 5, 3) + num(50, 62, '4', 40) + star(80, 20, 11, '#fff1b0', 0.4, 4, 3)
+# Hand slots drawn as a row of slots (no digits): the slot the fertilizer cares about is lit and holds a seed; the others are empty.
+def _slotrow(active, total, new=False):
+    w, gap = (26, 7) if total == 3 else (20, 6)
+    x0 = 50 - (total * w + (total - 1) * gap) / 2
+    out = ''
+    for i in range(total):
+        x = x0 + i * (w + gap)
+        if i == active:
+            out += rect(x - 2, 22, w + 4, 52, '#ffe9a6', 6, 3) + seed(x + w / 2, 50, 0.95)
+        else:
+            out += rect(x, 28, w, 40, '#e0d6bf', 5, 3)
+    return out + (star(86, 16, 11, '#fff1b0', 0.4, 4, 3) if new else '')
+M['slot1'] = lambda: _slotrow(0, 3); M['slot2'] = lambda: _slotrow(1, 3); M['slot3'] = lambda: _slotrow(2, 3)
+M['slot4'] = lambda: _slotrow(3, 4, True)
 
 
 # ---- batch of 40 fertilizers
@@ -198,7 +211,7 @@ M['n_icebreak'] = lambda: poly([(18, 74), (14, 34), (40, 14), (80, 22), (88, 62)
 M['n_season'] = lambda: ''.join('<path d="M50 46 L%g %g A36 36 0 0 1 %g %g Z" %s/>' % (50 + 36 * math.cos(math.radians(a)), 46 + 36 * math.sin(math.radians(a)), 50 + 36 * math.cos(math.radians(a + 90)), 46 + 36 * math.sin(math.radians(a + 90)), st(c, 3)) for a, c in ((-90, '#8fd05a'), (0, '#ffd23a'), (90, '#e8863a'), (180, '#bfe6ff')))
 M['n_under'] = lambda: sprout(50, 78, 1.5) + arrow(24, 60, 24, 22, R, 5) + arrow(76, 60, 76, 22, R, 5)
 M['n_finish'] = lambda: circ(50, 46, 34, CREAM, 3.5) + circ(50, 46, 22, R, 3) + circ(50, 46, 10, CREAM, 3) + poly([(58, 6), (40, 40), (52, 40), (44, 80), (72, 36), (58, 36), (68, 6)], '#ffd23a')
-M['n_last'] = lambda: seed(50, 46, 2.2) + star(80, 18, 11, '#fff1b0', 0.4, 4, 3) + num(22, 80, '1', 30)
+M['n_last'] = lambda: seed(40, 56, 2.0) + line(74, 10, 74, 80, '#8a5a2b', 5) + poly([(74, 10), (96, 20), (74, 32)], '#3a2a1c', 3) + poly([(74, 10), (85, 15), (74, 21)], CREAM, 0) + star(80, 54, 9, '#fff1b0', 0.4, 4, 2.5)
 M['n_first'] = lambda: seed(44, 52, 2.0) + line(70, 12, 70, 78, '#8a5a2b', 5) + poly([(70, 12), (92, 22), (70, 34)], R, 3)
 M['n_pig'] = lambda: ell(50, 52, 34, 26, '#f4a6b8') + circ(24, 52, 12, '#f08aa4', 3) + circ(21, 52, 2.5, O, 1) + circ(21, 48, 2.5, O, 1) + poly([(60, 28), (68, 14), (74, 32)], '#f08aa4', 3) + circ(60, 44, 3, O, 1) + rect(42, 30, 22, 5, O, 2, 1) + line(34, 76, 34, 86, O, 6) + line(66, 76, 66, 86, O, 6)
 M['n_bank'] = lambda: poly([(10, 34), (50, 8), (90, 34)], '#d8c9a0') + ''.join(rect(18 + i * 22, 38, 12, 34, CREAM, 2, 3) for i in range(4)) + rect(8, 72, 84, 10, '#c9c2b4', 3) + seed(50, 24, 0.7)
@@ -483,10 +496,12 @@ M['f_seedlibrary'] = lambda: rect(14, 34, 20, 52, '#4f7fd0', 4, 3.5) + rect(37, 
 M['f_twinbloom'] = lambda: tile(10, 32, 34, '#d86fb0') + tile(56, 32, 34, '#d86fb0') + path('M44 49 H56', 'none', 5) + star(50, 22, 9, '#fff1b0', 0.4, 4, 3)
 M['f_wildreserve'] = lambda: path('M30 30 C16 42 12 64 18 76 C22 86 34 90 50 90 C66 90 78 86 82 76 C88 64 84 42 70 30 Z', '#d8b574', 4) + rect(30, 24, 40, 8, '#8a5a2b', 4, 3.5) + star(50, 62, 15, '#fff1b0', 0.4, 5, 3)
 M['f_wildsurge'] = lambda: seed(50, 62, 2.2, P) + star(50, 36, 18, '#ffd84d', 0.4, 5, 3)
-M['f_grafter'] = lambda: _trait_motif('Pip')
+M['f_grafter'] = lambda: seed(50, 60, 2.0) + sprout(50, 40, 1.15) + star(84, 20, 10, '#fff1b0', 0.4, 4, 2.5)
 M['f_twingraft'] = lambda: _trait_motif('Kin')
 M['f_botanist'] = lambda: _trait_motif('Collector')
-M['f_hothouse'] = lambda: _trait_motif('Perennial')
+M['f_hothouse'] = lambda: (poly([(14, 40), (50, 10), (86, 40)], '#bfe3ea', 3) + rect(14, 40, 72, 42, '#d6f0f4', 3, 3)
+    + line(38, 40, 38, 82, '#8fc4cf', 3) + line(62, 40, 62, 82, '#8fc4cf', 3) + line(14, 61, 86, 61, '#8fc4cf', 3)
+    + sprout(30, 82, 0.8) + sprout(70, 82, 0.8) + rect(10, 80, 80, 6, '#8a5a2b', 3, 3))
 M['f_goodneighbors'] = lambda: _trait_motif('Cuddly')
 M['f_gleaner'] = lambda: _trait_motif('Harvester')
 
