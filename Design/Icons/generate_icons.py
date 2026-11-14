@@ -326,15 +326,12 @@ PLAQUE = '#f6e8c8'
 POT_BODY = 'M58 108 H198 C198 108 190 190 184 224 C182 234 176 238 166 238 H90 C80 238 74 234 72 224 C66 190 58 108 58 108 Z'
 
 def sack(motif_svg, catcol, tagkind, tagtxt):
-    """The fertilizer's icon, bare: just its motif (no bag, no pot, no background, no outline), softly shadowed, and the effect pill at the bottom right."""
+    """The fertilizer's icon, bare: just its motif (no bag, no pot, no background, no outline, no effect pill), softly shadowed. The tag arguments stay so the
+    table and Tools/check_icon_tags.py keep working, but the pill is not drawn any more."""
     s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n'
-    s += ('<defs><filter id="ms" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#2a1a0c" flood-opacity="0.5"/></filter>'
-          '<filter id="lab" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#2a1a0c" flood-opacity="0.5"/></filter></defs>\n')
-    scale = 2.3   # the motif box is about 100 x 92
-    s += '<g filter="url(#ms)"><g transform="translate(%g %g) scale(%g)">%s</g></g>\n' % (128 - 50 * scale, 112 - 46 * scale, scale, motif_svg)
-    if tagkind:
-        w = max(52, 17 * len(tagtxt) + 14)
-        s += tag(tagkind, tagtxt, 248 - w / 2, 230)
+    s += ('<defs><filter id="ms" x="-20%%" y="-20%%" width="140%%" height="150%%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#2a1a0c" flood-opacity="0.5"/></filter></defs>\n')
+    scale = 2.5   # the motif box is about 100 x 92
+    s += '<g filter="url(#ms)"><g transform="translate(%g %g) scale(%g)">%s</g></g>\n' % (128 - 50 * scale, 128 - 46 * scale, scale, motif_svg)
     return s + '</svg>\n'
 
 def sack_category(key, fallback):
