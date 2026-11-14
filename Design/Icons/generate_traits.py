@@ -4,11 +4,21 @@ Output: traits/<PieceTraitKind>.svg and traits/Poison.svg"""
 import math, os
 O = '#13212e'; W = '#fff7e8'
 
+SOIL = '#2f2318'
+def _ring(col):
+    # A chip color too dark to show against the soil medallion (Void, Bastion...) gets a lighter ring.
+    r, gr, b = int(col[1:3], 16), int(col[3:5], 16), int(col[5:7], 16)
+    if 0.299 * r + 0.587 * gr + 0.114 * b < 95:
+        r, gr, b = [int(v + (255 - v) * 0.45) for v in (r, gr, b)]
+    return '#%02x%02x%02x' % (r, gr, b)
+
 def chip(col, glyph):
+    # One shared look for every sprout badge: a dark soil medallion (like the empty plots of the board) with a thin ring in the sprout's own color and the glyph
+    # in the middle. The colors no longer fight the red / blue / yellow / green tiles the badge sits on, and every badge reads as the same kind of object.
     return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">'
             '<rect x="3" y="3" width="58" height="58" rx="14" fill="%s" stroke="%s" stroke-width="5"/>'
-            '<path d="M10 14 Q10 10 16 10 H34" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.45"/>'
-            '%s</svg>\n') % (col, O, glyph)
+            '<rect x="8.5" y="8.5" width="47" height="47" rx="10" fill="none" stroke="%s" stroke-width="3"/>'
+            '%s</svg>\n') % (SOIL, O, _ring(col), glyph)
 def g(s, fill=W, sw=3.5): return '<g fill="%s" stroke="%s" stroke-width="%g" stroke-linejoin="round" stroke-linecap="round">%s</g>' % (fill, O, sw, s)
 def star(cx, cy, r, n=4, inner=0.4):
     pts = []
