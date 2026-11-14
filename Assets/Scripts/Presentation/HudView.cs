@@ -41,18 +41,16 @@ namespace Contigu.Presentation
         private GameObject _scoreBarRoot;
 
         private const int MaxEnemyIcons = 6;
-        private const float EnemyIconSize = 72f;
+        private const float EnemyIconSize = 90f;   // 72 before: the enemies are drawn 25% bigger
         private const float EnemySlotWidth = 100f;
-        private const float EnemyIconTopPadding = 14f;
-        // Small HP bar sitting in the existing top-padding gap above each icon (4 top margin + 8 bar height
-        // + 6 gap before the icon = 18, the same EnemyIconTopPadding as before this bar existed), so neither
-        // EnemyIconTopPadding nor EnemyBandHeight need to change to make room for it.
+        private const float EnemyIconTopPadding = EnemyHpBarTopMargin + EnemyHpBarHeight + 4f;   // under the HP bar
+        // The HP bar sits above each icon (4 top margin + 18 bar height + 4 gap before the icon), with the HP text in its middle:
+        // the icon's top padding is derived from it.
         private const float EnemyHpBarTopMargin = 4f;
-        private const float EnemyHpBarHeight = 8f;
-        // No longer tied to BarHeight (the score/pieces bars it replaces) — the band needs more room than a
-        // plain bar to fit a much bigger portrait, label, and breathing room below it. GameBootstrap's status
-        // text position derives from this directly (see BuildUI), so the two stay in sync.
-        public const float EnemyBandHeight = EnemyIconTopPadding + EnemyIconSize + 30f;
+        private const float EnemyHpBarHeight = 18f;   // thick enough to hold the HP text in its middle
+        // The band = HP bar + portrait + a little room below (the HP text no longer takes a line under the portrait).
+        // GameBootstrap's status text position derives from this directly (see BuildUI), so the two stay in sync.
+        public const float EnemyBandHeight = EnemyIconTopPadding + EnemyIconSize + 6f;
         private GameObject _enemyBandRoot;
         private readonly List<GameObject> _enemySlots = new List<GameObject>();
         private readonly List<Image> _enemyHpBarBackgrounds = new List<Image>();
@@ -444,15 +442,15 @@ namespace Contigu.Presentation
                 _enemyTickBadges.Add(tickBadge.gameObject);
                 _enemyTickLabels.Add(tickLabel);
 
-                var label = UIFactory.CreateText(slot, "Hp", "", 16, UITheme.TextOnBackground);
+                // The HP text sits in the middle of its bar (a child of the bar's track, drawn over the fill).
+                var label = UIFactory.CreateText(hpBarBackground.transform, "Hp", "", 14, UITheme.TextOnBackground);
+                label.raycastTarget = false;
+                label.horizontalOverflow = HorizontalWrapMode.Overflow;
+                label.verticalOverflow = VerticalWrapMode.Overflow;
                 var labelOutline = label.gameObject.AddComponent<Outline>();
                 labelOutline.effectColor = UITheme.Border;
                 labelOutline.effectDistance = new Vector2(1.5f, -1.5f);
-                label.rectTransform.anchorMin = new Vector2(0.5f, 1f);
-                label.rectTransform.anchorMax = new Vector2(0.5f, 1f);
-                label.rectTransform.pivot = new Vector2(0.5f, 1f);
-                label.rectTransform.anchoredPosition = new Vector2(0f, -(EnemyIconTopPadding + EnemyIconSize + 6f));
-                label.rectTransform.sizeDelta = new Vector2(EnemySlotWidth, 20f);
+                UIFactory.StretchFull(label.rectTransform);
 
                 slot.gameObject.SetActive(false);
                 _enemySlots.Add(slot.gameObject);
