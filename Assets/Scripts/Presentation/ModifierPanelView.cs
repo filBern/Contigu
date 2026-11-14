@@ -78,7 +78,6 @@ namespace Contigu.Presentation
         /// <summary>Roots (see FertilizerGrowth): the sap a slot receives from its left neighbor, and how many neighbors of its category resonate with it.</summary>
         public System.Func<int, float> SapProvider;
         public System.Func<int, int> ResonanceProvider;
-        private static readonly Color RootsBg = new Color(0.55f, 0.36f, 0.20f, 1f);
 
         private const float StageMedallionSize = 30f;
 
@@ -495,28 +494,7 @@ namespace Contigu.Presentation
                 {
                     GrowthVisuals.AttachStage(badge, growth, harvests, StageMedallionSize, 150f, _tooltip, DescriptionTextFormatter.EffectUnitOf(ModifierCatalog.Get(activeModifiers[i]).Description));
                 }
-                if (rootsBonus > 0f)
-                {
-                    // Roots pill, top-right: what the neighbors add to this fertilizer's effect (sap + resonance).
-                    var rootsPill = UIFactory.CreatePanel(badge.transform, "RootsPill", RootsBg);
-                    // The Roots have a tooltip of their own, apart from the fertilizer's (pointer-downs and drags it does not handle bubble up to the sack).
-                    rootsPill.raycastTarget = _tooltip != null;
-                    if (_tooltip != null)
-                    {
-                        string myUnit = DescriptionTextFormatter.EffectUnitOf(ModifierCatalog.Get(activeModifiers[i]).Description);
-                        string rootsBody = sap > 0f ? "Sap from the left: " + DescriptionTextFormatter.Amount(sap, myUnit) : string.Empty;
-                        if (resonating > 0) { rootsBody += (rootsBody.Length > 0 ? "\n" : string.Empty) + ModifierVisualDefaults.GetCategoryLabel(ModifierCatalog.Get(activeModifiers[i]).Category) + " fertilizer next to it x" + resonating + ": " + DescriptionTextFormatter.Amount(resonating * FertilizerGrowth.ResonancePerNeighbor, myUnit); }
-                        rootsPill.gameObject.AddComponent<HoverTooltip>().Init(_tooltip, "Roots +" + Mathf.RoundToInt(rootsBonus * 100f) + "%", rootsBody);
-                    }
-                    UIFactory.AddThickOutline(rootsPill, UITheme.Border, 1.5f);
-                    rootsPill.rectTransform.anchorMin = rootsPill.rectTransform.anchorMax = new Vector2(1f, 1f);
-                    rootsPill.rectTransform.pivot = new Vector2(1f, 1f);
-                    rootsPill.rectTransform.anchoredPosition = new Vector2(-2f, -2f);
-                    rootsPill.rectTransform.sizeDelta = new Vector2(44f, 22f);
-                    var rootsLabel = UIFactory.CreateText(rootsPill.transform, "Roots", "+" + Mathf.RoundToInt(rootsBonus * 100f) + "%", 15, Color.white);
-                    rootsLabel.raycastTarget = false;
-                    UIFactory.StretchFull(rootsLabel.rectTransform);
-                }
+                // (No Roots pill on the badge any more: the total shows as "With bonus" in the tooltip, and each link between neighbors explains itself.)
 
                 // Supports both drag-and-drop and tap-tap swap reordering,
                 // same forwarding pattern as HandSlotDragHandler.
