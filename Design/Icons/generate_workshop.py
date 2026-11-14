@@ -3,10 +3,12 @@
 (a crate per pack, a compost bucket, an anvil). Output: glyphs/<UpgradeId>.svg and workshop/<Name>.svg (viewBox 256)."""
 import os
 from generate_icons import *
+from outline import strip_outline
 
 def glyph(motif):
     # Motifs are drawn around (50, 46) in a ~100x92 box; centered here in a square with a little margin.
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-14 -18 128 128" width="256" height="256">%s</svg>\n' % motif
+    # No dark outline on the shop glyphs (the filled shapes keep only their colors; lines and rings that are the drawing stay).
+    return strip_outline('<svg xmlns="http://www.w3.org/2000/svg" viewBox="-14 -18 128 128" width="256" height="256">%s</svg>\n' % motif)
 
 def crate(motif, band):
     s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">\n'
