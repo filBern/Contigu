@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><defs><filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#fff1d0" flood-opacity="0.75"/></filter><filter id="shade" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#1a0f08" flood-opacity="0.5"/></filter></defs><g filter="url(#shade)"><g filter="url(#glow)">
+  <defs>
+    
+    
+  </defs>
+  <g stroke-linejoin="round" stroke-linecap="round">
+<g fill="#cfd8a8"><path d="M118 120 C70 60 24 80 30 140 C34 182 82 190 120 156Z"/><path d="M138 120 C186 60 232 80 226 140 C222 182 174 190 136 156Z"/></g><g fill="#6b8a2a" opacity="0.85"><circle cx="64" cy="120" r="14"/><circle cx="84" cy="150" r="9"/><circle cx="192" cy="120" r="14"/><circle cx="172" cy="150" r="9"/></g><g fill="none" stroke="#13212e" stroke-width="5"><path d="M114 90 C100 60 84 52 72 56"/><path d="M142 90 C156 60 172 52 184 56"/></g><ellipse cx="128" cy="150" rx="26" ry="52" fill="#8a7a58"/><path d="M106 150 H150 M108 170 H148 M112 190 H144" stroke="#5a4a30" stroke-width="5"/><circle cx="128" cy="100" r="24" fill="#a89870"/><circle cx="118" cy="98" r="8" fill="#e8f070"/><circle cx="119" cy="99" r="4" fill="#13212e"/><path d="M107 87.8 L129 96.8"/><circle cx="138" cy="98" r="8" fill="#e8f070"/><circle cx="137" cy="99" r="4" fill="#13212e"/><path d="M127 93.8 L149 84.8"/>
+  </g>
+</g></g></svg>

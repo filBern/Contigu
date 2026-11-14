@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><defs><filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#fff1d0" flood-opacity="0.75"/></filter><filter id="shade" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#1a0f08" flood-opacity="0.5"/></filter></defs><g filter="url(#shade)"><g filter="url(#glow)">
+  <defs>
+    
+    
+  </defs>
+  <g stroke-linejoin="round" stroke-linecap="round">
+<g fill="#3f7a35"><path d="M112 140 L128 30 L144 140 Z" transform="rotate(-70 128 150)"/><path d="M112 140 L128 30 L144 140 Z" transform="rotate(-38 128 150)"/><path d="M112 140 L128 30 L144 140 Z" transform="rotate(0 128 150)"/><path d="M112 140 L128 30 L144 140 Z" transform="rotate(38 128 150)"/><path d="M112 140 L128 30 L144 140 Z" transform="rotate(70 128 150)"/></g><rect x="76" y="110" width="104" height="104" rx="18" fill="#6fb04f"/><path d="M92 128 L120 142 L92 152Z M164 128 L136 142 L164 152Z" fill="#fff7e8"/><circle cx="104" cy="143" r="3.5" fill="#13212e"/><circle cx="152" cy="143" r="3.5" fill="#13212e"/><path d="M98 186 L112 176 L128 186 L144 176 L158 186" fill="none" stroke="#13212e" stroke-width="5"/>
+  </g>
+</g></g></svg>

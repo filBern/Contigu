@@ -9710,3 +9710,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-14 — Plus de pastille « +15 % » sur les fertilizers
 - La pastille Roots (rectangle brun « +15 % » au coin des fertilizers du panneau) est retirée à la demande de l'auteur. L'information reste dans l'infobulle du fertilizer (ligne « With bonus ») et dans les liens entre voisins (sève, résonance), qui ont chacun leur infobulle. Son propre infobulle « Roots + N % » disparaît avec elle. Non vérifié dans Unity.
+
+## 2026-11-14 — Icônes des ennemis : la créature seule
+- Même traitement que les fertilizers : plus de plaque en bloc, de cadre ni de contour sombre. `Design/Enemies/bare.py` (remplace `add_depth.py` pour le rendu des PNG) retire la plaque, son cadre et la teinte plein cadre du corbeau enragé, supprime les contours bleu nuit des formes pleines (`Icons/outline.py`) et les gros traits sombres posés sous les traits colorés (leur contour), puis ajoute un halo crème doux (pour que les ennemis sombres — corbeau, souche, Locker — se lisent sur un fond foncé) et une ombre douce dessous. 17 PNG de `Assets/Resources/Enemies` regénérés (256 px), donc la bande des ennemis, la boutique et l'onglet Pests de la Collection changent. `add_depth.py` et le dossier `3d/` ne servent plus. Non vérifié dans Unity (le halo est à juger sur le fond réel).
