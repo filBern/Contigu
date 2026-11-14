@@ -1,0 +1,698 @@
+using System.Collections.Generic;
+using Contigu.Core;
+using Contigu.Data;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+
+namespace Contigu.Presentation
+{
+    /// <summary>Run state transitions, status line, restart and challenge start.</summary>
+    public sealed partial class GameBootstrap
+    {
+        private void HandleStateTransition(RunState state)
+        {
+            CollectNewUnlocks();
+            // Stops a Shuffle-button pulse left running from a selected
+            // piece that had nowhere to go, in case the run ends (or moves
+            // to the shop) before the player ever clears that selection
+            // themselves.
+            _handView.SetShufflePulsing(false);
+            // A state change (shop to round, round to shop, end of run) never leaves a tooltip from the previous screen showing.
+            if (_tooltipView != null)
+            {
+                _tooltipView.Hide();
+            }
+            CollectionTracker.Scan(_run);
+            switch (state)
+            {
+                case RunState.AwaitingShop:
+                    SaveCheckpoint();
+                    BeginGrowthHold();
+                    if (_run.LastWitheredModifiers.Count > 0)
+                    {
+                        // Autumn: the fertilizers that just withered shrink away from the panel, and the status says which.
+                        _modifierPanelView.Refresh(_run.ActiveModifiers);
+                        var names = new List<string>();
+                        for (int i = 0; i < _run.LastWitheredModifiers.Count; i++)
+                        {
+                            names.Add(ModifierCatalog.Get(_run.LastWitheredModifiers[i]).Name);
+                        }
+                        var sprouts = new List<string>();
+                        for (int i = 0; i < _run.LastSproutedModifiers.Count; i++)
+                        {
+                            sprouts.Add(ModifierCatalog.Get(_run.LastSproutedModifiers[i]).Name);
+                        }
+                        SetStatusText("Withered away: " + string.Join(", ", names) + (sprouts.Count > 0 ? ". Sprouted: " + string.Join(", ", sprouts) + "." : "."));
+                    }
+                    if (_run.LastRoundEndLueurBonus > 0)
+                    {
+                        StartCoroutine(PlayRoundEndLueurBonusSequence());
+                    }
+                    else
+                    {
+                        ShowRoundSummaryThenShop();
+                    }
+                    break;
+
+                case RunState.RunVictory:
+                {
+                    _unrecordedRun = false;
+                    RunSaveStore.Delete();
+                    bool isNewBestScore = RecordRunOutcome(victory: true, roundReached: _run.Challenge.RoundCount);
+                    SfxManager.Play(SfxId.Victory);
+                    _endScreenView.SetRunStats(_run.Stats, JoinLines(TopFertilizerLine(), PledgeSummaryLine()));
+                    _endScreenView.ShowVictory(_run.TotalScore, _metaStats, isNewBestScore, UnlockedSummary());
+                    break;
+                }
+
+                case RunState.RunDefeat:
+                {
+                    _unrecordedRun = false;
+                    RunSaveStore.Delete();
+                    bool isNewBestScore;
+                    if (_run.IsEndless)
+                    {
+                        // The win was already counted when the finale was cleared: only the extra rounds and records are new.
+                        isNewBestScore = _run.TotalScore > _metaStats.BestScore;
+                        _metaStats = MetaStatsRecorder.RecordEndlessEnd(_metaStats, _run.TotalScore, _run.CurrentRoundNumber);
+                        PersistMeta();
+                    }
+                    else
+                    {
+                        isNewBestScore = RecordRunOutcome(victory: false, roundReached: _run.CurrentRoundNumber);
+                    }
+                    SfxManager.Play(SfxId.Defeat);
+                    _endScreenView.SetRunStats(_run.Stats, JoinLines(TopFertilizerLine(), PledgeSummaryLine()));
+                    _endScreenView.ShowDefeat(_run.CurrentRoundNumber, _run.TotalScore, _metaStats, isNewBestScore, _run.IsEndless, UnlockedSummary(), _run.PiecesRemainingThisRound <= 0);
+                    break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Replays the round-end "unused piece budget -> Lueur" bonus
+        /// RunManager.EvaluateRoundEnd already applied to Lueur in full (see
+        /// RunManager.LastRoundEndLueurBonus). One tick per unused piece:
+        /// the pieces bar counts down and a "+1" popup flies to the Lueur
+        /// label. Purely a presentation replay — Core's Lueur/
+        /// PiecesRemainingThisRound are already final; only the local
+        /// displayed values animate. The shop opens once this finishes.
+        ///
+        /// Blocks hand/modifier-panel input for its whole duration — by the
+        /// time HandleStateTransition calls this, PlayPlacementSequence has
+        /// already re-enabled the hand, so without this a piece could still
+        /// be selected (and its drag ghost left stuck) between the two.
+        /// </summary>
+        private System.Collections.IEnumerator PlayRoundEndLueurBonusSequence()
+        {
+            _isPlayingPlacementSequence = true;
+            _handView.SetInteractable(false);
+            _modifierPanelView.SetInteractable(false);
+
+            int bonus = _run.LastRoundEndLueurBonus;
+            int displayedPieces = bonus;
+            int displayedLueur = _run.Lueur - bonus;
+            var fromAnchor = _hudView.PiecesBarTransform;
+
+            for (int i = 0; i < bonus; i++)
+            {
+                displayedPieces--;
+                displayedLueur++;
+                _hudView.SetPieces(displayedPieces, _run.CurrentBudget);
+                _feedbackLayer.SpawnPollenFlight(fromAnchor.position, _hudView.LueurLabelTransform, "+1", UITheme.ScorePollen);
+                _hudView.SetLueur(displayedLueur);
+                SfxManager.Play(SfxId.LueurGain);
+                yield return new WaitForSeconds(RoundEndLueurBonusStaggerSeconds);
+            }
+
+            _isPlayingPlacementSequence = false;
+            _handView.SetInteractable(true);
+            RefreshShuffleButton();
+            _modifierPanelView.SetInteractable(true);
+            ShowRoundSummaryThenShop();
+        }
+
+        /// <summary>Sprig says one line about each enemy or weather met for the very first time (never again after that), once the round banner is gone.</summary>
+        /// <summary>The garden and the hand come in with a little wave when a round begins.</summary>
+        private void PlayRoundIntro()
+        {
+            _gridView.PlayRoundIntro();
+            _handView.PlayRoundIntro();
+        }
+
+        private void ShowFirstEncounterIntros()
+        {
+            var intros = CollectionTracker.TakeIntroductions();
+            if (intros.Count > 0)
+            {
+                StartCoroutine(IntroRoutine(intros));
+            }
+        }
+
+        private System.Collections.IEnumerator IntroRoutine(List<CollectionTracker.Introduction> intros)
+        {
+            yield return new WaitForSecondsRealtime(3f);
+            foreach (var intro in intros)
+            {
+                string line = null;
+                if (intro.Category == CollectionCategory.Enemy)
+                {
+                    var enemy = EnemyCatalog.Get((EnemyId)intro.Id);
+                    line = "New pest! " + enemy.Name + ": " + FirstSentence(enemy.Description);
+                }
+                else if (intro.Category == CollectionCategory.Weather)
+                {
+                    var weather = (WeatherId)intro.Id;
+                    line = "New weather: " + VisualDefaults.GetWeatherName(weather, _run.CurrentWeatherColor) + ". " + FirstSentence(VisualDefaults.GetWeatherDescription(weather, _run.CurrentWeatherColor, _run.WeatherIntensity));
+                }
+                if (!string.IsNullOrEmpty(line))
+                {
+                    _sprigView.Say(line, SprigMood.Happy, 7f);
+                    yield return new WaitForSecondsRealtime(7.5f);
+                }
+            }
+        }
+
+        private static string JoinLines(string a, string b)
+        {
+            return string.IsNullOrEmpty(a) ? b : string.IsNullOrEmpty(b) ? a : a + "\n" + b;
+        }
+
+        private static string FirstSentence(string text)
+        {
+            if (string.IsNullOrEmpty(text)) { return ""; }
+            int end = text.IndexOf(". ", System.StringComparison.Ordinal);
+            string first = end > 0 ? text.Substring(0, end + 1) : text;
+            return first.Length > 120 ? first.Substring(0, 117) + "..." : first;
+        }
+
+        /// <summary>"Most triggered fertilizer: X (n times)" for the end screen, among the ones still held; empty when none fired.</summary>
+        private string TopFertilizerLine()
+        {
+            ModifierId? best = null;
+            int bestCount = 0;
+            for (int i = 0; i < _run.ActiveModifiers.Count; i++)
+            {
+                int count = _run.GetModifierUsageCount(_run.ActiveModifiers[i]);
+                if (count > bestCount)
+                {
+                    bestCount = count;
+                    best = _run.ActiveModifiers[i];
+                }
+            }
+            var definition = best.HasValue ? ModifierCatalog.Get(best.Value) : null;
+            return definition != null ? "Most triggered fertilizer: " + definition.Name + " (" + bestCount + " times)" : "";
+        }
+
+        /// <summary>How the round just cleared went (score, biggest placement, harvests, Pollen), then the shop opens.</summary>
+        // Maturation: the left panel keeps showing each fertilizer's stage from before the round until the summary's garden animation reaches it.
+        private IReadOnlyList<GrowthStep> _growthHold;
+        private readonly HashSet<int> _growthReleased = new HashSet<int>();
+
+        private readonly List<GrowthStep> _harvestsToPlay = new List<GrowthStep>();
+
+        private void BeginGrowthHold()
+        {
+            _harvestsToPlay.Clear();
+            if (_run != null)
+            {
+                for (int i = 0; i < _run.LastGrowthSteps.Count; i++)
+                {
+                    if (_run.LastGrowthSteps[i].Harvested) { _harvestsToPlay.Add(_run.LastGrowthSteps[i]); }
+                }
+            }
+            _growthReleased.Clear();
+            _growthHold = _run != null && _run.LastGrowthSteps.Count > 0 ? new List<GrowthStep>(_run.LastGrowthSteps) : null;
+        }
+
+        private bool IsHeld(int index)
+        {
+            return _growthHold != null && index >= 0 && index < _growthHold.Count && index < _run.ActiveModifiers.Count
+                && !_growthReleased.Contains(index) && _growthHold[index].Id == _run.ActiveModifiers[index];
+        }
+
+        private int DisplayedGrowth(int index)
+        {
+            return IsHeld(index) ? _growthHold[index].Before : _run.GetModifierGrowth(index);
+        }
+
+        private int DisplayedHarvests(int index)
+        {
+            return IsHeld(index) ? _growthHold[index].Harvests - (_growthHold[index].Harvested ? 1 : 0) : _run.GetModifierHarvests(index);
+        }
+
+        private float DisplayedSap(int index)
+        {
+            return index >= 1 && index < _run.ActiveModifiers.Count ? FertilizerGrowth.SapFrom(DisplayedGrowth(index - 1)) : 0f;
+        }
+
+        private void OnGrowthStepPlayed(int index, GrowthStep step)
+        {
+            if (_growthHold == null)
+            {
+                return;
+            }
+            _growthReleased.Add(index);
+            _modifierPanelView.Refresh(_run.ActiveModifiers);
+        }
+
+        /// <summary>The shop opens and each harvested fertilizer's sack squashes, pops a fruit and scatters Pollen, one after the other (popup and status only with reduced motion).</summary>
+        private System.Collections.IEnumerator PlayShopHarvest()
+        {
+            var steps = new List<GrowthStep>(_harvestsToPlay);
+            _harvestsToPlay.Clear();
+            yield return null; // the shop (and the panel's layout) is up
+            var names = new List<string>();
+            for (int i = 0; i < steps.Count; i++)
+            {
+                names.Add(ModifierCatalog.Get(steps[i].Id).Name);
+                var anchor = FindHarvestedBadge(steps[i].Id);
+                if (anchor != null)
+                {
+                    SfxManager.Play(SfxId.Harvest);
+                    _feedbackLayer.SpawnPopup(anchor, "Harvest +" + FertilizerGrowth.HarvestPollen, UITheme.ScorePollen);
+                    if (!MotionSettings.Reduced)
+                    {
+                        _feedbackLayer.SpawnHarvestBurst(anchor.position, GrowthVisuals.StageSprite(GrowthStage.Fruit), VisualDefaults.PollenSprite);
+                        yield return SquashBadge(anchor);
+                    }
+                }
+                yield return new WaitForSeconds(MotionSettings.Reduced ? 0.1f : 0.25f);
+            }
+            SetStatusText("Harvested: " + string.Join(", ", names) + " (+" + FertilizerGrowth.HarvestPollen * steps.Count + " Pollen).");
+        }
+
+        private RectTransform FindHarvestedBadge(ModifierId id)
+        {
+            return _modifierPanelView != null ? _modifierPanelView.GetBadgeTransform(id, 0) : null;
+        }
+
+        private static System.Collections.IEnumerator SquashBadge(RectTransform badge)
+        {
+            float t = 0f;
+            const float Duration = 0.45f;
+            while (t < Duration)
+            {
+                if (badge == null) { yield break; }
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.Clamp01(t / Duration);
+                // Crouch, spring up past its size, settle.
+                float s = p < 0.25f ? Mathf.Lerp(1f, 0.86f, p / 0.25f) : p < 0.6f ? Mathf.Lerp(0.86f, 1.18f, (p - 0.25f) / 0.35f) : Mathf.Lerp(1.18f, 1f, (p - 0.6f) / 0.4f);
+                badge.localScale = new Vector3(s, s, 1f);
+                yield return null;
+            }
+            if (badge != null) { badge.localScale = Vector3.one; }
+        }
+
+        private void OnGrowthFinished()
+        {
+            if (_growthHold == null)
+            {
+                return;
+            }
+            _growthHold = null;
+            _growthReleased.Clear();
+            _modifierPanelView.Refresh(_run.ActiveModifiers);
+        }
+
+        private void ShowRoundSummaryThenShop()
+        {
+            _roundSummaryView.Show(_run.LastRoundSummary, () =>
+            {
+                _shopView.Show(_run);
+                if (_harvestsToPlay.Count > 0) { StartCoroutine(PlayShopHarvest()); }
+            });
+        }
+
+        /// <summary>Saves the stats together with what is unlocked so far.</summary>
+        private void PersistMeta()
+        {
+            _metaStats = MetaStatsRecorder.WithUnlocks(_metaStats, _unlockState);
+            _metaStatsStore.Save(_metaStats);
+        }
+
+        /// <summary>Takes what the run just unlocked (its tracker unlocks into the shared state), keeps it for the end screen and saves right away.</summary>
+        private void CollectNewUnlocks()
+        {
+            if (_run == null || _run.Unlocks == null || !_run.Unlocks.HasNewlyUnlocked)
+            {
+                return;
+            }
+            _runUnlocks.AddRange(_run.Unlocks.DrainNewlyUnlocked());
+            PersistMeta();
+        }
+
+        /// <summary>The name of something that was unlocked, as the player knows it.</summary>
+        private static string UnlockName(UnlockEntry entry)
+        {
+            switch (entry.Kind)
+            {
+                case UnlockKind.Challenge: return ChallengeCatalog.Get((ChallengeId)entry.Id).Name + " (challenge)";
+                case UnlockKind.Sprout: return UpgradeCatalog.Get((UpgradeId)entry.Id).Name;
+                default: return ModifierCatalog.Get((ModifierId)entry.Id).Name;
+            }
+        }
+
+        /// <summary>"Unlocked: A, B, C" for the end screen, empty when this run unlocked nothing.</summary>
+        private string UnlockedSummary()
+        {
+            CollectNewUnlocks();
+            if (_runUnlocks.Count == 0)
+            {
+                return string.Empty;
+            }
+            var names = new List<string>();
+            foreach (var entry in _runUnlocks) { names.Add(UnlockName(entry)); }
+            return "New in your collection (" + names.Count + "): " + string.Join(", ", names);
+        }
+
+        /// <summary>Folds this run's outcome into the persisted MetaStats and saves immediately — there's no guaranteed exit hook in a WebGL/browser build. Returns whether this run's score is a new all-time best, for the end screen's "new record" callout.</summary>
+        private bool RecordRunOutcome(bool victory, int roundReached)
+        {
+            bool isNewBestScore = _run.TotalScore > _metaStats.BestScore;
+            _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, roundReached, victory, _run.Challenge.Id, _run.Challenge.Level);
+            PersistMeta();
+            return isNewBestScore;
+        }
+
+        private string GetCurrentRoundStatus()
+        {
+            // An active encounter always suppresses the BossEffect roll
+            // (see RunManager.HasActiveEncounter), so this short-circuits
+            // before the switch below falls through to its generic default.
+            if (_run.HasActiveEncounter)
+            {
+                return BuildEncounterStatus(_run.CurrentEncounter);
+            }
+
+            string status;
+            switch (_run.CurrentBossEffect)
+            {
+                case BossEffect.ProgressiveCellLock:
+                    status = "Boss round: every " + _run.Challenge.BossLockPiecesInterval + " seeds, " + _run.Challenge.BossLockCellsPerInterval + " cell(s) will lock.";
+                    break;
+                case BossEffect.LockedHandSlot:
+                    status = "Boss round: hand slot " + (_run.BossLockedHandSlotIndex.Value + 1) + " is locked for this round.";
+                    break;
+                case BossEffect.CursedColor:
+                    status = VisualDefaults.GetColorName(_run.BossCursedColor.Value) + " seeds score 0 points this round.";
+                    break;
+                default:
+                    status = "New round: select a seed, then click the grid.";
+                    break;
+            }
+            return status;
+        }
+
+        /// <summary>Lists every enemy in this round's encounter by name — a defeated one stays listed, marked "(defeated)", rather than dropped, so the count always matches EncounterCatalog's roster for the round.</summary>
+        private static string BuildEncounterStatus(IReadOnlyList<EnemyInstance> encounter)
+        {
+            var text = new System.Text.StringBuilder("Enemy encounter: ");
+            for (int i = 0; i < encounter.Count; i++)
+            {
+                if (i > 0)
+                {
+                    text.Append(", ");
+                }
+                text.Append(encounter[i].Definition.Name);
+                if (encounter[i].IsDead)
+                {
+                    text.Append(" (defeated)");
+                }
+            }
+            text.Append(". Defeat them all to clear the round.");
+            return text.ToString();
+        }
+
+        /// <summary>The victory screen's "Keep Growing": the run goes on past the final round (see RunManager.ContinueEndless), starting with the shop.</summary>
+        private void OnEndlessRequested()
+        {
+            if (!_run.ContinueEndless())
+            {
+                return;
+            }
+            _unrecordedRun = true;
+            _endScreenView.Hide();
+            RefreshAll();
+            HandleStateTransition(_run.State);
+        }
+
+        /// <summary>"New Run" goes back through the challenge picker rather than immediately restarting the same challenge — see OnChallengeChosen for what starts the next run once one is picked.</summary>
+        private void OnRestartRequested()
+        {
+            _endScreenView.Hide();
+            _challengeSelectView.Show(_metaStats);
+        }
+
+        // True from StartNewRun until the run's outcome has been recorded (a defeat/victory screen, or leaving the run early).
+        private bool _unrecordedRun;
+
+        /// <summary>Leaving a run early (abandon, or back to the main menu) counts like a defeat in the persistent stats — but only if the player actually played something, and never twice.</summary>
+        private void RecordLeftRun()
+        {
+            if (_run == null || !_unrecordedRun)
+            {
+                return;
+            }
+            _unrecordedRun = false;
+            bool untouched = !_run.IsEndless && _run.CurrentRoundIndex == 0 && _run.RoundScore == 0 && _run.PiecesRemainingThisRound == _run.CurrentBudget;
+            if (untouched || (_run.State != RunState.InProgress && _run.State != RunState.AwaitingShop))
+            {
+                return;
+            }
+            if (_run.IsEndless)
+            {
+                _metaStats = MetaStatsRecorder.RecordEndlessEnd(_metaStats, _run.TotalScore, _run.CurrentRoundNumber);
+            }
+            else
+            {
+                _metaStats = MetaStatsRecorder.RecordRunOutcome(_metaStats, _run.TotalScore, _run.CurrentRoundNumber, victory: false, challenge: _run.Challenge.Id, level: _run.Challenge.Level);
+            }
+            PersistMeta();
+        }
+
+        /// <summary>Settings → "Abandon run": the run is scored as a defeat, and the scene reloads straight onto the challenge picker (a fresh scene is the one sure way to drop whatever overlay, animation or pending choice was in flight).</summary>
+        private void OnAbandonRunRequested()
+        {
+            RecordLeftRun();
+            RunSaveStore.Delete();
+            SfxManager.StopPad();
+            Time.timeScale = 1f;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        }
+
+        /// <summary>Settings → "Save and quit": the run is saved (it resumes from the start of its current round, nothing is scored) and the title scene opens. Without a run in progress it is just a way back to the title.</summary>
+        private void OnMainMenuRequested()
+        {
+            SaveCheckpoint();
+            if (!(_run != null && _unrecordedRun && (_run.State == RunState.InProgress || _run.State == RunState.AwaitingShop)))
+            {
+                RecordLeftRun();
+            }
+            SfxManager.StopPad();
+            Time.timeScale = 1f;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(MainMenuSceneName);
+        }
+
+        private const string MainMenuSceneName = "MainMenu";
+
+        /// <summary>Dev/testing shortcut (F10 in the editor, or the picker's "Unlock all (dev)" button): every challenge becomes playable at once, persisted like any unlock.</summary>
+        private void OnUnlockAllChallengesRequested()
+        {
+            _metaStats = MetaStatsRecorder.UnlockAll(_metaStats);
+            _unlockState = _metaStats.ReadUnlocks();
+            _metaStatsStore.Save(_metaStats);
+            _challengeSelectView.Refresh(_metaStats);
+        }
+
+        /// <summary>Starts the chosen challenge, already built at the chosen difficulty level. Re-checked here rather than trusted blindly: a locked challenge never starts.</summary>
+        private void OnChallengeChosen(ChallengeDefinition challenge)
+        {
+            if (!_metaStats.IsUnlocked(challenge.Id))
+            {
+                _challengeSelectView.Refresh(_metaStats);
+                return;
+            }
+
+            _challengeSelectView.Hide();
+            StartNewRun(challenge, _challengeSelectView.SelectedPledges);
+            _roundBannerView.Play(_run);
+            PlayRoundIntro();
+            ShowFirstEncounterIntros();
+            if (_run.CurrentWeather != WeatherId.Clear)
+            {
+                _hudView.PulseWeather();
+            }
+
+            // The tutorial is shown once; after it, a new run starts without any tip.
+            if (GamePrefs.ConsumeFirstTime(TutorialSeenPrefsKey))
+            {
+                StartCoroutine(RunSprigGuideAfterDelay());
+            }
+        }
+
+        private System.Collections.IEnumerator RunSprigGuideAfterDelay()
+        {
+            yield return new WaitForSeconds(2.1f);
+            _sprigView.RunGuide(BuildSprigGuide());
+        }
+
+        private void OnModifierCarouselDismissed()
+        {
+            // Only now does the modifier panel learn about the shop-bought
+            // Random Modifier the carousel just revealed — refreshing
+            // earlier would show the badge in the side panel while the
+            // carousel's spin was still playing.
+            var landed = _modifierCarouselView.WinningBadge;
+            var granted = _run.LastRandomModifierGranted;
+            Vector3? from = landed != null ? WorldCenter(landed) : (Vector3?)null;
+            float fromWidth = landed != null ? WorldWidth(landed) : 0f;
+            _modifierPanelView.Refresh(_run.ActiveModifiers);
+            // The fertilizer the reel landed on flies into its slot.
+            if (from.HasValue && granted.HasValue && !MotionSettings.Reduced)
+            {
+                StartCoroutine(FlyFertilizerToSlot(granted.Value, from.Value, fromWidth));
+            }
+        }
+
+        /// <summary>Gives the whole backdrop this challenge's own world: its scenery, the tone of the drifting shapes, and its creatures and particles.</summary>
+        private void ApplyChallengeAmbiance(ChallengeDefinition challenge)
+        {
+            var ambiance = ChallengeAmbiance.For(challenge.Id);
+            _sceneryView.Apply(ambiance);
+            _animatedBackgroundView.ApplyTheme(ambiance);
+            _ambientLifeView.SetChallenge(ambiance);
+        }
+
+        private void StartNewRun(ChallengeDefinition challenge, Pledge pledges = Pledge.None)
+        {
+            BeginRun(new RunManager(new SystemRandomProvider(), challenge, pledges), challenge);
+        }
+
+        /// <summary>Says once that a pledge the player took on has just been broken.</summary>
+        private void NotePledgeBroken(Pledge pledge, bool firstTime)
+        {
+            if (firstTime && (_run.Pledges & pledge) != Pledge.None)
+            {
+                SetStatusText("Pledge broken: " + PledgeCatalog.Name(pledge) + ".");
+            }
+        }
+
+        /// <summary>The pledges of the run for the end screen: "Pledges kept: X" / "Broken: Y", one line, empty when none were taken.</summary>
+        private string PledgeSummaryLine()
+        {
+            var kept = new List<string>();
+            var broken = new List<string>();
+            foreach (var pledge in PledgeCatalog.All)
+            {
+                if ((_run.Pledges & pledge) == Pledge.None) { continue; }
+                (_run.IsPledgeKept(pledge) ? kept : broken).Add(PledgeCatalog.Name(pledge));
+            }
+            var parts = new List<string>();
+            if (kept.Count > 0) { parts.Add("Pledges kept: " + string.Join(", ", kept)); }
+            if (broken.Count > 0) { parts.Add("Broken: " + string.Join(", ", broken)); }
+            return string.Join("   ·   ", parts);
+        }
+
+        /// <summary>Saves the run as it stood when its current round began (also what Save and quit writes). Only while a run is actually in progress.</summary>
+        private void SaveCheckpoint()
+        {
+            if (_run != null && _unrecordedRun && (_run.State == RunState.InProgress || _run.State == RunState.AwaitingShop) && _run.CheckpointSnapshot != null)
+            {
+                RunSaveStore.Save(_run.CheckpointSnapshot);
+            }
+        }
+
+        /// <summary>The picker's "Continue": resumes the saved run at the start of the round it was saved in.</summary>
+        private void OnContinueRequested()
+        {
+            var snapshot = RunSaveStore.Load();
+            var resumed = snapshot != null ? RunManager.Restore(snapshot, new SystemRandomProvider()) : null;
+            if (resumed == null)
+            {
+                RunSaveStore.Delete();
+                _challengeSelectView.Refresh(_metaStats);
+                return;
+            }
+            _challengeSelectView.Hide();
+            BeginRun(resumed, resumed.Challenge);
+            if (_run.State == RunState.AwaitingShop)
+            {
+                // Saved in the shop: back in it, with the offers and the Pollen it opened with.
+                HandleStateTransition(_run.State);
+                SetStatusText("Welcome back! The shop is as it was when it opened.");
+                return;
+            }
+            _roundBannerView.Play(_run);
+            PlayRoundIntro();
+            ShowFirstEncounterIntros();
+            if (_run.CurrentWeather != WeatherId.Clear)
+            {
+                _hudView.PulseWeather();
+            }
+            SetStatusText("Welcome back! Your run resumes at the start of the round.");
+        }
+
+        private void BeginRun(RunManager run, ChallengeDefinition challenge)
+        {
+            _isPlayingPlacementSequence = false;
+            _run = run;
+            _run.AttachUnlocks(_unlockState);
+            _runUnlocks.Clear();
+            CollectNewUnlocks();
+            SfxManager.PlayPad(challenge.Id.ToString());
+            _unrecordedRun = true;
+            SaveCheckpoint();
+            ApplyChallengeAmbiance(challenge);
+            _gridView.Rebind(_run.Grid);
+            _handView.Rebind(_run);
+            _tileChoiceView.Rebind(_run.Deck);
+            _deckView.Rebind(_run);
+            _deckView.Hide();
+
+            RefreshAll();
+            SetStatusText(IdleStatusMessage);
+        }
+
+        /// <summary><paramref name="refreshModifierPanel"/> defaults to true; OnUpgradeBuyRequested passes false when a Random Modifier grant is about to reveal through the carousel, deferring the panel's own refresh until that reveal is dismissed (see its own comment for why).</summary>
+        private void RefreshAll(bool refreshModifierPanel = true)
+        {
+            CollectionTracker.Scan(_run);
+            _gridView.Refresh();
+            _handView.SetBossLockedSlot(_run.BossLockedHandSlotIndex);
+            _handView.Refresh();
+            RefreshShuffleButton();
+            _hudView.Refresh(_run);
+            _comboView.SetRound(_run.CurrentRoundNumber, _run.IsEndless ? 0 : _run.Challenge.RoundCount, ChallengeSelectView.AccentFor(_run.Challenge));
+            if (refreshModifierPanel)
+            {
+                _modifierPanelView.Refresh(_run.ActiveModifiers);
+            }
+            UpdateAmbientLife();
+        }
+
+        /// <summary>Feeds the ambient garden: this round's weather, and how much of the round is won (more butterflies the closer to victory).</summary>
+        private void UpdateAmbientLife()
+        {
+            _ambientLifeView.SetWeather(_run.CurrentWeather);
+            float progress;
+            if (_run.HasActiveEncounter)
+            {
+                int hp = 0;
+                int max = 0;
+                foreach (var enemy in _run.CurrentEncounter)
+                {
+                    hp += Mathf.Max(0, enemy.CurrentHp);
+                    max += enemy.CurrentMaxHp;
+                }
+                progress = max > 0 ? 1f - (float)hp / max : 0f;
+            }
+            else
+            {
+                progress = _run.CurrentQuota > 0 ? (float)_run.RoundScore / _run.CurrentQuota : 0f;
+            }
+            _ambientLifeView.SetProgress(progress);
+        }
+    }
+}

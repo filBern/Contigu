@@ -1,0 +1,639 @@
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using Contigu.Core;
+using UnityEngine;
+
+namespace Contigu.RunSim
+{
+    /// <summary>The bot's way of choosing placements and shop purchases.</summary>
+    public enum BotPolicy
+    {
+        /// <summary>Every legal placement is equally likely; buys whatever it can afford at random.</summary>
+        Random,
+
+        /// <summary>Takes the best-scoring placement (group score, completed lines, tidy edges); buys modifiers first.</summary>
+        Greedy,
+
+        /// <summary>Searches every order and spot for the whole hand (see <see cref="Planner"/>) and plays the first move of the best sequence; shops like Greedy.</summary>
+        Planner
+    }
+
+    /// <summary>Everything one simulated run reports back.</summary>
+    public sealed class RunResult
+    {
+        public bool Victory;
+        public int RoundsCleared;
+        public int TotalScore;
+        public int PlacementsMade;
+        public int ShufflesUsed;
+        public int PollenSpent;
+        public int PollenEarnedEstimate;
+        public string DeathCause;
+        public double EnemyHpLeftPct;
+        public bool Stuck;
+        public string StuckReason;
+        public List<EnemyId> DeathEncounter = new List<EnemyId>();
+        public List<ModifierId> FinalModifiers = new List<ModifierId>();
+        public List<int> PlacementsPerRound = new List<int>();
+    }
+
+    public sealed class Bot
+    {
+        private readonly Random _rng;
+        private readonly BotPolicy _policy;
+
+        private readonly ChallengeDefinition _challenge;
+        private readonly bool _endless;
+        private readonly Planner _planner;
+
+        /// <summary>Called on the fresh run before the first move (QA smoke tests give every run one specific fertilizer or upgrade).</summary>
+        public System.Action<RunManager> Setup;
+
+        /// <summary>
+        /// Item scores from the balance study (mean rounds gained, keyed "fertilizer:Id" / "sprout:Id"). When set, the shop is played by the
+        /// ranking: the best-scored fertilizers and sprouts are bought first, duds are skipped, and pack choices take the best-scored option.
+        /// </summary>
+        public static Dictionary<string, double> Scores;
+
+        /// <summary>Before leaving the shop the bot arranges its fertilizers for the Roots (sap flows left to right, neighbors of one category resonate). --no-order turns it off for comparisons.</summary>
+        public static bool OrderFertilizers = true;
+
+        private static double ScoreOfModifier(ModifierId id)
+        {
+            double v;
+            return Scores != null && Scores.TryGetValue("fertilizer:" + id, out v) ? v : 0.0;
+        }
+
+        private static double ScoreOfUpgrade(UpgradeDefinition def)
+        {
+            double v;
+            return Scores != null && def != null && Scores.TryGetValue("sprout:" + def.Id, out v) ? v : 0.0;
+        }
+
+        public static void LoadScores(string csvPath)
+        {
+            Scores = new Dictionary<string, double>();
+            foreach (var line in System.IO.File.ReadAllLines(csvPath).Skip(1))
+            {
+                var f = line.Split(',');
+                if (f.Length < 4) { continue; }
+                Scores[f[0] + ":" + f[1]] = double.Parse(f[3], System.Globalization.CultureInfo.InvariantCulture);
+            }
+        }
+
+        public Bot(int seed, BotPolicy policy, ChallengeDefinition challenge = null, bool endless = false)
+        {
+            _rng = new Random(seed ^ 0x5bd1e995);
+            _policy = policy;
+            _challenge = challenge ?? ChallengeCatalog.Classic;
+            _endless = endless;
+            _planner = new Planner(_rng);
+        }
+
+        /// <summary>Shared across every run of a simulation when --coverage or --locked is on: what the simulated player has unlocked so far.</summary>
+        public static UnlockState Unlocks;
+
+        /// <summary>--calibrate: every run starts from a fresh state, and its tracker keeps the best value reached by each condition.</summary>
+        public static bool Calibrating;
+        public static UnlockTracker LastTracker;
+
+        /// <summary>Which run (1-based) first earned each unlock, for the coverage report.</summary>
+        public static readonly Dictionary<string, int> FirstEarnedInRun = new Dictionary<string, int>();
+        private static int _runsPlayedWithUnlocks;
+
+        public RunResult PlayRun(int seed)
+        {
+            var run = new RunManager(new SystemRandomProvider(seed), _challenge);
+            if (Calibrating) { run.AttachUnlocks(new UnlockState(everythingAvailable: true)); LastTracker = run.Unlocks; }
+            else if (Unlocks != null) { run.AttachUnlocks(Unlocks); }
+            if (Setup != null) { Setup(run); }
+            var result = new RunResult();
+            int placementsThisRound = 0;
+            int guard = 0;
+            Invariants.Reset();
+
+            while (run.State != RunState.RunDefeat && (run.State != RunState.RunVictory || _endless))
+            {
+                if (Unlocks != null && run.Unlocks != null && System.Environment.GetEnvironmentVariable("UNLOCK_TRACE") == "1")
+                {
+                    foreach (var fresh in run.Unlocks.DrainNewlyUnlocked()) { System.Console.WriteLine("  [trace] round " + run.CurrentRoundNumber + " " + fresh.Key + " " + fresh.Condition.Text); }
+                }
+                if (Invariants.Enabled)
+                {
+                    string violation = Invariants.Check(run);
+                    if (violation != null)
+                    {
+                        result.Stuck = true;
+                        result.StuckReason = "invariant: " + violation + " [round " + (run.CurrentRoundIndex + 1) + ", " + run.State + "]";
+                        break;
+                    }
+                }
+                if (run.State == RunState.RunVictory)
+                {
+                    // Endless: bank the win, then keep playing into rounds 16+.
+                    result.Victory = true;
+                    run.ContinueEndless();
+                    continue;
+                }
+                if (++guard > 200000)
+                {
+                    result.Stuck = true;
+                    result.StuckReason = "step guard";
+                    break;
+                }
+
+                if (run.State == RunState.AwaitingShop)
+                {
+                    result.PlacementsPerRound.Add(placementsThisRound);
+                    placementsThisRound = 0;
+                    result.RoundsCleared = run.CurrentRoundIndex + 1;
+                    if (!ShopPhase(run, result))
+                    {
+                        result.Stuck = true;
+                        result.StuckReason = "shop";
+                        break;
+                    }
+                    continue;
+                }
+
+                if (!TryPlaceBest(run, out int lueurBefore))
+                {
+                    if (run.ShufflesRemaining > 0 && run.ShuffleHand())
+                    {
+                        result.ShufflesUsed++;
+                        continue;
+                    }
+                    // Nothing playable and no shuffle left: the engine ends the run on its own; if it did not, bail out.
+                    if (run.State == RunState.InProgress)
+                    {
+                        result.Stuck = true;
+                        result.StuckReason = "no move";
+                        if (System.Environment.GetEnvironmentVariable("STUCK_DUMP") == "1")
+                        {
+                            System.Console.WriteLine("STUCK seed " + seed + " round " + run.CurrentRoundNumber + " shuffles " + run.ShufflesRemaining + " pieces " + run.PiecesRemainingThisRound + " state " + run.State);
+                            for (int i = 0; i < run.Deck.Hand.Count; i++) { var t = run.Deck.Hand[i]; System.Console.WriteLine("  hand " + i + ": " + (t.HasValue ? t.Value.Shape + "/" + t.Value.Color : "empty") + " locked=" + run.IsHandSlotLocked(i)); }
+                            foreach (var en in run.CurrentEncounter) { System.Console.WriteLine("  enemy " + en.Definition.Id + " hp " + en.CurrentHp + " dead " + en.IsDead); }
+                            for (int y = 0; y < GridManager.Size; y++) { var row = ""; for (int x = 0; x < GridManager.Size; x++) { var c = run.Grid.GetCell(x, y); row += c.IsFrozen ? "F" : c.IsLocked ? "L" : c.IsFilled ? "#" : "."; } System.Console.WriteLine("  " + row); }
+                        }
+                        break;
+                    }
+                    continue;
+                }
+                placementsThisRound++;
+                result.PlacementsMade++;
+                result.PollenEarnedEstimate += Math.Max(0, run.Lueur - lueurBefore);
+            }
+
+            if (run.State == RunState.RunVictory)
+            {
+                result.Victory = true;
+                result.RoundsCleared = RunConfig.RoundCount;
+            }
+            else if (run.State == RunState.RunDefeat)
+            {
+                if (_endless)
+                {
+                    result.RoundsCleared = run.CurrentRoundNumber - 1;
+                }
+                var ids = EncounterCatalog.GetEncounter(run.Challenge.Id, run.CurrentRoundIndex);
+                result.DeathEncounter.AddRange(ids);
+                result.DeathCause = run.PiecesRemainingThisRound <= 0 ? "out of seeds" : "board blocked";
+                if (run.HasActiveEncounter)
+                {
+                    int hp = 0;
+                    int max = 0;
+                    foreach (var enemy in run.CurrentEncounter)
+                    {
+                        hp += Math.Max(0, enemy.CurrentHp);
+                        max += enemy.CurrentMaxHp;
+                    }
+                    result.EnemyHpLeftPct = max > 0 ? 100.0 * hp / max : 0;
+                }
+            }
+            result.TotalScore = run.TotalScore;
+            result.FinalModifiers.AddRange(run.ActiveModifiers);
+            if (Unlocks != null)
+            {
+                _runsPlayedWithUnlocks++;
+                foreach (var entry in UnlockCatalog.All)
+                {
+                    if (Unlocks.IsEarned(entry.Key) && !FirstEarnedInRun.ContainsKey(entry.Key)) { FirstEarnedInRun[entry.Key] = _runsPlayedWithUnlocks; }
+                }
+            }
+            return result;
+        }
+
+        // ---------------------------------------------------------------- placing
+
+        private bool TryPlaceBest(RunManager run, out int lueurBefore)
+        {
+            lueurBefore = run.Lueur;
+            if (_policy == BotPolicy.Planner)
+            {
+                if (!_planner.Choose(run, out int plannedSlot, out int plannedX, out int plannedY))
+                {
+                    return false;
+                }
+                return run.PlacePiece(plannedSlot, plannedX, plannedY).Placement.Success;
+            }
+            var deck = run.Deck;
+            double bestScore = double.NegativeInfinity;
+            int bestSlot = -1;
+            int bestX = 0;
+            int bestY = 0;
+            int ties = 0;
+
+            for (int i = 0; i < deck.Hand.Count; i++)
+            {
+                if (!deck.Hand[i].HasValue || run.IsHandSlotLocked(i))
+                {
+                    continue;
+                }
+                var token = deck.Hand[i].Value;
+                var shape = PieceShapeCatalog.GetRotated(token.Shape, deck.HandRotations[i]);
+                for (int x = 0; x < GridManager.Size; x++)
+                {
+                    for (int y = 0; y < GridManager.Size; y++)
+                    {
+                        if (!run.Grid.CanPlace(shape, x, y))
+                        {
+                            continue;
+                        }
+                        double score = _policy == BotPolicy.Random ? _rng.NextDouble() : Evaluate(run, shape, token, x, y) + _rng.NextDouble() * 0.5;
+                        if (score > bestScore)
+                        {
+                            bestScore = score;
+                            bestSlot = i;
+                            bestX = x;
+                            bestY = y;
+                            ties = 1;
+                        }
+                    }
+                }
+            }
+
+            if (bestSlot < 0)
+            {
+                return false;
+            }
+            var outcome = run.PlacePiece(bestSlot, bestX, bestY);
+            return outcome.Placement.Success;
+        }
+
+        /// <summary>Group score plus a bonus per row/column this placement would complete and a small tidiness term.</summary>
+        private double Evaluate(RunManager run, PieceShape shape, PieceToken token, int ax, int ay)
+        {
+            double score = run.Grid.PreviewGroupScore(shape, token.Color, ax, ay);
+            var cells = shape.Cells;
+            var rowAdd = new int[GridManager.Size];
+            var colAdd = new int[GridManager.Size];
+            for (int i = 0; i < cells.Count; i++)
+            {
+                rowAdd[ay + cells[i].y]++;
+                colAdd[ax + cells[i].x]++;
+            }
+            for (int k = 0; k < GridManager.Size; k++)
+            {
+                if (rowAdd[k] > 0 && FilledInRow(run.Grid, k) + rowAdd[k] >= UnlockedInRow(run.Grid, k))
+                {
+                    score += 30;
+                }
+                if (colAdd[k] > 0 && FilledInColumn(run.Grid, k) + colAdd[k] >= UnlockedInColumn(run.Grid, k))
+                {
+                    score += 30;
+                }
+            }
+            // Slight preference for hugging the filled area (keeps free space contiguous).
+            for (int i = 0; i < cells.Count; i++)
+            {
+                int cx = ax + cells[i].x;
+                int cy = ay + cells[i].y;
+                if (IsFilledOrWall(run.Grid, cx - 1, cy)) { score += 0.4; }
+                if (IsFilledOrWall(run.Grid, cx + 1, cy)) { score += 0.4; }
+                if (IsFilledOrWall(run.Grid, cx, cy - 1)) { score += 0.4; }
+                if (IsFilledOrWall(run.Grid, cx, cy + 1)) { score += 0.4; }
+            }
+            return score;
+        }
+
+        private static bool IsFilledOrWall(GridManager grid, int x, int y)
+        {
+            if (!GridManager.InBounds(x, y))
+            {
+                return true;
+            }
+            var cell = grid.GetCell(x, y);
+            return cell.IsFilled || cell.IsLocked;
+        }
+
+        private static int FilledInRow(GridManager grid, int y)
+        {
+            int n = 0;
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                if (grid.GetCell(x, y).IsFilled) { n++; }
+            }
+            return n;
+        }
+
+        private static int UnlockedInRow(GridManager grid, int y)
+        {
+            int n = 0;
+            for (int x = 0; x < GridManager.Size; x++)
+            {
+                if (!grid.GetCell(x, y).IsLocked) { n++; }
+            }
+            return n;
+        }
+
+        private static int FilledInColumn(GridManager grid, int x)
+        {
+            int n = 0;
+            for (int y = 0; y < GridManager.Size; y++)
+            {
+                if (grid.GetCell(x, y).IsFilled) { n++; }
+            }
+            return n;
+        }
+
+        private static int UnlockedInColumn(GridManager grid, int x)
+        {
+            int n = 0;
+            for (int y = 0; y < GridManager.Size; y++)
+            {
+                if (!grid.GetCell(x, y).IsLocked) { n++; }
+            }
+            return n;
+        }
+
+        // ---------------------------------------------------------------- shopping
+
+        /// <summary>Spends Pollen, resolves every pending choice, leaves the shop. False if a choice could not be resolved.</summary>
+        // A Workshop item is never sold out any more (each purchase only makes the next dearer): the bot takes each at most once per visit.
+        private readonly HashSet<int> _workshopBought = new HashSet<int>();
+
+        private bool ShopPhase(RunManager run, RunResult result)
+        {
+            _workshopBought.Clear();
+            for (int guard = 0; guard < 40; guard++)
+            {
+                if (!TryBuyOne(run, result))
+                {
+                    break;
+                }
+                if (!ResolvePending(run))
+                {
+                    return false;
+                }
+            }
+            if (OrderFertilizers) { ArrangeFertilizers(run); }
+            return run.LeaveShop();
+        }
+
+        /// <summary>What an arrangement of the held fertilizers earns from the Roots: each one's sap (from its left neighbor's growth) and resonance (neighbors of its category), in effect factor.</summary>
+        private static float RootsValue(RunManager run, int[] order)
+        {
+            float total = 0f;
+            for (int pos = 0; pos < order.Length; pos++)
+            {
+                var category = ModifierCatalog.Get(run.ActiveModifiers[order[pos]]).Category;
+                if (pos > 0)
+                {
+                    total += FertilizerGrowth.SapFrom(run.GetModifierGrowth(order[pos - 1]));
+                    if (ModifierCatalog.Get(run.ActiveModifiers[order[pos - 1]]).Category == category) { total += FertilizerGrowth.ResonancePerNeighbor; }
+                }
+                if (pos + 1 < order.Length && ModifierCatalog.Get(run.ActiveModifiers[order[pos + 1]]).Category == category) { total += FertilizerGrowth.ResonancePerNeighbor; }
+            }
+            return total;
+        }
+
+        /// <summary>Tries every arrangement (at most 4! = 24) and keeps the best for the Roots; on a tie the current order stays (least movement).</summary>
+        private static void ArrangeFertilizers(RunManager run)
+        {
+            int n = run.ActiveModifiers.Count;
+            if (n < 2) { return; }
+            var current = new int[n];
+            for (int i = 0; i < n; i++) { current[i] = i; }
+            var best = (int[])current.Clone();
+            float bestValue = RootsValue(run, best);
+            int bestMoved = 0;
+            Permute(current, 0, perm =>
+            {
+                float value = RootsValue(run, perm);
+                int moved = 0;
+                for (int i = 0; i < perm.Length; i++) { if (perm[i] != i) { moved++; } }
+                if (value > bestValue + 1e-4f || (System.Math.Abs(value - bestValue) <= 1e-4f && moved < bestMoved))
+                {
+                    bestValue = value;
+                    bestMoved = moved;
+                    best = (int[])perm.Clone();
+                }
+            });
+            // Put them in order with swaps; slotOf[k] = where the fertilizer that started at slot k stands now.
+            var at = new int[n]; // at[slot] = original index standing there
+            for (int i = 0; i < n; i++) { at[i] = i; }
+            for (int pos = 0; pos < n; pos++)
+            {
+                if (at[pos] == best[pos]) { continue; }
+                int from = System.Array.IndexOf(at, best[pos]);
+                run.SwapModifiers(pos, from);
+                int temp = at[pos]; at[pos] = at[from]; at[from] = temp;
+            }
+        }
+
+        private static void Permute(int[] items, int start, System.Action<int[]> visit)
+        {
+            if (start == items.Length) { visit(items); return; }
+            for (int i = start; i < items.Length; i++)
+            {
+                (items[start], items[i]) = (items[i], items[start]);
+                Permute(items, start + 1, visit);
+                (items[start], items[i]) = (items[i], items[start]);
+            }
+        }
+
+        private bool TryBuyOne(RunManager run, RunResult result)
+        {
+            var options = new List<(bool Modifier, int Index, int Price)>();
+            var blister = run.ShopBlisterSlots;
+            for (int i = 0; i < blister.Count; i++)
+            {
+                if (blister[i] != null && !blister[i].Purchased)
+                {
+                    options.Add((blister[i].Kind == ShopSlotKind.Modifier, i, run.GetBlisterSlotPrice(i)));
+                }
+            }
+            var upgrades = run.ShopUpgradeSlots;
+            for (int i = 0; i < upgrades.Count; i++)
+            {
+                // The bot never composts: thinning the bag is a deliberate human choice it cannot judge.
+                if (upgrades[i] != null && !_workshopBought.Contains(i) && upgrades[i].HiddenUpgrade.Id != UpgradeId.Compost)
+                {
+                    options.Add((false, 1000 + i, run.GetUpgradeSlotPrice(i)));
+                }
+            }
+            if (Scores != null)
+            {
+                // Ranked: the study's best items first; items the study found useless are not bought (they only take a slot).
+                double Value((bool Modifier, int Index, int Price) o)
+                {
+                    if (o.Index >= 1000)
+                    {
+                        // Workshop packs and services: the best option a pack could show, scaled down (the pick is a gamble).
+                        return 0.5;
+                    }
+                    var slot = run.ShopBlisterSlots[o.Index];
+                    return slot.Kind == ShopSlotKind.Modifier ? ScoreOfModifier(slot.ModifierId) : ScoreOfUpgrade(slot.HiddenUpgrade);
+                }
+                options.RemoveAll(o => Value(o) < 0.1);
+                options.Sort((a, b) => Value(b).CompareTo(Value(a)));
+            }
+            // Greedy: modifiers (blister) first, cheapest first. Random: shuffled.
+            else if (_policy != BotPolicy.Random)
+            {
+                options.Sort((a, b) =>
+                {
+                    int byKind = (b.Modifier ? 1 : 0).CompareTo(a.Modifier ? 1 : 0);
+                    return byKind != 0 ? byKind : a.Price.CompareTo(b.Price);
+                });
+            }
+            else
+            {
+                for (int i = options.Count - 1; i > 0; i--)
+                {
+                    int j = _rng.Next(i + 1);
+                    var tmp = options[i]; options[i] = options[j]; options[j] = tmp;
+                }
+            }
+
+            for (int i = 0; i < options.Count; i++)
+            {
+                int lueurBefore = run.Lueur;
+                bool bought = options[i].Index >= 1000 ? run.BuyUpgradeSlot(options[i].Index - 1000) : run.BuyBlisterSlot(options[i].Index);
+                if (bought)
+                {
+                    if (options[i].Index >= 1000)
+                    {
+                        _workshopBought.Add(options[i].Index - 1000);
+                    }
+                    result.PollenSpent += lueurBefore - run.Lueur;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private bool ResolvePending(RunManager run)
+        {
+            for (int guard = 0; guard < 10 && run.PendingUpgrade != null; guard++)
+            {
+                var pending = run.PendingUpgrade;
+                bool ok;
+                if (run.PendingMasteryOptions.Count > 0)
+                {
+                    ok = run.ResolveMasteryChoice(_rng.Next(run.PendingMasteryOptions.Count));
+                }
+                else if (pending.Id == UpgradeId.RandomPiece || pending.Id == UpgradeId.SeedPack || pending.Id == UpgradeId.WildPack)
+                {
+                    ok = run.ResolveUpgradePieceChoice(_rng.Next(run.PendingUpgradePieceCandidates.Count));
+                }
+                else if (pending.Id == UpgradeId.SproutPack || pending.Id == UpgradeId.Forge)
+                {
+                    int upgradePick = _rng.Next(Math.Max(1, run.PendingPackUpgrades.Count));
+                    if (Scores != null)
+                    {
+                        double best = double.MinValue;
+                        for (int i = 0; i < run.PendingPackUpgrades.Count; i++)
+                        {
+                            double v = ScoreOfUpgrade(run.PendingPackUpgrades[i]);
+                            if (v > best) { best = v; upgradePick = i; }
+                        }
+                    }
+                    ok = run.PendingPackUpgrades.Count > 0 && run.ResolvePackUpgradeChoice(upgradePick);
+                    if (!ok) { ok = run.SkipPack(); }
+                }
+                else if (pending.Id == UpgradeId.Transplant)
+                {
+                    if (run.PendingTransplantChosen.HasValue)
+                    {
+                        ok = run.PendingUpgradeTileCandidates.Count > 0 && run.ResolveTransplantTarget(run.PendingUpgradeTileCandidates[_rng.Next(run.PendingUpgradeTileCandidates.Count)]);
+                    }
+                    else
+                    {
+                        ok = run.PendingTransplantSources.Count > 0 && run.ResolveTransplantSource(_rng.Next(run.PendingTransplantSources.Count));
+                    }
+                    if (!ok) { ok = run.AbandonPending(); }
+                }
+                else if (pending.Id == UpgradeId.FertilizerPack)
+                {
+                    int modifierPick = _rng.Next(Math.Max(1, run.PendingPackModifiers.Count));
+                    if (Scores != null)
+                    {
+                        double best = double.MinValue;
+                        for (int i = 0; i < run.PendingPackModifiers.Count; i++)
+                        {
+                            double v = ScoreOfModifier(run.PendingPackModifiers[i]);
+                            if (v > best) { best = v; modifierPick = i; }
+                        }
+                    }
+                    ok = run.PendingPackModifiers.Count > 0 && run.ResolvePackModifierChoice(modifierPick);
+                    if (!ok && run.PendingUpgrade == pending) { ok = run.SkipPack(); }
+                }
+                else if (pending.Id == UpgradeId.ModifierUpgrade)
+                {
+                    ok = run.ActiveModifiers.Count > 0 && run.ResolveModifierUpgradeChoice(_rng.Next(run.ActiveModifiers.Count));
+                }
+                else if (pending.Pool == UpgradePool.Grid)
+                {
+                    var chosen = new List<int>();
+                    var candidates = run.PendingUpgradeTileCandidates;
+                    int take = Math.Min(EconomyConstants.ShopTileChoiceCount, candidates.Count);
+                    var pool = new List<int>(candidates);
+                    for (int i = 0; i < take; i++)
+                    {
+                        int pick = _rng.Next(pool.Count);
+                        chosen.Add(pool[pick]);
+                        pool.RemoveAt(pick);
+                    }
+                    ok = run.ResolveUpgradeTileChoice(chosen);
+                }
+                else if (pending.Id == UpgradeId.Compost)
+                {
+                    var compostable = run.PendingUpgradeTileCandidates;
+                    ok = compostable.Count > 0 && run.ResolveCompostChoice(compostable[_rng.Next(compostable.Count)]);
+                }
+                else if (pending.RequiresSubChoice && run.PendingUpgradeTypeCandidates.Count > 0)
+                {
+                    var type = run.PendingUpgradeTypeCandidates[_rng.Next(run.PendingUpgradeTypeCandidates.Count)];
+                    PieceColor target = PieceColor.Coral;
+                    foreach (var c in PieceColorUtility.BaseColors)
+                    {
+                        if (c != type.Color) { target = c; break; }
+                    }
+                    ShapeId addShape = ShapeId.Single;
+                    PieceColor addColor = PieceColor.Coral;
+                    if (pending.Id == UpgradeId.ReplacePiece)
+                    {
+                        var repl = run.Upgrades.GetReplacementCandidateTypesFor(run.Deck, type.Shape, type.Color);
+                        if (repl.Count > 0)
+                        {
+                            addShape = repl[0].Shape;
+                            addColor = repl[0].Color;
+                        }
+                    }
+                    ok = run.ResolveUpgradeSubChoice(new UpgradeSubChoice(type.Shape, type.Color, target, addShape, addColor));
+                }
+                else
+                {
+                    return false;
+                }
+                if (!ok && run.PendingUpgrade == pending)
+                {
+                    return false;
+                }
+            }
+            return run.PendingUpgrade == null;
+        }
+    }
+}
