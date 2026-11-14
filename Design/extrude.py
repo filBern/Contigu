@@ -10,7 +10,8 @@ LAYERS = 6
 
 # (svg folder, png folder, optional name filter)
 SETS = [
-    ('Icons/traits', '../Assets/Resources/Icons/Traits'),
+    # Sprout badges: a lighter (brown, not black) extrusion, since they sit on colored tiles and the plain dark depth read as a black outline.
+    ('Icons/traits', '../Assets/Resources/Icons/Traits', None, 1.75),
     ('Icons/glyphs', '../Assets/Resources/Icons/UpgradeGlyphs'),
     ('Icons/upgrades', '../Assets/Resources/Icons/Upgrades'),
     ('UI', '../Assets/Resources/Icons', ['Shield', 'ShieldShard']),
@@ -20,7 +21,7 @@ SETS = [
 OUT = 'extruded'
 os.makedirs(OUT, exist_ok=True)
 
-def wrap(src, w, h):
+def wrap(src, w, h, shade=1.0):
     m = re.search(r'<svg([^>]*)>(.*)</svg>', src, re.S)
     attrs, inner = m.group(1), m.group(2)
     vb = re.search(r'viewBox="([^"]+)"', attrs)
@@ -33,13 +34,14 @@ def wrap(src, w, h):
         layers += '<svg x="%.2f" y="%.2f" width="%.2f" height="%.2f" viewBox="%s" filter="url(#dk)">%s</svg>' % (x0, y0 + k * step, w * SCALE, h * SCALE, vbox, inner)
     front = '<svg x="%.2f" y="%.2f" width="%.2f" height="%.2f" viewBox="%s">%s</svg>' % (x0, y0, w * SCALE, h * SCALE, vbox, inner)
     return ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %g %g" width="%g" height="%g"><defs>'
-            '<filter id="dk" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.32 0 0 0 0  0 0.30 0 0 0  0 0 0.34 0 0  0 0 0 1 0"/></filter></defs>%s%s</svg>'
-            ) % (w, h, w, h, layers, front)
+            '<filter id="dk" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="%.2f 0 0 0 0  0 %.2f 0 0 0  0 0 %.2f 0 0  0 0 0 1 0"/></filter></defs>%s%s</svg>'
+            ) % (w, h, w, h, 0.32 * shade, 0.30 * shade, 0.34 * shade, layers, front)
 
 jobs = []
 for entry in SETS:
     svg_dir, png_dir = entry[0], entry[1]
     only = entry[2] if len(entry) > 2 else None
+    shade = entry[3] if len(entry) > 3 else 1.0
     for png in sorted(glob.glob(png_dir + '/*.png')):
         name = os.path.splitext(os.path.basename(png))[0]
         if only is not None and name not in only:
@@ -49,7 +51,7 @@ for entry in SETS:
             continue
         w, h = [int(v) for v in subprocess.check_output(['identify', '-format', '%w %h', png]).decode().split()]
         key = '%s__%s' % (os.path.basename(png_dir), name)
-        open('%s/%s.svg' % (OUT, key), 'w').write(wrap(open(svg).read(), w, h))
+        open('%s/%s.svg' % (OUT, key), 'w').write(wrap(open(svg).read(), w, h, shade))
         jobs.append([key, png, w, h])
 
 js = """
