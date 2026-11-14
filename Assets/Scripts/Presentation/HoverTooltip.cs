@@ -62,11 +62,7 @@ namespace Contigu.Presentation
         public void SetUpgradeCard(UpgradeDefinition def, string reason = null)
         {
             _chips = new System.Collections.Generic.List<TooltipChip>();
-            // The pool box says what kind of upgrade it is, except for a sprout (the Grid pool), which is implicit.
-            if (def.Pool != UpgradePool.Grid)
-            {
-                _chips.Add(new TooltipChip(UpgradeVisualDefaults.GetPoolLabel(def.Pool), UpgradeVisualDefaults.GetPoolColor(def.Pool)));
-            }
+            // No pool box any more: what kind of upgrade it is goes without saying (the pool's color is on the shop item's marker).
             // The card replaces the plain text subtitle; the rarity colors the line under the title.
             _subtitle = null;
             _subtitleColor = UpgradeVisualDefaults.GetRarityColor(def.Rarity);
