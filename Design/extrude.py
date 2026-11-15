@@ -14,7 +14,7 @@ SETS = [
     ('Icons/glyphs', '../Assets/Resources/Icons/UpgradeGlyphs', None, 1.75),
     ('Icons/upgrades', '../Assets/Resources/Icons/Upgrades'),
     ('UI', '../Assets/Resources/Icons', ['Shield', 'ShieldShard']),
-    ('Characters', '../Assets/Resources/Characters'),
+    # (Sprig, Characters/, is drawn flat with soft shadows now: Design/Characters/generate_sprig.py)
     ('Title', '../Assets/Resources/Title'),
 ]
 OUT = 'extruded'

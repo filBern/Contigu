@@ -1,57 +1,95 @@
 #!/usr/bin/env python3
-"""Sprig, the garden guide: a little seed sprite with a sprout on its head. 4 expressions -> Assets/Resources/Characters/Sprig_<Expr>.png"""
+"""Sprig, the garden guide: a little seed sprite with a sprout on its head, drawn in the garden style (no dark outline: soft gradients, a soft shadow, glossy eyes).
+4 expressions -> Sprig_<Expr>.svg here and Assets/Resources/Characters/Sprig_<Expr>.png (256 px, rendered with Playwright: NODE_PATH=$(npm root -g) python3 generate_sprig.py)."""
 import os, subprocess
-O = '#13212e'
+
 OUT = '../../Assets/Resources/Characters'
-CHROME = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
-S = 'stroke="%s" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"' % O
-S4 = S.replace('6"', '4"', 1)
+INK = '#3a2a1c'
+DEFS = ('<defs>'
+        '<linearGradient id="body" x1="0.15" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#fbe8bd"/><stop offset="0.5" stop-color="#ebca8a"/><stop offset="1" stop-color="#c89a58"/></linearGradient>'
+        '<linearGradient id="bib" x1="0" y1="0" x2="0.8" y2="1"><stop offset="0" stop-color="#9be8b0"/><stop offset="1" stop-color="#4fae70"/></linearGradient>'
+        '<linearGradient id="boot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a06a38"/><stop offset="1" stop-color="#5e3b1c"/></linearGradient>'
+        '<linearGradient id="leafA" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5bb04a"/><stop offset="1" stop-color="#b6ec72"/></linearGradient>'
+        '<linearGradient id="leafB" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3f8f3a"/><stop offset="1" stop-color="#7fd05a"/></linearGradient>'
+        '<filter id="soft" x="-20%" y="-15%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#0c1620" flood-opacity="0.5"/></filter>'
+        '<filter id="blur"><feGaussianBlur stdDeviation="2.2"/></filter>'
+        '</defs>')
+
+def eyes(look=0, sad=False):
+    out = ''
+    for cx in (104, 152):
+        out += '<ellipse cx="%d" cy="136" rx="13.5" ry="16.5" fill="#fffdf5"/>' % cx
+        out += '<ellipse cx="%d" cy="%d" rx="9" ry="10.5" fill="%s"/>' % (cx + 1, 139 + look, INK)
+        out += '<circle cx="%d" cy="%d" r="3.6" fill="#fff"/><circle cx="%d" cy="%d" r="1.8" fill="#fff" opacity="0.85"/>' % (cx + 4, 134 + look, cx - 2, 143 + look)
+    return out
+
+def cheeks():
+    return ('<g filter="url(#blur)"><ellipse cx="84" cy="161" rx="13" ry="8.5" fill="#ff8fa3" opacity="0.8"/><ellipse cx="172" cy="161" rx="13" ry="8.5" fill="#ff8fa3" opacity="0.8"/></g>')
 
 def face(expr):
-    cheeks = '<ellipse cx="86" cy="158" rx="12" ry="8" fill="#ff9aa8" opacity="0.85"/><ellipse cx="170" cy="158" rx="12" ry="8" fill="#ff9aa8" opacity="0.85"/>'
-    def eyes(dy=0, pupil_dy=0):
-        e = ''
-        for cx in (104, 152):
-            e += '<ellipse cx="%d" cy="%d" rx="12" ry="15" fill="#fff7e8" stroke="%s" stroke-width="4"/>' % (cx, 138 + dy, O)
-            e += '<circle cx="%d" cy="%d" r="7" fill="%s"/><circle cx="%d" cy="%d" r="2.5" fill="#fff"/>' % (cx + 1, 140 + dy + pupil_dy, O, cx + 3, 136 + dy)
-        return e
     if expr == 'Happy':
-        return eyes() + cheeks + '<path d="M110 166 Q128 186 146 166" fill="#7a2e2e" %s/>' % S4
+        return eyes() + cheeks() + '<path d="M108 165 Q128 192 148 165 Q128 174 108 165 Z" fill="#8a3a3a"/><path d="M116 176 Q128 185 140 176 Q128 172 116 176 Z" fill="#ff8f9a"/>'
     if expr == 'Neutral':
-        return eyes() + cheeks + '<ellipse cx="128" cy="172" rx="8" ry="9" fill="#7a2e2e" stroke="%s" stroke-width="4"/>' % O
+        return eyes() + cheeks() + '<ellipse cx="128" cy="173" rx="7.5" ry="8.5" fill="#8a3a3a"/><ellipse cx="128" cy="177" rx="4.5" ry="3.5" fill="#ff8f9a"/>'
     if expr == 'Sad':
-        brows = '<path d="M88 124 L116 112 M168 124 L140 112" stroke="%s" stroke-width="5" stroke-linecap="round"/>' % O
-        tear = '<path d="M168 156 C162 168 174 168 168 156Z" fill="#7cc7e8" stroke="%s" stroke-width="2.5"/>' % O
-        return eyes(pupil_dy=3) + brows + cheeks + '<path d="M112 178 Q128 164 144 178" fill="none" %s/>' % S4 + tear
-    if expr == 'Cheer':
-        arcs = ''.join('<path d="M%d 142 Q%d 124 %d 142" fill="none" %s/>' % (cx - 13, cx, cx + 13, S4) for cx in (104, 152))
-        return arcs + cheeks + '<path d="M104 164 Q128 200 152 164Z" fill="#7a2e2e" %s/><path d="M114 178 Q128 190 142 178" fill="#ff9aa8"/>' % S4
+        brows = '<path d="M88 122 L116 112 M168 122 L140 112" stroke="#6a4424" stroke-width="5" stroke-linecap="round"/>'
+        tear = '<path d="M170 158 C164 170 176 170 170 158 Z" fill="#8fd6f5"/>'
+        return eyes(look=3) + brows + cheeks() + '<path d="M112 180 Q128 164 144 180" fill="none" stroke="#8a3a3a" stroke-width="5" stroke-linecap="round"/>' + tear
+    # Cheer: eyes shut in joy, a big open mouth
+    arcs = ''.join('<path d="M%d 142 Q%d 122 %d 142" fill="none" stroke="%s" stroke-width="5.5" stroke-linecap="round"/>' % (cx - 13, cx, cx + 13, INK) for cx in (104, 152))
+    return arcs + cheeks() + '<path d="M102 162 Q128 204 154 162 Z" fill="#8a3a3a"/><path d="M114 182 Q128 194 142 182 Q128 176 114 182 Z" fill="#ff8f9a"/>'
+
+def arms(expr):
+    left, right = {'Cheer': ('M72 172 Q42 142 50 112', 'M184 172 Q214 142 206 112'),
+                   'Sad': ('M74 180 Q62 206 70 222', 'M182 180 Q194 206 186 222')}.get(expr, ('M72 178 Q50 190 54 214', 'M184 178 Q206 190 202 214'))
+    out = ''
+    for d in (left, right):
+        out += '<path d="%s" fill="none" stroke="#e4c07e" stroke-width="15" stroke-linecap="round"/>' % d
+        # a little hand at the end of the arm
+        x, y = d.split()[-2], d.split()[-1]
+        out += '<circle cx="%s" cy="%s" r="9.5" fill="#f1d598"/>' % (x, y)
+    return out
 
 def svg(expr):
-    arms = {'Cheer': ('M72 170 Q44 140 52 112', 'M184 170 Q212 140 204 112'),
-            'Sad': ('M74 178 Q62 204 70 220', 'M182 178 Q194 204 186 220')}.get(expr, ('M72 176 Q50 188 54 212', 'M184 176 Q206 188 202 212'))
-    body = ('<ellipse cx="96" cy="236" rx="22" ry="10" fill="#6b4a2a" %s/><ellipse cx="160" cy="236" rx="22" ry="10" fill="#6b4a2a" %s/>' % (S, S) +
-            '<path d="%s" fill="none" stroke="%s" stroke-width="16" stroke-linecap="round"/><path d="%s" fill="none" stroke="%s" stroke-width="16" stroke-linecap="round"/>' % (arms[0], O, arms[1], O) +
-            '<path d="%s" fill="none" stroke="#e8c98a" stroke-width="7" stroke-linecap="round"/><path d="%s" fill="none" stroke="#e8c98a" stroke-width="7" stroke-linecap="round"/>' % (arms[0], arms[1]) +
-            '<path d="M128 74 C190 74 200 150 190 196 C182 238 74 238 66 196 C56 150 66 74 128 74Z" fill="#e8c98a" %s/>' % S +
-            '<path d="M84 100 C92 84 108 78 120 78" fill="none" stroke="#fff7e8" stroke-width="6" stroke-linecap="round" opacity="0.7"/>' +
-            # overalls bib
-            '<path d="M84 200 C84 190 96 188 128 188 C160 188 172 190 172 200 C176 226 80 226 84 200Z" fill="#5a9e45" %s/>' % S4 +
-            '<circle cx="128" cy="204" r="5" fill="#ffd54a" stroke="%s" stroke-width="2.5"/>' % O +
-            # sprout
-            '<path d="M128 76 C128 54 130 44 134 30" fill="none" %s/>' % S.replace('stroke-width="6"', 'stroke-width="8"') +
-            '<path d="M128 76 C128 54 130 44 134 30" fill="none" stroke="#5a9e45" stroke-width="3"/>' +
-            '<path d="M133 36 C150 10 184 12 192 22 C186 48 158 52 133 36Z" fill="#7bc65a" %s/><path d="M138 36 C156 26 170 24 184 24" fill="none" stroke="#d9f2b0" stroke-width="3" stroke-linecap="round"/>' % S4 +
-            '<path d="M131 46 C112 28 84 30 74 40 C82 62 108 64 131 46Z" fill="#5a9e45" %s/>' % S4 +
-            face(expr))
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">%s</svg>' % body
+    body = (
+        '<ellipse cx="128" cy="244" rx="82" ry="9" fill="#0c1620" opacity="0.3"/>'
+        '<g filter="url(#soft)">'
+        '<ellipse cx="97" cy="236" rx="23" ry="11" fill="url(#boot)"/><ellipse cx="159" cy="236" rx="23" ry="11" fill="url(#boot)"/>'
+        '<ellipse cx="90" cy="232" rx="9" ry="3.5" fill="#d9a066" opacity="0.6"/><ellipse cx="152" cy="232" rx="9" ry="3.5" fill="#d9a066" opacity="0.6"/>'
+        + arms(expr) +
+        '<path d="M128 62 C196 62 212 140 200 190 C192 232 64 232 56 190 C44 140 60 62 128 62 Z" fill="url(#body)"/>'
+        '<path d="M170 78 C206 116 206 176 190 214 C202 196 214 150 196 108 C190 94 182 84 170 78 Z" fill="#a8763a" opacity="0.22"/>'
+        '<path d="M80 104 C88 84 106 74 122 74" fill="none" stroke="#fffaf0" stroke-width="8" stroke-linecap="round" opacity="0.7"/>'
+        # overalls: a bib with a little flower pocket
+        '<path d="M80 202 C80 192 98 187 128 187 C158 187 176 192 176 202 C180 231 76 231 80 202 Z" fill="url(#bib)"/><path d="M92 195 C106 191 150 191 164 195" fill="none" stroke="#c9f6d4" stroke-width="3" stroke-linecap="round" opacity="0.7"/>'
+        '<g transform="translate(128 206)">' + ''.join('<circle cx="%g" cy="%g" r="4.2" fill="#fff6e6"/>' % (6 * __import__('math').cos(__import__('math').radians(a)), 6 * __import__('math').sin(__import__('math').radians(a))) for a in range(0, 360, 72)) + '<circle r="3.4" fill="#ffc83a"/></g>'
+        # the sprout
+        '<path d="M128 68 C127 52 129 44 134 30" fill="none" stroke="#4f9a3c" stroke-width="7" stroke-linecap="round"/>'
+        '<path d="M133 38 C152 8 190 10 199 22 C192 52 160 58 133 38 Z" fill="url(#leafA)"/><path d="M140 38 C158 26 174 24 190 24" fill="none" stroke="#e4f9b8" stroke-width="3" stroke-linecap="round" opacity="0.8"/>'
+        '<path d="M131 50 C110 28 80 32 69 44 C78 68 108 70 131 50 Z" fill="url(#leafB)"/><path d="M122 50 C106 42 90 40 78 44" fill="none" stroke="#c9f09a" stroke-width="3" stroke-linecap="round" opacity="0.7"/>'
+        '</g>' + face(expr))
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">%s%s</svg>\n' % (DEFS, body)
 
-os.makedirs(OUT, exist_ok=True)
-for e in ['Happy', 'Neutral', 'Sad', 'Cheer']:
-    s = svg(e)
-    open('Sprig_%s.svg' % e, 'w').write(s)
-    open('_s.html', 'w').write('<html><body style="margin:0;background:transparent">%s</body></html>' % s)
-    subprocess.run([CHROME, '--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars', '--default-background-color=00000000',
-                    '--window-size=256,556', '--screenshot=_s.png', 'file://' + os.path.abspath('_s.html')], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.run(['convert', '_s.png', '-crop', '256x256+0+0', '+repage', '%s/Sprig_%s.png' % (OUT, e)])
-os.remove('_s.html'); os.remove('_s.png')
+if __name__ == '__main__':
+    os.makedirs(OUT, exist_ok=True)
+    names = ['Happy', 'Neutral', 'Sad', 'Cheer']
+    for e in names:
+        open('Sprig_%s.svg' % e, 'w').write(svg(e))
+    js = """
+const { chromium } = require('playwright');
+const fs = require('fs');
+(async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 256, height: 256 }, deviceScaleFactor: 1 });
+  for (const e of %s) {
+    await p.setContent('<html><body style="margin:0;background:transparent">' + fs.readFileSync('Sprig_' + e + '.svg', 'utf8') + '</body></html>');
+    await p.screenshot({ path: '%s/Sprig_' + e + '.png', omitBackground: true, clip: { x: 0, y: 0, width: 256, height: 256 } });
+  }
+  await b.close();
+})();
+""" % (names, OUT)
+    open('_render.js', 'w').write(js)
+    env = dict(os.environ, NODE_PATH=subprocess.check_output(['npm', 'root', '-g']).decode().strip())
+    subprocess.run(['node', '_render.js'], check=True, env=env)
+    os.remove('_render.js')
+    print('Sprig:', ', '.join(names))
