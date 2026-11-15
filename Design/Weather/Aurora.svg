@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7be0b0"/><stop offset="1" stop-color="#2f9a86"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9a5ff"/><stop offset="1" stop-color="#6a5ac8"/></linearGradient>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="2.4" flood-color="#1a0f08" flood-opacity="0.55"/></filter>
+  </defs>
+  <g filter="url(#s)">
+    <path d="M18 84 C14 56 24 36 40 18 C38 40 46 52 44 84 Z" fill="url(#g2)"/>
+    <path d="M40 84 C36 52 50 30 66 10 C66 36 76 50 70 84 Z" fill="url(#g1)"/>
+    <path d="M66 84 C64 56 80 36 98 24 C92 44 102 60 96 84 Z" fill="url(#g2)" opacity="0.9"/>
+    <path d="M12 98 L64 74 L116 98 Z" fill="#f4f6fb"/>
+    <path d="M64 74 L116 98 L84 98 Z" fill="#c7d3e6"/>
+    <path d="M96 12 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z M22 28 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#fff4c8"/>
+  </g>
+</svg>
