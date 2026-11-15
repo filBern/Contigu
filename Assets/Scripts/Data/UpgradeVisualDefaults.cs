@@ -35,12 +35,6 @@ namespace Contigu.Data
             return LoadLoose("Icons/UpgradeGlyphs/" + id);
         }
 
-        /// <summary>An upgrade as the shop shows it: a garden plant-marker (a wooden tag on a stake, its pool's color on top, the motif on a plaque), Resources/Icons/UpgradeMarkers/&lt;UpgradeId&gt;.png. Falls back to the bare glyph, then the sign icon.</summary>
-        public static Sprite GetMarker(UpgradeId id)
-        {
-            return LoadLoose("Icons/UpgradeMarkers/" + id) ?? GetGlyph(id) ?? GetIcon(id);
-        }
-
         /// <summary>A Workshop object's own picture (a crate per pack, the compost bucket, the anvil): Resources/Icons/Workshop/&lt;name&gt;.png. Null if missing.</summary>
         public static Sprite GetWorkshopArt(string name)
         {

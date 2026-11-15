@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One tiny bold icon per sprout trait (tile upgrade) + the poison marker. 64px target, so: one chip color, one glyph.
+"""One tiny bold icon per sprout trait (tile upgrade) + the poison marker, bare glyphs (the chip colors are kept in T for the rings of older uses).
 Output: traits/<PieceTraitKind>.svg and traits/Poison.svg"""
 import math, os
 from outline import strip_outline
@@ -21,6 +21,12 @@ def chip(col, glyph):
             '<rect x="3.5" y="3.5" width="57" height="57" rx="14" fill="%s" stroke="none" data-edge="%s"/>'
             '<rect x="8.5" y="8.5" width="47" height="47" rx="10" fill="none" stroke="%s" stroke-width="3.5"/>'
             '%s</svg>\n') % (SOIL, EDGE, _ring(col), glyph)
+def bare(glyph):
+    """The sprout's icon alone (no chip, no medallion, no outline): the glyph with a soft shadow, rendered by render_traits.py."""
+    return strip_outline('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">'
+                         '<defs><filter id="ts" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2" stdDeviation="1.3" flood-color="#1a0f08" flood-opacity="0.75"/></filter></defs>'
+                         '<g filter="url(#ts)"><g transform="translate(32 31) scale(0.94) translate(-32 -32)">@@</g></g></svg>\n'.replace('@@', glyph))
+
 def g(s, fill=W, sw=3.5): return '<g fill="%s" stroke="%s" stroke-width="%g" stroke-linejoin="round" stroke-linecap="round">%s</g>' % (fill, O, sw, s)
 def star(cx, cy, r, n=4, inner=0.4):
     pts = []
@@ -155,5 +161,5 @@ T['Poison'] = ('#4a2f66', skull)
 if __name__ == '__main__':
     os.makedirs('traits', exist_ok=True)
     for k, (col, glyph) in T.items():
-        open('traits/%s.svg' % k, 'w').write(strip_outline(chip(col, glyph)))
+        open('traits/%s.svg' % k, 'w').write(bare(glyph))
     print(len(T))

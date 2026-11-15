@@ -508,10 +508,9 @@ M['u_colormastery'] = lambda: rect(10, 26, 80, 46, '#c58a4a', 14) + ''.join(circ
 # ---- tile upgrades with flat placement points: the sign shows the same glyph as the trait's badge
 import generate_traits as GT
 def _trait_motif(kind):
+    # The sprout's bare glyph (the chip behind it is gone: tile upgrades are the icon alone now).
     col, glyph = GT.T[kind]
-    svg = GT.chip(col, glyph)
-    inner = svg[svg.index('>') + 1: svg.rindex('</svg>')]
-    return '<svg x="10" y="3" width="80" height="80" viewBox="0 0 64 64">%s</svg>' % inner
+    return '<svg x="10" y="3" width="80" height="80" viewBox="0 0 64 64">%s</svg>' % glyph
 M['u_pip'] = lambda: _trait_motif('Pip')
 M['u_lucky'] = lambda: _trait_motif('Lucky')
 M['u_companion'] = lambda: _trait_motif('Companion')

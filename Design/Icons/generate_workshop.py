@@ -63,24 +63,10 @@ def anvil():
     s += '<path d="M104 168 L108 192" stroke="#aab2bd" stroke-width="4" stroke-linecap="round" opacity="0.7"/>\n'
     return s + '</svg>\n'
 
-def marker(motif, pool):
-    """An upgrade in the shop: a garden plant-marker: a wooden tag on a stake, a band in the pool's color on top, the motif on a cream plaque."""
-    col = POOL_UI[pool]
-    s = HEAD
-    s += '<ellipse cx="128" cy="246" rx="62" ry="8" fill="#2a1a0c" opacity="0.3"/>\n'
-    s += '<g filter="url(#soft)"><path d="M116 176 H140 V228 L128 248 L116 228 Z" fill="url(#wood2)"/><rect x="26" y="14" width="204" height="172" rx="24" fill="url(#wood)"/></g>\n'
-    s += '<path d="M128 214 V236" stroke="#8a5a2b" stroke-width="3" opacity="0.4"/>\n'
-    s += '<path d="M26 40 A24 24 0 0 1 50 14 H206 A24 24 0 0 1 230 40 V52 H26 Z" fill="%s"/><rect x="40" y="20" width="176" height="8" rx="4" fill="#fff" opacity="0.38"/>\n' % col
-    s += plaque(44, 62, 168, 112, col, motif, 1.05)
-    return s + '</svg>\n'
-
 if __name__ == '__main__':
     os.makedirs('glyphs', exist_ok=True); os.makedirs('workshop', exist_ok=True)
     for k, (m, pool) in U.items():
         open('glyphs/%s.svg' % k, 'w').write(glyph(M[m]()))
-    os.makedirs('markers', exist_ok=True)
-    for k, (m, pool) in U.items():
-        open('markers/%s.svg' % k, 'w').write(marker(M[m](), pool))
     open('workshop/SeedPack.svg', 'w').write(crate(M['u_seedpack'](), POOL['Bank']))
     open('workshop/SproutPack.svg', 'w').write(crate(M['u_sproutpack'](), POOL['Grid']))
     open('workshop/FertilizerPack.svg', 'w').write(crate(M['u_fertpack'](), POOL['Modifier']))

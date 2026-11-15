@@ -296,7 +296,7 @@ namespace Contigu.Presentation
             var entries = new List<ChoiceEntry>();
             foreach (var upgrade in _run.PendingPackUpgrades)
             {
-                var sprite = UpgradeVisualDefaults.GetMarker(upgrade.Id);
+                var sprite = UpgradeVisualDefaults.GetGlyph(upgrade.Id);
                 string body = TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgrade.Description, 14), upgrade.Id);
                 entries.Add(new ChoiceEntry
                 {

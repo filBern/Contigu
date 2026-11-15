@@ -145,7 +145,7 @@ namespace Contigu.Presentation
             UIFactory.SetAnchor(badgeTraitOrigin.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f));
             badgeTraitOrigin.rectTransform.pivot = new Vector2(1f, 1f);
             // Proportional to the plot (about a third of it, like the badges on the hand's pieces), never smaller than 20.
-            float traitBadgeSize = Mathf.Max(20f, _builtCellSize * 0.34f);
+            float traitBadgeSize = Mathf.Max(25f, _builtCellSize * 0.425f);   // 25% bigger than before (0.34 / 20): the icon stands alone, without a medallion
             badgeTraitOrigin.rectTransform.sizeDelta = new Vector2(traitBadgeSize, traitBadgeSize);
             // Flush in the plot's top-right corner (it floated 3 units in from it), and without the black rim of the old chips: the badge art is its own medallion now.
             badgeTraitOrigin.rectTransform.anchoredPosition = Vector2.zero;

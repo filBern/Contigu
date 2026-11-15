@@ -10,8 +10,7 @@ LAYERS = 6
 
 # (svg folder, png folder, optional name filter)
 SETS = [
-    # Sprout badges: a lighter (brown, not black) extrusion, since they sit on colored tiles and the plain dark depth read as a black outline.
-    ('Icons/traits', '../Assets/Resources/Icons/Traits', None, 1.75),
+    # (the sprout badges, Icons/traits, are bare glyphs now: Design/Icons/render_traits.py renders them)
     ('Icons/glyphs', '../Assets/Resources/Icons/UpgradeGlyphs', None, 1.75),
     ('Icons/upgrades', '../Assets/Resources/Icons/Upgrades'),
     ('UI', '../Assets/Resources/Icons', ['Shield', 'ShieldShard']),
