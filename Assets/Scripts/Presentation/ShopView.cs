@@ -977,6 +977,19 @@ namespace Contigu.Presentation
         /// <summary>Share of its cell a tile-upgrade glyph fills in the shop (fertilizer sacks leave margin of their own).</summary>
         public static float UpgradeGlyphShopScale { get { return UITweaks.Current.upgradeGlyphScale; } }
 
+        /// <summary>The tile-upgrade glyphs are drawn 50% bigger than the cell share above and stand on the shelf: the glyph picture has a transparent margin under its motif, so the image is lowered by that margin and the motif touches the plank.</summary>
+        public const float UpgradeGlyphBoost = 1.5f;
+        private const float GlyphBottomMargin = 0.14f;   // share of the glyph image left empty under its motif
+
+        public static void PlaceShopGlyph(RectTransform glyph)
+        {
+            float size = UpgradeGlyphShopScale * UpgradeGlyphBoost;
+            float bottom = -GlyphBottomMargin * size;
+            glyph.anchorMin = new Vector2(0.5f - size * 0.5f, bottom);
+            glyph.anchorMax = new Vector2(0.5f + size * 0.5f, bottom + size);
+            glyph.offsetMin = glyph.offsetMax = Vector2.zero;
+        }
+
         private void BuildBlisterItem(RunManager run, int index, ShopSlot slot)
         {
             int price = run.GetBlisterSlotPrice(index);
@@ -1007,10 +1020,8 @@ namespace Contigu.Presentation
                 sign.sprite = UpgradeVisualDefaults.GetGlyph(upgradeDef.Id) ?? UpgradeVisualDefaults.GetIcon(upgradeDef.Id);
                 sign.preserveAspect = true;
                 sign.raycastTarget = false;
-                // A bit smaller than the cell: the glyphs fill their whole square, the fertilizer sacks do not, so they looked bigger.
-                sign.rectTransform.anchorMin = new Vector2(0.5f - UpgradeGlyphShopScale * 0.5f, 0.5f - UpgradeGlyphShopScale * 0.5f);
-                sign.rectTransform.anchorMax = new Vector2(0.5f + UpgradeGlyphShopScale * 0.5f, 0.5f + UpgradeGlyphShopScale * 0.5f);
-                sign.rectTransform.offsetMin = sign.rectTransform.offsetMax = Vector2.zero;
+                // 50% bigger than before and standing on the shelf (see PlaceShopGlyph).
+                PlaceShopGlyph(sign.rectTransform);
                 hover.Init(_tooltip, upgradeDef.Name, TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgradeDef.Description, 14), upgradeDef.Id),
                     ShopReason(Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity), UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", "")), blocked ? (gardenFull ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : Loc.T("shop.unavailableWhy")) : null, price - run.Lueur), UITheme.TextMuted);
                 hover.SetUpgradeCard(upgradeDef, blocked ? (gardenFull ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : Loc.T("shop.unavailableWhy")) : price > run.Lueur ? Loc.T("shop.needPollen", price - run.Lueur) : null);

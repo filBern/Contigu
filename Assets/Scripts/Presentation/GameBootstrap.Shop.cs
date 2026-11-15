@@ -397,9 +397,7 @@ namespace Contigu.Presentation
             image.preserveAspect = true;
             image.raycastTarget = false;
             UIFactory.AddDropShadow(image, 4f);
-            image.rectTransform.anchorMin = new Vector2(0.5f - ShopView.UpgradeGlyphShopScale * 0.5f, 0.5f - ShopView.UpgradeGlyphShopScale * 0.5f);
-            image.rectTransform.anchorMax = new Vector2(0.5f + ShopView.UpgradeGlyphShopScale * 0.5f, 0.5f + ShopView.UpgradeGlyphShopScale * 0.5f);
-            image.rectTransform.offsetMin = image.rectTransform.offsetMax = Vector2.zero;
+            ShopView.PlaceShopGlyph(image.rectTransform);   // 50% bigger, standing on the shelf
         }
 
         private void ShowSeedPack(ChoiceSource source)
