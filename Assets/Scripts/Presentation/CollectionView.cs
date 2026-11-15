@@ -207,30 +207,24 @@ namespace Contigu.Presentation
 
         private void BuildCell(Entry entry, bool discovered, Vector2 center, float size)
         {
-            // A little planter per entry: a light bed for a discovered one, the dark wooden bed for one still to find.
-            var bed = UISprites.Garden(discovered ? "WoodLight" : "Wood");
-            var cell = UIFactory.CreateSlicedImage(_gridHost, "Cell", bed ?? UISprites.CardBackground);
-            cell.color = bed != null ? Color.white : discovered ? UITheme.PanelLight : new Color(0f, 0f, 0f, 0.28f);
-            UIFactory.AddDropShadow(cell, 3f, 0.4f);
+            // No bed and no outline around an entry any more: just its icon on the planks (the cell itself is an invisible, clickable square for the tooltip).
+            var cell = UIFactory.CreatePanel(_gridHost, "Cell", new Color(1f, 1f, 1f, 0f));
             cell.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             cell.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             cell.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             cell.rectTransform.anchoredPosition = center;
             cell.rectTransform.sizeDelta = new Vector2(size, size);
-            if (discovered && bed == null)
-            {
-                UIFactory.AddThickOutline(cell, UITheme.Border, 2f);
-            }
 
             if (entry.Icon != null)
             {
-                var icon = UIFactory.CreatePanel(cell.transform, "Icon", discovered ? Color.white : new Color(0.1f, 0.1f, 0.12f, 0.9f));
+                // An entry still to find shows its silhouette, dim, on the planks (the old dark bed is gone).
+                var icon = UIFactory.CreatePanel(cell.transform, "Icon", discovered ? Color.white : new Color(0.04f, 0.03f, 0.03f, 0.55f));
                 icon.sprite = entry.Icon;
                 icon.preserveAspect = true;
                 icon.raycastTarget = false;
                 UIFactory.StretchFull(icon.rectTransform);
-                icon.rectTransform.offsetMin = new Vector2(8f, 8f);
-                icon.rectTransform.offsetMax = new Vector2(-8f, -8f);
+                icon.rectTransform.offsetMin = new Vector2(2f, 2f);
+                icon.rectTransform.offsetMax = new Vector2(-2f, -2f);
                 if (discovered)
                 {
                     UIFactory.AddDropShadow(icon, 2.5f, 0.4f);
@@ -239,7 +233,7 @@ namespace Contigu.Presentation
             bool locked = entry.Unlock != null && Unlocks != null && !Unlocks.IsUnlocked(entry.Unlock.Kind, entry.Unlock.Id);
             if (!discovered)
             {
-                var mark = UIFactory.CreateText(cell.transform, "Mark", locked ? "X" : "?", Mathf.RoundToInt(size * 0.5f), new Color(1f, 1f, 1f, 0.55f));
+                var mark = UIFactory.CreateText(cell.transform, "Mark", locked ? "X" : "?", Mathf.RoundToInt(size * 0.5f), new Color(1f, 0.93f, 0.8f, 0.7f));
                 mark.raycastTarget = false;
                 UIFactory.StretchFull(mark.rectTransform);
             }
