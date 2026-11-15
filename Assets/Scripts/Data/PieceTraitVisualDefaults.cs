@@ -127,11 +127,10 @@ namespace Contigu.Data
             }
         }
 
-        /// <summary>The upgrade's effect; tile upgrades are permanent, so every non-Joker one also says it counts again each time its tile is scored.</summary>
+        /// <summary>The upgrade's effect. (Tile upgrades are permanent and count again each time their tile is scored: that goes without saying, so the text no longer repeats it.)</summary>
         public static string GetDescription(PieceTrait trait)
         {
-            string text = GetBaseDescription(trait);
-            return text.Length == 0 ? text : text + " Counts again every time this tile is scored.";
+            return GetBaseDescription(trait);
         }
 
         private static string GetBaseDescription(PieceTrait trait)
