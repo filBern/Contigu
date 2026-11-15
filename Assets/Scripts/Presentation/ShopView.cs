@@ -977,13 +977,14 @@ namespace Contigu.Presentation
         /// <summary>Share of its cell a tile-upgrade glyph fills in the shop (fertilizer sacks leave margin of their own).</summary>
         public static float UpgradeGlyphShopScale { get { return UITweaks.Current.upgradeGlyphScale; } }
 
-        /// <summary>The tile-upgrade glyphs are drawn 50% bigger than the cell share above and stand on the shelf: the glyph picture has a transparent margin under its motif, so the image is lowered by that margin and the motif touches the plank.</summary>
-        public const float UpgradeGlyphBoost = 1.5f;
-        private const float GlyphBottomMargin = 0.14f;   // share of the glyph image left empty under its motif
+        /// <summary>The glyph pictures are trimmed to their motif (see Design/Icons/fit_glyphs.py: the drawing fills about 92% of its square), so a glyph drawn at this share of
+        /// the cell's own glyph scale shows its motif about 70% bigger than the old, mostly transparent images did; it stands on the shelf (its margin under the motif is tiny).</summary>
+        public const float UpgradeGlyphFill = 0.84f;
+        private const float GlyphBottomMargin = 0.023f;   // share of the glyph image left empty under its motif
 
         public static void PlaceShopGlyph(RectTransform glyph)
         {
-            float size = UpgradeGlyphShopScale * UpgradeGlyphBoost;
+            float size = UpgradeGlyphShopScale * UpgradeGlyphFill;
             float bottom = -GlyphBottomMargin * size;
             glyph.anchorMin = new Vector2(0.5f - size * 0.5f, bottom);
             glyph.anchorMax = new Vector2(0.5f + size * 0.5f, bottom + size);
@@ -1020,7 +1021,7 @@ namespace Contigu.Presentation
                 sign.sprite = UpgradeVisualDefaults.GetGlyph(upgradeDef.Id) ?? UpgradeVisualDefaults.GetIcon(upgradeDef.Id);
                 sign.preserveAspect = true;
                 sign.raycastTarget = false;
-                // 50% bigger than before and standing on the shelf (see PlaceShopGlyph).
+                // Bigger than before and standing on the shelf (see PlaceShopGlyph).
                 PlaceShopGlyph(sign.rectTransform);
                 hover.Init(_tooltip, upgradeDef.Name, TileUpgradePreview.Append(DescriptionTextFormatter.Colorize(upgradeDef.Description, 14), upgradeDef.Id),
                     ShopReason(Loc.T("shop.upgrade", UpgradeVisualDefaults.GetRarityLabel(upgradeDef.Rarity), UpgradeVisualDefaults.GetPoolLabel(upgradeDef.Pool).Replace(" Upgrade", "")), blocked ? (gardenFull ? Loc.T("shop.fullWhy", EconomyConstants.MaxActiveModifiers) : Loc.T("shop.unavailableWhy")) : null, price - run.Lueur), UITheme.TextMuted);

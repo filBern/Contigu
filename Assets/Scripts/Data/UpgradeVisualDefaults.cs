@@ -51,9 +51,9 @@ namespace Contigu.Data
         }
 
         // Layout of a glyph on its picture, as fractions of the picture's side: one place to re-tune if the art is re-cropped.
-        private const float AnvilGlyphSize = 0.46f;
+        private const float AnvilGlyphSize = 0.35f;   // the glyph pictures are trimmed to their motif now (was 0.46 of a mostly transparent image)
         private const float AnvilGlyphDrop = 0.015f;
-        private const float CrateGlyphSize = 0.30f;
+        private const float CrateGlyphSize = 0.20f;
         private const float CratePlateDrop = 0.125f;
 
         /// <summary>Sizes and positions <paramref name="glyph"/> (a child of the picture, same square) on its <paramref name="surface"/>, for a picture <paramref name="pictureSize"/> wide.</summary>
