@@ -429,17 +429,11 @@ def bag(motif_svg, key, name, category_color, category_label, rarity):
     # glossy streaks, like the plastic of a real bag
     s += '<path d="M60 40 L88 40 L66 226 L50 226 Z" fill="#ffffff" opacity="0.18"/><path d="M178 40 L190 40 L174 226 L168 226 Z" fill="#ffffff" opacity="0.12"/>'
     s += '</g>\n'
-    # the name plate
-    px, py, pw, ph = 60, 44, 136, 40
-    s += '<g filter="url(#lab)">%s</g>\n' % _plate(plate_shape, px, py, pw, ph, CREAMY)
-    # (no lettering on the bag: a small seedling emblem sits on the plate, like a brand's logo)
-    s += ('<g transform="translate(128 %g)"><path d="M0 12 V-2" stroke="#4f9a3c" stroke-width="3.2" stroke-linecap="round" fill="none"/>'
-          '<path d="M0 3 C-14 4 -19 -4 -17 -11 C-7 -11 -1 -5 0 3 Z" fill="#6fb04f"/><path d="M0 0 C13 1 19 -7 17 -14 C7 -14 1 -8 0 0 Z" fill="#4f9440"/></g>\n') % (py + ph / 2 + 2)
     # the picture window with the motif
-    cx, cy, r = 128, 146, 50
+    cx, cy, r = 128, 121, 68   # no plate above any more: the window takes the room
     s += '<g filter="url(#lab)"><g fill="%s">%s</g></g>\n' % (category_color, _window(window_shape, cx, cy, r + 5))
     s += '<g fill="%s">%s</g>\n' % (CREAMY, _window(window_shape, cx, cy, r))
-    s += '<g filter="url(#ms)"><g transform="translate(%g %g) scale(0.86)">%s</g></g>\n' % (cx - 50 * 0.86, cy - 46 * 0.86, motif_svg)
+    s += '<g filter="url(#ms)"><g transform="translate(%g %g) scale(%g)">%s</g></g>\n' % (cx - 50 * 1.16, cy - 46 * 1.16, 1.16, motif_svg)
     return s + '</svg>\n'
 
 def sack(motif_svg, catcol, tagkind, tagtxt, key=None, name=None, category=None, rarity='Common'):
