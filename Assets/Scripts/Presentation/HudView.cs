@@ -137,7 +137,7 @@ namespace Contigu.Presentation
             lueurIconLayout.preferredWidth = 54f;
             lueurIconLayout.preferredHeight = 54f;
 
-            _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", 84, new Color(0.30f, 0.19f, 0.05f, 1f));
+            _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", Mathf.RoundToInt(84f / UITheme.TextScale), new Color(0.30f, 0.19f, 0.05f, 1f));
             _lueurLabel.alignment = TextAnchor.MiddleCenter;
             // A fixed width for the number (room for three digits): the pill behind it never grows or shrinks while the count rolls up.
             var lueurLabelLayout = _lueurLabel.gameObject.AddComponent<LayoutElement>();

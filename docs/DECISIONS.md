@@ -9846,3 +9846,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Description de météo plus grande
 - Capture de l'auteur : la description de la météo (carte du HUD et rangée « Coming up » de la boutique) n'avait pas grossi. Les maxima de l'ajustement automatique passent à `Scaled(15)` (HUD) et `Scaled(14)` (boutique), avec `fontSize` de départ identique ; l'ajustement continue de réduire si le texte ne tient pas dans la boîte. Non vérifié dans Unity ; si le texte reste petit, c'est que la boîte (56 px au HUD, 52 px à la boutique) est trop basse : on l'agrandira.
+
+## 2026-11-16 — Compteur de Pollen : boîte et icône
+- Capture de l'auteur : la boîte du Pollen était trop grosse. Cause : le chiffre (84) était passé à 105 par `TextScale`, et la boîte épouse son contenu. La taille demandée est divisée par `TextScale` pour garder un chiffre de 84 px visuels comme avant.
+- L'icône `Icons/Pollen.png` est redessinée (`Design/Notebook/generate_pollen.py`) : grain jaune crayon à six bosses, contour encre, reflet. Non vérifié dans Unity.
