@@ -21,9 +21,9 @@ MonoBehaviour:
   upgradeGlyphScale: 0.8
   priceShowBackground: 0
   priceTagColor: {r: 1, g: 0.969, b: 0.91, a: 1}
-  priceTextColor: {r: 1, g: 0.84, b: 0.3, a: 1}
-  priceTextUnaffordable: {r: 1, g: 0.45, b: 0.4, a: 1}
-  priceTagOutline: {r: 0.075, g: 0.129, b: 0.18, a: 1}
+  priceTextColor: {r: 0.165, g: 0.141, b: 0.125, a: 1}
+  priceTextUnaffordable: {r: 0.72, g: 0.16, b: 0.12, a: 1}
+  priceTagOutline: {r: 0.925, g: 0.875, b: 0.765, a: 1}
   priceTagRotation: 0
   priceTagFontSize: 26
   priceTagIconSize: 26

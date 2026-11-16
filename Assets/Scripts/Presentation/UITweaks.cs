@@ -22,9 +22,9 @@ namespace Contigu.Presentation
         [Header("Boutique : prix")]
         [Tooltip("Le prix est un texte contouré ; coche pour le mettre dans une étiquette (couleur ci-dessous).")] public bool priceShowBackground = false;
         public Color priceTagColor = new Color(1f, 0.969f, 0.91f, 1f);
-        public Color priceTextColor = new Color(1f, 0.84f, 0.3f, 1f);
-        public Color priceTextUnaffordable = new Color(1f, 0.45f, 0.4f, 1f);
-        [Tooltip("Couleur du contour du chiffre (et de l'étiquette si elle est cochée).")] public Color priceTagOutline = new Color(0.075f, 0.129f, 0.18f, 1f);
+        public Color priceTextColor = new Color(0.165f, 0.141f, 0.125f, 1f);
+        public Color priceTextUnaffordable = new Color(0.72f, 0.16f, 0.12f, 1f);
+        [Tooltip("Couleur du contour du chiffre (et de l'étiquette si elle est cochée).")] public Color priceTagOutline = new Color(0.925f, 0.875f, 0.765f, 1f);
         [Range(-20f, 20f)] public float priceTagRotation = 0f;
         [Range(14f, 40f)] public int priceTagFontSize = 26;
         [Range(12f, 44f)] public float priceTagIconSize = 26f;

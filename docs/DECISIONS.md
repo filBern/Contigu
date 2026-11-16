@@ -9799,3 +9799,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Chiffres des pastilles d'emplacement en encre
 - `NumberBadge` (pastille jaune numérotée des emplacements de main et de fertilizers) : chiffre noir/encre au lieu de crème, illisible sur le jaune crayon. Non vérifié dans Unity.
+
+## 2026-11-16 — Étiquettes de prix lisibles sur le papier
+- Prix en encre (`priceTextColor`), prix inabordable en rouge brique foncé, contour en halo papier (`priceTagOutline`) : l'or clair à contour sombre se perdait sur le fond beige. Valeurs changées dans `UITweaks.cs` et dans `Resources/UITweaks.asset` (l'asset prime à l'exécution). Non vérifié dans Unity.
