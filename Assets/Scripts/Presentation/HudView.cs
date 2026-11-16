@@ -103,14 +103,13 @@ namespace Contigu.Presentation
             // plus number in a horizontal layout group that sizes to its contents.
             _lueurContainer = UIFactory.CreateUIObject("LueurContainer", lueurParent);
             var lueurLayout = _lueurContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            lueurLayout.spacing = 19f;
-            lueurLayout.padding = new RectOffset(26, 32, 12, 12);
+            lueurLayout.spacing = 12f;
+            lueurLayout.padding = new RectOffset(20, 22, 6, 8);
             // A golden planter behind the Pollen (gold bed, pale-gold soil), like the boxes of the left column, so it reads as a real counter and not a loose icon.
             var lueurPill = _lueurContainer.gameObject.AddComponent<Image>();
             lueurPill.sprite = UISprites.Garden("GoldLight") ?? UISprites.CardBackground;
             lueurPill.type = Image.Type.Sliced;
             lueurPill.color = Color.white;
-            UIFactory.AddDropShadow(lueurPill, 6f, 0.4f);
             lueurLayout.childAlignment = TextAnchor.MiddleCenter;
             lueurLayout.childControlWidth = true;
             lueurLayout.childControlHeight = true;
@@ -134,14 +133,14 @@ namespace Contigu.Presentation
             }
             // Plain Image has no ILayoutElement, so without this the HorizontalLayoutGroup gives it zero width.
             var lueurIconLayout = lueurIcon.gameObject.AddComponent<LayoutElement>();
-            lueurIconLayout.preferredWidth = 54f;
-            lueurIconLayout.preferredHeight = 54f;
+            lueurIconLayout.preferredWidth = 46f;
+            lueurIconLayout.preferredHeight = 46f;
 
-            _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", Mathf.RoundToInt(84f / UITheme.TextScale), new Color(0.30f, 0.19f, 0.05f, 1f));
+            _lueurLabel = UIFactory.CreateText(_lueurContainer, "LueurLabel", "", Mathf.RoundToInt(58f / UITheme.TextScale), UITheme.Ink);
             _lueurLabel.alignment = TextAnchor.MiddleCenter;
             // A fixed width for the number (room for three digits): the pill behind it never grows or shrinks while the count rolls up.
             var lueurLabelLayout = _lueurLabel.gameObject.AddComponent<LayoutElement>();
-            lueurLabelLayout.minWidth = 150f;
+            lueurLabelLayout.minWidth = 100f;
             _lueurContainer.gameObject.AddComponent<PollenFx>().Init(lueurIcon.rectTransform, _lueurLabel);
             // The pill behind the Pollen is also what catches the pointer for the tooltip below (a GameObject holds only one Image).
             _lueurContainer.gameObject.AddComponent<HoverTooltip>().Init(tooltip, "Pollen",

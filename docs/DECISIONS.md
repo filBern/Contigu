@@ -9853,3 +9853,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Planches latérales et bande des ennemis en style cahier
 - Capture de l'auteur : les planches brunes de gauche et de droite et la bande des ennemis n'étaient pas « dessinées à la main ». Elles utilisaient le sprite `Card` (désormais crayon + contour encre) mais teinté brun foncé et entouré d'un contour Unity net, avec liseré et clous. `UITweaks.boardWood` passe à un blanc chaud (défaut et asset), les contours moteur, le liseré et les clous sont retirés (colonne de gauche et de droite) ; la bande des ennemis devient une image 9-slice du même sprite (au lieu d'un aplat + contour moteur). Non vérifié dans Unity.
+
+## 2026-11-16 — Compteur de Pollen plus compact
+- Capture de l'auteur : la boîte du Pollen restait trop grosse et mordait sur la planche de gauche. Chiffre ramené à 58 px visuels (au lieu de 84), largeur minimale 100 (au lieu de 150), icône 46 (au lieu de 54), marges et espacement réduits, plus d'ombre portée ; le chiffre passe à l'encre. Non vérifié dans Unity ; si encore trop grand, les valeurs sont toutes dans `HudView` (`LueurContainer`).
