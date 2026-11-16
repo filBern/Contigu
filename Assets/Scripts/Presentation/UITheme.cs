@@ -18,6 +18,9 @@ namespace Contigu.Presentation
         public static readonly Color Background = new Color(0.925f, 0.875f, 0.765f); // #ecdfc3
         // Soft paper-colored halo under ink text that sits on busy art (replaces the old dark text outline, which turned ink text into a blob).
         public static readonly Color TextHalo = new Color(0.925f, 0.875f, 0.765f, 0.85f);
+        /// <summary>Global text size factor (the handwritten font runs small): every Text made by UIFactory.CreateText is scaled by it.</summary>
+        public const float TextScale = 1.25f;
+        public static int Scaled(int size) { return UnityEngine.Mathf.RoundToInt(size * TextScale); }
         public static readonly Color Ink = new Color(0.165f, 0.141f, 0.125f); // #2a2420
         public static readonly Color Panel = new Color(1f, 0.969f, 0.910f); // #fff7e8
         // Same cream as Panel; "selected/primary" is distinguished from "idle" via which elements get the mustard/coral fill, not a second panel tone.

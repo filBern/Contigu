@@ -314,7 +314,7 @@ namespace Contigu.Presentation
             // Long descriptions shrink to fit their box instead of running into the pledges below.
             _descriptionLabel.resizeTextForBestFit = true;
             _descriptionLabel.resizeTextMinSize = 12;
-            _descriptionLabel.resizeTextMaxSize = 19;
+            _descriptionLabel.resizeTextMaxSize = UITheme.Scaled(19);
             _descriptionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
@@ -350,7 +350,7 @@ namespace Contigu.Presentation
             var continueLabel = _continueButton.GetComponentInChildren<Text>();
             continueLabel.resizeTextForBestFit = true;
             continueLabel.resizeTextMinSize = 14;
-            continueLabel.resizeTextMaxSize = 22;
+            continueLabel.resizeTextMaxSize = UITheme.Scaled(22);
             _continueButton.gameObject.AddComponent<AttentionPulse>();
             _continueButton.onClick.AddListener(() => { if (ContinueRequested != null) { ContinueRequested(); } });
             _continueButton.gameObject.SetActive(false);
@@ -455,7 +455,7 @@ namespace Contigu.Presentation
             var green = UISprites.Garden("Green") ?? UISprites.ChooseButtonBackground;
             if (playImage != null) { playImage.sprite = hasSave ? green : gold; }
             playRect.sizeDelta = new Vector2(hasSave ? CardWidth - 140f : CardWidth - 60f, hasSave ? 44f : 56f);
-            _playButtonLabel.fontSize = hasSave ? 20 : 26;
+            _playButtonLabel.fontSize = UITheme.Scaled(hasSave ? 20 : 26);
             _playButtonLabel.resizeTextMaxSize = _playButtonLabel.fontSize;
             _playButtonLabel.color = UITheme.Ink;
             if (_playButton.interactable && !_playArmed) { _playButtonLabel.text = hasSave ? "New run" : "Play"; }

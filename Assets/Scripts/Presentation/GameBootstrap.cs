@@ -338,7 +338,7 @@ namespace Contigu.Presentation
             // The grey status line above the grid (round/enemy hints, drag prompt, warnings) is gone to give the grid the room.
             // Callers still go through here, so the text is kept in the (hidden) label for debugging.
             _statusText.text = text;
-            _statusText.fontSize = emphasize ? EmphasizedStatusFontSize : DefaultStatusFontSize;
+            _statusText.fontSize = UITheme.Scaled(emphasize ? EmphasizedStatusFontSize : DefaultStatusFontSize);
             StopStatusPulse();
         }
 
@@ -725,7 +725,7 @@ namespace Contigu.Presentation
             var menuButton = UIFactory.CreateButton(parent, "ShopMenuButton", "Menu", UISprites.ChooseButtonBackground, 12);
             UIFactory.DisablePlants(menuButton);
             var label = menuButton.GetComponentInChildren<Text>();
-            label.fontSize = 22;
+            label.fontSize = UITheme.Scaled(22);
             // Position and size are set by the shop each time it opens (under its Seed bag button, see ShopView.PlaceSidePanels).
             menuButton.onClick.AddListener(() => _settingsView.Toggle());
             // Its own sorting layer above every overlay (shop choices, end screens, challenge picker): Menu stays reachable, and never looks active while something covers it.
@@ -785,7 +785,7 @@ namespace Contigu.Presentation
             var deckOutline = deckLabel.gameObject.AddComponent<Outline>();
             deckOutline.effectColor = UITheme.TextHalo;
             deckOutline.effectDistance = new Vector2(2f, -2f);
-            deckLabel.fontSize = 25;
+            deckLabel.fontSize = UITheme.Scaled(25);
             var deckRect = deckButton.GetComponent<RectTransform>();
             deckRect.anchorMin = new Vector2(0.5f, 0.5f);
             deckRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -799,7 +799,7 @@ namespace Contigu.Presentation
             var menuOutline = menuColumnLabel.gameObject.AddComponent<Outline>();
             menuOutline.effectColor = UITheme.TextHalo;
             menuOutline.effectDistance = new Vector2(2f, -2f);
-            menuColumnLabel.fontSize = 25;
+            menuColumnLabel.fontSize = UITheme.Scaled(25);
             var menuColumnRect = menuColumnButton.GetComponent<RectTransform>();
             menuColumnRect.anchorMin = new Vector2(0.5f, 0.5f);
             menuColumnRect.anchorMax = new Vector2(0.5f, 0.5f);

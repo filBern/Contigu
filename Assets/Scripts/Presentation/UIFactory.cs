@@ -65,7 +65,7 @@ namespace Contigu.Presentation
             var text = rt.gameObject.AddComponent<Text>();
             text.font = DefaultFont();
             text.text = content;
-            text.fontSize = fontSize;
+            text.fontSize = UITheme.Scaled(fontSize);
             text.color = color;
             text.alignment = anchor;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;

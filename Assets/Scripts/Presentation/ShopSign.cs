@@ -36,7 +36,7 @@ namespace Contigu.Presentation
             UIFactory.StretchFull(label.rectTransform);
             label.resizeTextForBestFit = true;
             label.resizeTextMinSize = 10;
-            label.resizeTextMaxSize = fontSize;
+            label.resizeTextMaxSize = UITheme.Scaled(fontSize);
             PlotButtonDecor.Attach(body, label, Mathf.Abs(name.GetHashCode()));
             return body.rectTransform;
         }

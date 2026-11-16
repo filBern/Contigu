@@ -93,7 +93,7 @@ namespace Contigu.Presentation
             text.font = speechFont != null ? speechFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (speechFont != null)
             {
-                text.fontSize = Mathf.RoundToInt(fontSize * 1.15f);
+                text.fontSize = Mathf.RoundToInt(fontSize * 1.15f * UITheme.TextScale);
             }
             UIFactory.StretchFull(text.rectTransform);
             text.rectTransform.offsetMin = new Vector2(22f, 14f);

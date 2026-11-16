@@ -307,7 +307,7 @@ namespace Contigu.Presentation
             _weatherNameLabel.supportRichText = true;
             _weatherNameLabel.resizeTextForBestFit = true;
             _weatherNameLabel.resizeTextMinSize = 11;
-            _weatherNameLabel.resizeTextMaxSize = 17;
+            _weatherNameLabel.resizeTextMaxSize = UITheme.Scaled(17);
             _weatherNameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _weatherNameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _weatherNameLabel.rectTransform.pivot = new Vector2(0f, 1f);
@@ -319,7 +319,7 @@ namespace Contigu.Presentation
             _weatherEffectLabel.verticalOverflow = VerticalWrapMode.Truncate; // best fit only shrinks a bounded text
             _weatherEffectLabel.resizeTextForBestFit = true;
             _weatherEffectLabel.resizeTextMinSize = 9;
-            _weatherEffectLabel.resizeTextMaxSize = 12;
+            _weatherEffectLabel.resizeTextMaxSize = UITheme.Scaled(12);
             _weatherEffectLabel.rectTransform.anchorMin = Vector2.zero;
             _weatherEffectLabel.rectTransform.anchorMax = Vector2.one;
             _weatherEffectLabel.rectTransform.offsetMin = new Vector2(66f, 4f);
@@ -1214,7 +1214,7 @@ namespace Contigu.Presentation
             var fitter = tag.gameObject.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
-            tag.sizeDelta = new Vector2(tag.sizeDelta.x, Mathf.Max(tweaks.priceTagFontSize * 1.35f, tweaks.priceTagIconSize) + 6f);
+            tag.sizeDelta = new Vector2(tag.sizeDelta.x, Mathf.Max(UITheme.Scaled(tweaks.priceTagFontSize) * 1.35f, tweaks.priceTagIconSize) + 6f);
 
             if (showIcon && VisualDefaults.PollenSprite != null)
             {

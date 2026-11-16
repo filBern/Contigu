@@ -334,8 +334,8 @@ namespace Contigu.Presentation
             PlotButtonDecor.Suppress(_shuffleButton);
             _shuffleCountLabel = _shuffleButton.GetComponentInChildren<Text>();
             _shuffleCountLabel.text = "SHUFFLE " + _run.ShufflesRemaining;
-            _shuffleCountLabel.fontSize = 20;
-            _shuffleCountLabel.resizeTextMaxSize = 20;
+            _shuffleCountLabel.fontSize = UITheme.Scaled(20);
+            _shuffleCountLabel.resizeTextMaxSize = UITheme.Scaled(20);
             _shuffleCountLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
             _shuffleCountLabel.raycastTarget = false;
             UIFactory.StretchFull(_shuffleCountLabel.rectTransform);

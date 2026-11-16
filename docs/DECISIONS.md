@@ -9833,3 +9833,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Les 4 derniers sacs (Glow) au nouveau dessin
 - `generate_bags.py` couvre aussi `EclatCoral/Teal/Violet/Lime` (Poppy/Iris/Sunflower/Fern Glow, sans entrée dans `generate_icons.F` : leurs anciens sacs de toile étaient faits à la main) : même sac, rareté Uncommon (bleu), motif d'étoile brillante de la couleur de la fleur. Les 137 sacs sont maintenant au même style. Non vérifié dans Unity.
+
+## 2026-11-16 — Tous les textes +25 %
+- `UITheme.TextScale = 1.25` et `UITheme.Scaled(int)` : `UIFactory.CreateText` multiplie toute taille de police par 1,25 (la police manuscrite est petite). Les tailles posées après coup (`fontSize =` et maxima de `resizeTextForBestFit` : boutons du choix de challenge, Seed bag/Menu, Shuffle, météo, `ShopSign`, statut, bulles de Sprig) passent par le même facteur ; la hauteur de l'étiquette de prix suit. Les minima de `bestFit` ne changent pas.
+- Risque : des textes à hauteur fixe peuvent déborder ou se couper (descriptions, infobulles, boutons) ; non vérifié dans Unity. Pour revenir en arrière ou ajuster, changer la seule constante `TextScale`.
