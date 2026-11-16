@@ -183,6 +183,7 @@ namespace Contigu.Presentation
             logo.raycastTarget = false;
             logo.rectTransform.sizeDelta = new Vector2(LogoWidth, LogoWidth * LogoAspect);
             _logoImage = logo;
+            LogoFlipbook.Attach(logo, sprite);
             _logoRect = logo.rectTransform;
             BuildSparkles(_logoRect);
             return _logoRect;

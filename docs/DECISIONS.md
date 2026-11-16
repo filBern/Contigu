@@ -9809,3 +9809,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Bouton Back sur le choix de challenge
 - `ChallengeSelectView` : bouton « Back » (rouge) en haut à droite, symétrique de « Collection » ; l'événement `BackRequested` est relié à `OnMainMenuRequested` (même sortie que « Save and quit » : retour à la scène du menu principal, sans run en cours c'est un simple retour au titre). Non vérifié dans Unity.
+
+## 2026-11-16 — Logo en flipbook (3 dessins)
+- `Design/Notebook/generate_title.py` produit maintenant 3 dessins du logo (`Title/LastBloom`, `LastBloom_1`, `LastBloom_2`, `.meta` à guid neuf) : lettres légèrement décalées/inclinées, pousses et trait de sol qui bougent, ondulation du filtre différente.
+- `LogoFlipbook` (nouveau, `MainMenuView.BuildLogo`) les alterne toutes les 0,14 s dans l'ordre 0-1-2-1, comme les vieux dessins animés ; figé sur le premier dessin avec « mouvement réduit » (`MotionSettings.Reduced`) ou si un dessin manque. Non vérifié dans Unity.
