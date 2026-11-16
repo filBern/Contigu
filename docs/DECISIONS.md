@@ -9840,3 +9840,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Descendantes des boutons
 - Capture de l'auteur : les queues du « p » (Play) et du « g » (Settings) dépassaient du bas des boutons. Le texte des boutons à corps « plot » est relevé d'environ 5 px (marge basse de 10 px, haute de 0) ; la taille s'ajuste toujours automatiquement. Non vérifié dans Unity.
+
+## 2026-11-16 — Description du choix de challenge qui déborde
+- Capture de l'auteur : avec le texte +25 %, la description du challenge (5 lignes) chevauchait le niveau et les pledges. Cause : `CreateText` met `verticalOverflow = Overflow`, ce qui empêche l'ajustement automatique (`resizeTextForBestFit`) de réduire le texte à la hauteur de la boîte. Les libellés à ajustement automatique de hauteur fixe (description, noms/effets de météo du HUD et de la boutique) passent en `Truncate` pour que la réduction fonctionne. Non vérifié dans Unity ; si une description reste trop longue, elle sera réduite jusqu'à 12 px.

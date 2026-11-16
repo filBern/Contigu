@@ -234,6 +234,7 @@ namespace Contigu.Presentation
             _weatherNameLabel.resizeTextForBestFit = true;
             _weatherNameLabel.resizeTextMinSize = 12;
             _weatherNameLabel.resizeTextMaxSize = UITheme.Scaled(21);
+            _weatherNameLabel.verticalOverflow = VerticalWrapMode.Truncate;
 
             _weatherEffectLabel = UIFactory.CreateText(card.transform, "WeatherEffect", "", 12, UITheme.TextMuted, TextAnchor.UpperLeft);
             _weatherEffectLabel.raycastTarget = false;
@@ -246,6 +247,7 @@ namespace Contigu.Presentation
             _weatherEffectLabel.resizeTextForBestFit = true;
             _weatherEffectLabel.resizeTextMinSize = 9;
             _weatherEffectLabel.resizeTextMaxSize = UITheme.Scaled(13);
+            _weatherEffectLabel.verticalOverflow = VerticalWrapMode.Truncate;
         }
 
         /// <summary>Height of the weather card in the left column.</summary>

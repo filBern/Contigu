@@ -308,6 +308,7 @@ namespace Contigu.Presentation
             _weatherNameLabel.resizeTextForBestFit = true;
             _weatherNameLabel.resizeTextMinSize = 11;
             _weatherNameLabel.resizeTextMaxSize = UITheme.Scaled(17);
+            _weatherNameLabel.verticalOverflow = VerticalWrapMode.Truncate;
             _weatherNameLabel.rectTransform.anchorMin = new Vector2(0f, 1f);
             _weatherNameLabel.rectTransform.anchorMax = new Vector2(1f, 1f);
             _weatherNameLabel.rectTransform.pivot = new Vector2(0f, 1f);
@@ -320,6 +321,7 @@ namespace Contigu.Presentation
             _weatherEffectLabel.resizeTextForBestFit = true;
             _weatherEffectLabel.resizeTextMinSize = 9;
             _weatherEffectLabel.resizeTextMaxSize = UITheme.Scaled(12);
+            _weatherEffectLabel.verticalOverflow = VerticalWrapMode.Truncate;
             _weatherEffectLabel.rectTransform.anchorMin = Vector2.zero;
             _weatherEffectLabel.rectTransform.anchorMax = Vector2.one;
             _weatherEffectLabel.rectTransform.offsetMin = new Vector2(66f, 4f);

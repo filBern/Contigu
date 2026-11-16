@@ -315,6 +315,7 @@ namespace Contigu.Presentation
             _descriptionLabel.resizeTextForBestFit = true;
             _descriptionLabel.resizeTextMinSize = 12;
             _descriptionLabel.resizeTextMaxSize = UITheme.Scaled(19);
+            _descriptionLabel.verticalOverflow = VerticalWrapMode.Truncate; // best fit only shrinks to the box height when overflow is truncated
             _descriptionLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _descriptionLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
