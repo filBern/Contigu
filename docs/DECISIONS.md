@@ -9837,3 +9837,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-16 — Tous les textes +25 %
 - `UITheme.TextScale = 1.25` et `UITheme.Scaled(int)` : `UIFactory.CreateText` multiplie toute taille de police par 1,25 (la police manuscrite est petite). Les tailles posées après coup (`fontSize =` et maxima de `resizeTextForBestFit` : boutons du choix de challenge, Seed bag/Menu, Shuffle, météo, `ShopSign`, statut, bulles de Sprig) passent par le même facteur ; la hauteur de l'étiquette de prix suit. Les minima de `bestFit` ne changent pas.
 - Risque : des textes à hauteur fixe peuvent déborder ou se couper (descriptions, infobulles, boutons) ; non vérifié dans Unity. Pour revenir en arrière ou ajuster, changer la seule constante `TextScale`.
+
+## 2026-11-16 — Descendantes des boutons
+- Capture de l'auteur : les queues du « p » (Play) et du « g » (Settings) dépassaient du bas des boutons. Le texte des boutons à corps « plot » est relevé d'environ 5 px (marge basse de 10 px, haute de 0) ; la taille s'ajuste toujours automatiquement. Non vérifié dans Unity.

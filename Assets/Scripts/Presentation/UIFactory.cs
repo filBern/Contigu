@@ -118,6 +118,9 @@ namespace Contigu.Presentation
                 text.resizeTextForBestFit = true;
                 text.resizeTextMinSize = 10;
                 text.resizeTextMaxSize = text.fontSize;
+                // The handwritten font has long descenders (p, g, y): lift the line a few pixels so they stay inside the button.
+                text.rectTransform.offsetMin = new Vector2(text.rectTransform.offsetMin.x, 10f);
+                text.rectTransform.offsetMax = new Vector2(text.rectTransform.offsetMax.x, 0f);
                 PlotButtonDecor.Attach(img, text, Mathf.Abs(name.GetHashCode()));
             }
             if (gardenBody)
