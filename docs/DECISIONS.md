@@ -9813,3 +9813,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-16 — Logo en flipbook (3 dessins)
 - `Design/Notebook/generate_title.py` produit maintenant 3 dessins du logo (`Title/LastBloom`, `LastBloom_1`, `LastBloom_2`, `.meta` à guid neuf) : lettres légèrement décalées/inclinées, pousses et trait de sol qui bougent, ondulation du filtre différente.
 - `LogoFlipbook` (nouveau, `MainMenuView.BuildLogo`) les alterne toutes les 0,14 s dans l'ordre 0-1-2-1, comme les vieux dessins animés ; figé sur le premier dessin avec « mouvement réduit » (`MotionSettings.Reduced`) ou si un dessin manque. Non vérifié dans Unity.
+
+## 2026-11-16 — Sprig du menu en flipbook
+- `generate_sprig.py` produit 3 dessins de Sprig content et de Sprig en fête (`Sprig_Happy`, `_1`, `_2` ; `Sprig_Cheer`, `_1`, `_2` ; `.meta` à guid neuf) : bras, pousse et jambes légèrement différents, tremblé différent. `MainMenuView` les alterne toutes les 0,14 s (0-1-2-1) selon la pose (content ou en fête) ; figé sur le premier dessin avec « mouvement réduit », ou si un dessin manque. Non vérifié dans Unity.

@@ -250,16 +250,34 @@ namespace Contigu.Presentation
         private static float SprigHopEvery { get { return UITweaks.Current.sprigHopEvery; } }
         private const float SprigHopDuration = 0.7f;
         private const float SprigHopHeight = 16f;
+        /// <summary>The three drawings of a pose, or null when one is missing (the single drawing is then used).</summary>
+        private static Sprite[] LoadSprigFrames(string pose, Sprite first)
+        {
+            var frames = new[] { first, Resources.Load<Sprite>("Characters/Sprig_" + pose + "_1"), Resources.Load<Sprite>("Characters/Sprig_" + pose + "_2") };
+            foreach (var f in frames)
+            {
+                if (f == null) { return null; }
+            }
+            return frames;
+        }
+
         private RectTransform _sprigRect;
         private Image _sprigImage;
         private Sprite _sprigHappy;
         private Sprite _sprigCheer;
+        // Boiling-line flipbook: three drawings of each pose (Sprig_Happy, _1, _2 / Sprig_Cheer, _1, _2), cycled 0-1-2-1 (see SprigFlipbookSeconds).
+        private Sprite[] _sprigHappyFrames;
+        private Sprite[] _sprigCheerFrames;
+        private const float SprigFlipbookSeconds = 0.14f;
+        private static readonly int[] SprigFlipbookOrder = { 0, 1, 2, 1 };
         private float _sprigStart;
 
         private void BuildSprig(RectTransform parent)
         {
             _sprigHappy = Resources.Load<Sprite>("Characters/Sprig_Happy");
             _sprigCheer = Resources.Load<Sprite>("Characters/Sprig_Cheer");
+            _sprigHappyFrames = LoadSprigFrames("Happy", _sprigHappy);
+            _sprigCheerFrames = LoadSprigFrames("Cheer", _sprigCheer);
             if (_sprigHappy == null)
             {
                 return;
@@ -316,7 +334,9 @@ namespace Contigu.Presentation
             _sprigRect.localScale = new Vector3(pop * (1f - breathe - stretch * 0.5f), pop * (1f + breathe + stretch), 1f);
             _sprigRect.localRotation = Quaternion.Euler(0f, 0f, p >= 1f ? Mathf.Sin(t * 1.3f) * 3f : 0f);
             _sprigRect.anchoredPosition = new Vector2(0f, SprigBaseY + hop);
-            var wanted = cheering && _sprigCheer != null ? _sprigCheer : _sprigHappy;
+            var frames = cheering && _sprigCheerFrames != null ? _sprigCheerFrames : _sprigHappyFrames;
+            int frame = MotionSettings.Reduced || frames == null ? 0 : SprigFlipbookOrder[(int)(Time.unscaledTime / SprigFlipbookSeconds) % SprigFlipbookOrder.Length];
+            var wanted = frames != null ? frames[frame] : (cheering && _sprigCheer != null ? _sprigCheer : _sprigHappy);
             if (_sprigImage.sprite != wanted)
             {
                 _sprigImage.sprite = wanted;

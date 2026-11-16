@@ -42,6 +42,17 @@ POSES = {
     'Sad': dict(face='sad', armL=(140, 320), armR=(340, 320), leg=4, dy=4),
     'Cheer': dict(face='cheer', armL=(112, 200), armR=(368, 200), dy=-10, leg=14, sprout=14),
 }
+import random
+def vary(p, k):
+    r = random.Random(500 + k); q = dict(p)
+    q['armL'] = (p['armL'][0] + r.uniform(-7, 7), p['armL'][1] + r.uniform(-9, 9)); q['armR'] = (p['armR'][0] + r.uniform(-7, 7), p['armR'][1] + r.uniform(-9, 9))
+    q['sprout'] = p.get('sprout', 0) + r.uniform(-6, 6); q['dy'] = p.get('dy', 0) + r.uniform(-3, 3); q['leg'] = p.get('leg', 8) + r.uniform(-3, 3)
+    return q
+k = 0
 for i, (n, p) in enumerate(POSES.items()):
-    open('svg/Sprig_%s.svg' % n, 'w').write(sprig(40 + i, p)); JOBS.append(('svg/Sprig_%s.svg' % n, R + 'Sprig_%s.png' % n, 256, 256, True))
+    variants = [(n, p, 40 + i)]
+    if n in ('Happy', 'Cheer'):   # three drawings each, alternated by MainMenuView (boiling-line flipbook)
+        variants += [('%s_%d' % (n, j), vary(p, k + j), 60 + i * 5 + j) for j in (1, 2)]; k += 3
+    for name, pose, seed in variants:
+        open('svg/Sprig_%s.svg' % name, 'w').write(sprig(seed, pose)); JOBS.append(('svg/Sprig_%s.svg' % name, R + 'Sprig_%s.png' % name, 256, 256, True))
 json.dump(JOBS, open('jobs_sprig.json', 'w')); print(len(JOBS))
