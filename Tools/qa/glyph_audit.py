@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Finds characters in the game's visible strings that the main UI font (Digitalt) cannot draw: they vanish on screen.
+"""Finds characters in the game's visible strings that the main UI font (Patrick Hand) cannot draw: they vanish on screen.
 Usage: python3 Tools/qa/glyph_audit.py   (exit code 1 when any is found). Needs fontTools (pip install fonttools)."""
 import glob, os, re, sys
 from fontTools.ttLib import TTFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-cmap = set(TTFont(os.path.join(ROOT, 'Assets/Resources/Colorful_UI/colorful/font/Digitalt.ttf')).getBestCmap().keys())
+cmap = set(TTFont(os.path.join(ROOT, 'Assets/Resources/Font/PatrickHand-Regular.ttf')).getBestCmap().keys())
 ALLOWED = {'◆'}  # only a constant in DescriptionTextFormatter; no visible text contains it
 found = {}
 for path in glob.glob(os.path.join(ROOT, 'Assets/Scripts/**/*.cs'), recursive=True):
@@ -19,6 +19,6 @@ for path in glob.glob(os.path.join(ROOT, 'Assets/Scripts/**/*.cs'), recursive=Tr
                 if ord(ch) > 127 and ord(ch) not in cmap and ch not in ALLOWED:
                     found.setdefault(ch, []).append('%s:%d' % (os.path.relpath(path, ROOT), n))
 for ch, locs in found.items():
-    print('%r U+%04X not in Digitalt (%d): %s' % (ch, ord(ch), len(locs), ', '.join(locs[:8])))
+    print('%r U+%04X not in Patrick Hand (%d): %s' % (ch, ord(ch), len(locs), ', '.join(locs[:8])))
 print('No missing glyphs.' if not found else '')
 sys.exit(1 if found else 0)

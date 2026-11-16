@@ -9789,3 +9789,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - Contours de texte : `UITheme.TextHalo` (halo papier) remplace `UITheme.Border` sur les textes encre (boutons lettrés, Combo, Seed bag, Menu, Shuffle, PV).
 - Fonds : les écrans plein cadre (Collection, Deck, Fin de run, Boutique, choix de challenge, Menu/réglages, carrousels, tutoriel, révélation d'upgrade, guide de Sprig) passent au papier ; bande des ennemis et en-tête d'infobulle en beige ; boîte du total (ComboView) en crème.
 - Textes clairs codés en dur passés à l'encre (Combo, carte d'upgrade, Collection, étiquettes de pledge, nom de challenge, étiquette d'effet de case, compte du deck). Non vérifié dans Unity.
+
+## 2026-11-16 — Police manuscrite (Patrick Hand) partout
+- `UIFactory.DefaultFont()` charge `Font/PatrickHand-Regular` (déjà utilisée pour les bulles de Sprig), avec repli sur Digitalt puis la police intégrée. `Tools/qa/glyph_audit.py` vérifie maintenant les glyphes de Patrick Hand : seul « → » manquait (sous-titre de montée de niveau), remplacé par « > ».
+- Patrick Hand est plus fine et plus petite que Digitalt (pas de gras) : certaines tailles seront peut-être à augmenter après un test visuel. Non vérifié dans Unity.

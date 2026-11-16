@@ -12,17 +12,19 @@ namespace Contigu.Presentation
         private static Font _cachedFont;
 
         /// <summary>
-        /// The "Colorful UI" pack's "Digitalt" font (Assets/Resources/
-        /// Colorful_UI/colorful/font/), used everywhere text is created.
-        /// The font's thick, uniform stroke weight is baked into its glyphs,
-        /// not a separate outline effect. Falls back to Unity's built-in
-        /// legacy font if the asset pack isn't present.
+        /// The handwritten "Patrick Hand" font (Assets/Resources/Font/), used
+        /// everywhere text is created (notebook style). Falls back to the
+        /// "Colorful UI" pack's Digitalt, then to Unity's built-in legacy font.
         /// </summary>
         public static Font DefaultFont()
         {
             if (_cachedFont == null)
             {
-                _cachedFont = Resources.Load<Font>("Colorful_UI/colorful/font/Digitalt");
+                _cachedFont = Resources.Load<Font>("Font/PatrickHand-Regular");
+                if (_cachedFont == null)
+                {
+                    _cachedFont = Resources.Load<Font>("Colorful_UI/colorful/font/Digitalt");
+                }
                 if (_cachedFont == null)
                 {
                     _cachedFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");

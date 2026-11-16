@@ -356,7 +356,7 @@ namespace Contigu.Presentation
                     },
                     Name = level > 1 ? def.Name + " (Lv " + level + ")" : def.Name,
                     Body = DescriptionTextFormatter.Colorize(def.Description, 14),
-                    Subtitle = "Level " + level + " → " + (level + 1),
+                    Subtitle = "Level " + level + " > " + (level + 1),
                     FillCell = true
                 });
             }
