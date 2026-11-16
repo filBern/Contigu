@@ -42,6 +42,6 @@ namespace Contigu.Presentation
         public static readonly Color ScorePoints = new Color(0.184f, 0.561f, 0.878f); // #2F8FE0
         public static readonly Color ScoreMult = new Color(0.910f, 0.302f, 0.271f); // #e84d45
         public static readonly Color ScorePollen = new Color(0.910f, 0.659f, 0.180f); // #e8a82e
-        public static readonly Color Border = new Color(0.075f, 0.129f, 0.180f); // #13212e
+        public static readonly Color Border = new Color(0.165f, 0.141f, 0.125f); // #2a2420 (notebook ink)
     }
 }

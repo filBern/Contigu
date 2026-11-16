@@ -9802,3 +9802,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Étiquettes de prix lisibles sur le papier
 - Prix en encre (`priceTextColor`), prix inabordable en rouge brique foncé, contour en halo papier (`priceTagOutline`) : l'or clair à contour sombre se perdait sur le fond beige. Valeurs changées dans `UITweaks.cs` et dans `Resources/UITweaks.asset` (l'asset prime à l'exécution). Non vérifié dans Unity.
+
+## 2026-11-16 — Cadres plus « dessinés à la main »
+- Constat (capture de la boîte « Coming up ») : les cadres faisaient propres et 3D. Les contours des sprites de cadre sont plus ondulés (`ink.py` : amplitude du tremblé ×2,5, segments plus courts), régénérés avec `generate_notebook.py` et `generate_tiles.py` (boutons, panneaux, barres, tuiles).
+- Code : `UITheme.Border` passe de l'ardoise (#13212e) à l'encre (#2a2420) ; `ButtonDepth` n'a plus l'extrusion sombre ni l'ombre douce, seulement un léger décalage encre (0,45) sous le bouton. Non vérifié dans Unity.

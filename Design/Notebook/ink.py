@@ -33,7 +33,7 @@ class D:
         for (cx, cy, a0) in ((x + w - r, y + r, -90), (x + w - r, y + h - r, 0), (x + r, y + h - r, 90), (x + r, y + r, 180)):
             for k in range(7):
                 t = math.radians(a0 + 90 * k / 6); pts.append((cx + r * math.cos(t), cy + r * math.sin(t)))
-        s.line(pts, w=lw, closed=True, fill=fill, a=a * .6, step=step)
+        s.line(pts, w=lw, closed=True, fill=fill, a=a * 1.5, step=min(step, 22))
     def blob(s, cx, cy, rx, ry, n=18, **k):
         s.line([(cx + rx * math.cos(2 * math.pi * i / n), cy + ry * math.sin(2 * math.pi * i / n)) for i in range(n)], closed=True, **k)
     def dot(s, x, y, r=4): s.o.append('<circle cx="%.1f" cy="%.1f" r="%s" fill="%s"/>' % (s.j(x, .5), s.j(y, .5), r, INK))

@@ -25,10 +25,10 @@ namespace Contigu.Presentation
             var depth = face.gameObject.AddComponent<ButtonDepth>();
             // The extrusion: a dark, near-opaque copy straight below; then a wide soft shadow beneath it.
             depth._soft = face.gameObject.AddComponent<Shadow>();
-            depth._soft.effectColor = new Color(0f, 0f, 0f, 0.28f);
+            depth._soft.effectColor = new Color(0f, 0f, 0f, 0f); // notebook style: no soft glossy shadow
             depth._soft.effectDistance = new Vector2(1f, -Thickness - 5f);
             depth._base = face.gameObject.AddComponent<Shadow>();
-            depth._base.effectColor = new Color(0.04f, 0.025f, 0.02f, 0.78f);
+            depth._base.effectColor = new Color(0.165f, 0.141f, 0.125f, 0.45f); // a pencil-ink offset, not a dark extrusion
             depth._base.effectDistance = new Vector2(0f, -Thickness);
             depth._button = face.GetComponent<Button>();
             depth._rect = face.rectTransform;
