@@ -9779,3 +9779,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - Créatures et particules de l'ambiance (`Ambient/*.png`, 96 px : abeille, papillon, chat, flamme, feuille, érable, pétale, goutte, flocon, étincelle, grain de soleil) et fleurs des boutons (`Buttons/Plot/Flowers/*`) redessinées par `Design/Notebook/generate_ambient.py`.
 - Code non modifié : les couches animées (`AnimatedBackgroundView`) restent des formes procédurales teintées (décor, pétales) et des lueurs (lucioles) ; sur le papier les lueurs sont discrètes. À juger dans un build ; si trop pâles, foncer `FireflyColor` ou les remplacer par l'étincelle encrée.
 - Les boutons illustrés `Buttons/Full` sont retirés du jeu (`UseIllustratedButtons=false`), laissés tels quels. Non vérifié dans Unity.
+
+## 2026-11-16 — Style « cahier », étape 6 : cartes d'upgrades et icônes restantes
+- `Design/Notebook/inkify.py` étendu : `upgrades` (106 pancartes `Icons/Upgrades`), `mystery` (5), `growth` (badges de stade et de racines ; `Fruit_Glow` est une lueur, laissée telle quelle), `challenges` (6 icônes de challenge, sources PNG enveloppées dans un SVG pour passer par le même filtre).
+- Limites : les icônes de `Growth` et de `Challenges` gardent leur gros contour bleu marine d'origine (il est dans l'image) sous le nouveau contour encre ; `Icons/Modifiers` (anciens modificateurs, quasi inutilisés) et `Pollen`/`GoldenTile` non repris. Les pancartes d'upgrades ne sont plus affichées dans la boutique (seuls les glyphes le sont). Non vérifié dans Unity.

@@ -7,6 +7,7 @@ SRC = '../Icons/'; RES = '../../Assets/Resources/Icons/'
 SETS = {  # set: (svg dir under ../Icons/ or an explicit path, png dir under Resources, px)
     'fertilizers': ('fertilizers', 'Fertilizers', 256), 'glyphs': ('glyphs', 'UpgradeGlyphs', 256), 'traits': ('traits', 'Traits', 128),
     'workshop': ('workshop', 'Workshop', 256), 'growth': ('growth', 'Growth', 256),
+    'upgrades': ('upgrades', 'Upgrades', 256), 'mystery': ('mystery', 'Mystery', 256), 'challenges': ('challenges', 'Challenges', 0),
     'enemies': ('../Enemies/bare', '../Enemies', 256), 'weather': ('../Weather/svg', 'Weather', 128)}
 INK = '#2a2420'
 def mid(stops):
@@ -36,6 +37,15 @@ if __name__ == '__main__':
     for s in names:
         sd, pd, px = SETS[s]
         for f in sorted(os.listdir(SRC + sd)):
+            if s == 'growth' and f.startswith('Fruit_Glow'): continue   # a glow overlay, not a drawing
+            if s == 'challenges' and f.endswith('.png'):    # raster sources: wrapped in an SVG so the same ink filter applies
+                import base64
+                from PIL import Image
+                n = f[:-4]; png = RES + pd + '/' + n + '.png'; im = Image.open(SRC + sd + '/' + f); px = im.size[0]
+                b64 = base64.b64encode(open(SRC + sd + '/' + f, 'rb').read()).decode()
+                p = 'svg_ink/%s_%s.svg' % (s, n)
+                open(p, 'w').write(inkify('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 %d %d" width="%d" height="%d"><image width="%d" height="%d" href="data:image/png;base64,%s"/></svg>' % (px, px, px, px, px, px, b64), px))
+                jobs.append((p, png, px, px, True)); continue
             if not f.endswith('.svg'): continue
             n = f[:-4]; png = RES + pd + '/' + n + '.png'
             if not os.path.exists(png): continue
