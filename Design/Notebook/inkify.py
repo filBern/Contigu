@@ -4,9 +4,10 @@ the whole drawing wobbled (low-frequency displacement) and wrapped in a thick in
 Usage (from this folder):  python3 inkify.py [set ...]   sets: fertilizers glyphs traits workshop growth   (glyphs: then run ../Icons/fit_glyphs.py)"""
 import re, sys, os, json, subprocess
 SRC = '../Icons/'; RES = '../../Assets/Resources/Icons/'
-SETS = {  # set: (svg dir, png dir, px)
+SETS = {  # set: (svg dir under ../Icons/ or an explicit path, png dir under Resources, px)
     'fertilizers': ('fertilizers', 'Fertilizers', 256), 'glyphs': ('glyphs', 'UpgradeGlyphs', 256), 'traits': ('traits', 'Traits', 128),
-    'workshop': ('workshop', 'Workshop', 256), 'growth': ('growth', 'Growth', 256)}
+    'workshop': ('workshop', 'Workshop', 256), 'growth': ('growth', 'Growth', 256),
+    'enemies': ('../Enemies/bare', '../Enemies', 256), 'weather': ('../Weather/svg', 'Weather', 128)}
 INK = '#2a2420'
 def mid(stops):
     cols = re.findall(r'stop-color="(#[0-9a-fA-F]{6})"', stops)

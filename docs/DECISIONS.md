@@ -9768,3 +9768,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - Choix : le contour encre revient (il fait le style cahier), contrairement à la consigne précédente « sans contour noir » qui visait l'ancien rendu 3D. À ajuster si l'auteur préfère sans.
 - Non traités : `Icons/Growth` (effets de maturation, laissés tels quels), cartes `Icons/Upgrades` et `Mystery`, `Icons/Challenges`, `Icons/Modifiers`, ennemis, météo, Sprig, titre.
 - Non vérifié dans Unity.
+
+## 2026-11-16 — Style « cahier », étape 4 : ennemis, météo, Sprig
+- Ennemis (17 portraits, `Enemies/*.png`) et météo (23 icônes, `Icons/Weather/*.png`) : `Design/Notebook/inkify.py enemies weather` repasse les SVG existants (`Design/Enemies/bare/`, `Design/Weather/svg/`) au style cahier (même méthode que les icônes). Mêmes noms et tailles.
+- Sprig : `Design/Notebook/generate_sprig.py` redessine les 4 expressions (`Characters/Sprig_{Neutral,Happy,Sad,Cheer}.png`, 256 px) en encre fine + crayon, avec les couleurs de la mascotte. Défaut connu : le bras gauche est en partie caché derrière le corps dans certaines poses.
+- Non vérifié dans Unity. Reste : écran titre, cartes `Icons/Upgrades`/`Mystery`, `Icons/Challenges`/`Modifiers`, `Icons/Growth`, ambiance animée (lucioles, pétales).
