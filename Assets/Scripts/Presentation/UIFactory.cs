@@ -83,17 +83,11 @@ namespace Contigu.Presentation
             return FinishButton(img, label, fontSize);
         }
 
-        /// <summary>The text color of a plot button: the light shade of its bed (green, gold, blue, red) or cream for the wooden one.</summary>
+        /// <summary>The text color of a plot button (ink on every crayon bed).</summary>
         internal static Color PlotTextColor(string spriteName)
         {
-            switch (spriteName)
-            {
-                case "PlotGreen": return new Color(0.72f, 0.94f, 0.54f, 1f);
-                case "PlotGold": return new Color(1f, 0.89f, 0.48f, 1f);
-                case "PlotBlue": return new Color(0.67f, 0.83f, 1f, 1f);
-                case "PlotRed": return new Color(1f, 0.64f, 0.58f, 1f);
-                default: return new Color(0.96f, 0.89f, 0.75f, 1f);
-            }
+            // Notebook style: every plot body is a pale crayon bed, so the label is ink.
+            return UITheme.Ink;
         }
 
         /// <summary>Same as the Color overload, but skinned with a "Colorful UI" pack sprite (see UISprites) instead of a flat fill.</summary>

@@ -115,7 +115,7 @@ namespace Contigu.Presentation
             }
 
             // Title band: dark strip across the top (clipped by nothing; inset so it hugs the card's rounded frame), accent line below.
-            _headerBand = UIFactory.CreatePanel(_panel, "HeaderBand", UITheme.Background);
+            _headerBand = UIFactory.CreatePanel(_panel, "HeaderBand", UITheme.Ink);
             _headerBand.raycastTarget = false;
             _headerBand.rectTransform.anchorMin = new Vector2(0f, 1f);
             _headerBand.rectTransform.anchorMax = new Vector2(1f, 1f);

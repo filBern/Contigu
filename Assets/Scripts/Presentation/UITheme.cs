@@ -14,7 +14,9 @@ namespace Contigu.Presentation
     /// </summary>
     public static class UITheme
     {
-        public static readonly Color Background = new Color(0.071f, 0.188f, 0.290f); // #12304a
+        // Notebook style (see docs/DECISIONS.md): the bare background is ruled paper, text on it is ink.
+        public static readonly Color Background = new Color(0.925f, 0.875f, 0.765f); // #ecdfc3
+        public static readonly Color Ink = new Color(0.165f, 0.141f, 0.125f); // #2a2420
         public static readonly Color Panel = new Color(1f, 0.969f, 0.910f); // #fff7e8
         // Same cream as Panel; "selected/primary" is distinguished from "idle" via which elements get the mustard/coral fill, not a second panel tone.
         public static readonly Color PanelLight = new Color(1f, 0.969f, 0.910f); // #fff7e8
@@ -25,9 +27,9 @@ namespace Contigu.Presentation
         // Same hex as TextPrimary, dimmed via alpha rather than a separate flat color.
         public static readonly Color TextMuted = new Color(0.075f, 0.129f, 0.180f, 0.68f); // #13212e @ 68%
         // Light text for spots that sit directly on the bare Background with no panel/button underneath (e.g. HudView's status text and Lueur readout).
-        public static readonly Color TextOnBackground = new Color(1f, 0.969f, 0.910f); // #fff7e8
+        public static readonly Color TextOnBackground = new Color(0.165f, 0.141f, 0.125f); // #2a2420 (ink)
         // Muted counterpart to TextOnBackground.
-        public static readonly Color TextMutedOnBackground = new Color(1f, 0.969f, 0.910f, 0.68f); // #fff7e8 @ 68%
+        public static readonly Color TextMutedOnBackground = new Color(0.165f, 0.141f, 0.125f, 0.68f); // ink @ 68%
         public static readonly Color Success = new Color(0.643f, 0.922f, 0.800f); // #a4ebcc
         public static readonly Color Danger = new Color(1f, 0.420f, 0.341f); // #ff6b57
         public static readonly Color HoverValid = new Color(0.643f, 0.922f, 0.800f, 0.85f); // #a4ebcc
