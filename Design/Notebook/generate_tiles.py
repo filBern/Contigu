@@ -62,8 +62,6 @@ tile(304, '#c3a6e0', joker, 'T_Joker', 'Tiles/Joker.png'); tile(305, '#e0cd9e', 
 tile(306, '#cfe8f5', frozen, 'T_Frozen', 'Tiles/Frozen.png'); tile(307, '#9ec3ee', bonus, 'T_Bonus', 'Tiles/Bonus.png')
 tile(308, '#c9bfa8', locked, 'T_Locked', 'Icons/LockedTile.png')
 d = D(309); star(d, 64, 64, 52, '#f1c84a'); emit('GoldenStar', d, 128, 128, 'Icons/GoldenStar.png')
-json.dump(JOBS, open('jobs_tiles.json', 'w')); print(len(JOBS), 'sprites')
-
 # --- harvest petals (128, pointing up) and attack projectiles (256, pointing right)
 COL = {'Coral': '#e8483f', 'Teal': '#5b86e0', 'Violet': '#f1b92a', 'Lime': '#5aa845', 'Joker': '#a77ccf'}
 for i, (n, c) in enumerate(COL.items()):
@@ -71,4 +69,11 @@ for i, (n, c) in enumerate(COL.items()):
     d = D(340 + i)
     for k, off in enumerate((-18, 0, 18)): d.line([(8, 128 + off), (60, 128 + off * .8)], w=3, a=1.2, op=.55)
     petal(d, 70, 128, 0, 170, 52, c, 6); d.line([(80, 128), (220, 128)], w=2.2, a=.8, op=.6); emit('Attack_' + n, d, 256, 256, 'Icons/Attacks/%s.png' % n)
+json.dump(JOBS, open('jobs_tiles.json', 'w')); print(len(JOBS), 'sprites')
+
+# --- menu -> game transition sweep: square, edge-to-edge versions (no gaps between neighbours): flat bed to the edge, ink lines inset
+for i, (n, bed, fn) in enumerate((('Ember', '#ec9a8c', poppy), ('Frost', '#9ec3ee', iris), ('Gold', '#f7d26a', sunflower), ('Moss', '#9fd37e', fern))):
+    d = D(360 + i); d.o.append('<rect width="128" height="128" fill="%s"/>' % bed)
+    d.line([(2, 2), (126, 2), (126, 126), (2, 126)], w=4, closed=True, a=1.6, step=20)
+    fn(d); emit('Sweep_' + n, d, 128, 128, 'Tiles/Sweep/%s.png' % n)
 json.dump(JOBS, open('jobs_tiles.json', 'w')); print(len(JOBS), 'sprites')
