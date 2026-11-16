@@ -9762,3 +9762,9 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - `Design/Notebook/generate_tiles.py` (+ `render.js jobs_tiles.json`) réécrit, à noms et tailles identiques, les tuiles de pièces `Tiles/Ember` (Poppy), `Frost` (Iris), `Gold` (Sunflower), `Moss` (Fern), `Joker`, les cases spéciales `Golden`, `Frozen`, `Bonus` (x2), `Icons/LockedTile`, `Icons/GoldenStar`, ainsi que les pétales de récolte (`Icons/Petals/*`) et les projectiles d'attaque (`Icons/Attacks/*`) : lit d'un crayon de la couleur de la pièce, contour encre, fleur dessinée à l'encre. Les pièces de la main et les aperçus utilisent les mêmes sprites.
 - `GridCellView` : la case vide n'est plus assombrie (0,6 gris) : elle est déjà beige pâle, la tuile plantée ressort par sa couleur.
 - Non vérifié dans Unity. Reste : icônes (fertilizers, upgrades, traits), ennemis, météo, Sprig, titre, ambiance animée.
+
+## 2026-11-16 — Style « cahier », étape 3 : icônes
+- `Design/Notebook/inkify.py` (lancé depuis ce dossier, puis `Design/Icons/fit_glyphs.py` pour les glyphes) repasse les SVG d'icônes existants (`Design/Icons/<set>/*.svg`) au style cahier : dégradés aplatis à leur couleur médiane, ombres portées retirées, dessin légèrement ondulé (déplacement basse fréquence) et entouré d'un contour encre épais (silhouette). Les PNG sont réécrits à leurs chemins actuels (mêmes noms/tailles, `.meta` intacts) : sacs de fertilizers (`Icons/Fertilizers`, 137), glyphes d'upgrades (`Icons/UpgradeGlyphs`, 106), badges de sprouts (`Icons/Traits`, 90), objets du Workshop (`Icons/Workshop`, 8).
+- Choix : le contour encre revient (il fait le style cahier), contrairement à la consigne précédente « sans contour noir » qui visait l'ancien rendu 3D. À ajuster si l'auteur préfère sans.
+- Non traités : `Icons/Growth` (effets de maturation, laissés tels quels), cartes `Icons/Upgrades` et `Mystery`, `Icons/Challenges`, `Icons/Modifiers`, ennemis, météo, Sprig, titre.
+- Non vérifié dans Unity.
