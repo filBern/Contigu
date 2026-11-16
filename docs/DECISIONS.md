@@ -9773,3 +9773,9 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - Ennemis (17 portraits, `Enemies/*.png`) et météo (23 icônes, `Icons/Weather/*.png`) : `Design/Notebook/inkify.py enemies weather` repasse les SVG existants (`Design/Enemies/bare/`, `Design/Weather/svg/`) au style cahier (même méthode que les icônes). Mêmes noms et tailles.
 - Sprig : `Design/Notebook/generate_sprig.py` redessine les 4 expressions (`Characters/Sprig_{Neutral,Happy,Sad,Cheer}.png`, 256 px) en encre fine + crayon, avec les couleurs de la mascotte. Défaut connu : le bras gauche est en partie caché derrière le corps dans certaines poses.
 - Non vérifié dans Unity. Reste : écran titre, cartes `Icons/Upgrades`/`Mystery`, `Icons/Challenges`/`Modifiers`, `Icons/Growth`, ambiance animée (lucioles, pétales).
+
+## 2026-11-16 — Style « cahier », étape 5 : écran titre et ambiance
+- Logo `Title/LastBloom.png` (1080x300) : `Design/Notebook/generate_title.py`, lettrage Patrick Hand épaissi d'un contour encre, lettres aux 4 couleurs de fleurs, pousses au-dessus, trait de sol hachuré (remplace la planche de terre).
+- Créatures et particules de l'ambiance (`Ambient/*.png`, 96 px : abeille, papillon, chat, flamme, feuille, érable, pétale, goutte, flocon, étincelle, grain de soleil) et fleurs des boutons (`Buttons/Plot/Flowers/*`) redessinées par `Design/Notebook/generate_ambient.py`.
+- Code non modifié : les couches animées (`AnimatedBackgroundView`) restent des formes procédurales teintées (décor, pétales) et des lueurs (lucioles) ; sur le papier les lueurs sont discrètes. À juger dans un build ; si trop pâles, foncer `FireflyColor` ou les remplacer par l'étincelle encrée.
+- Les boutons illustrés `Buttons/Full` sont retirés du jeu (`UseIllustratedButtons=false`), laissés tels quels. Non vérifié dans Unity.
