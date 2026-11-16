@@ -9796,3 +9796,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Pledges : texte blanc sans halo
 - Les puces de pledge (choix de challenge) sont vertes foncées quand elles sont désactivées : leur texte devient blanc, sans le halo papier (qui faisait un contour étrange). Activées (puce dorée pâle), le texte reste encre pour rester lisible. Non vérifié dans Unity.
+
+## 2026-11-16 — Chiffres des pastilles d'emplacement en encre
+- `NumberBadge` (pastille jaune numérotée des emplacements de main et de fertilizers) : chiffre noir/encre au lieu de crème, illisible sur le jaune crayon. Non vérifié dans Unity.
