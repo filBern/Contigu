@@ -246,7 +246,8 @@ namespace Contigu.Presentation
             _weatherEffectLabel.verticalOverflow = VerticalWrapMode.Truncate;
             _weatherEffectLabel.resizeTextForBestFit = true;
             _weatherEffectLabel.resizeTextMinSize = 9;
-            _weatherEffectLabel.resizeTextMaxSize = UITheme.Scaled(13);
+            _weatherEffectLabel.resizeTextMaxSize = UITheme.Scaled(15);
+            _weatherEffectLabel.fontSize = UITheme.Scaled(15);
             _weatherEffectLabel.verticalOverflow = VerticalWrapMode.Truncate;
         }
 

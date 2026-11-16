@@ -9843,3 +9843,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Description du choix de challenge qui déborde
 - Capture de l'auteur : avec le texte +25 %, la description du challenge (5 lignes) chevauchait le niveau et les pledges. Cause : `CreateText` met `verticalOverflow = Overflow`, ce qui empêche l'ajustement automatique (`resizeTextForBestFit`) de réduire le texte à la hauteur de la boîte. Les libellés à ajustement automatique de hauteur fixe (description, noms/effets de météo du HUD et de la boutique) passent en `Truncate` pour que la réduction fonctionne. Non vérifié dans Unity ; si une description reste trop longue, elle sera réduite jusqu'à 12 px.
+
+## 2026-11-16 — Description de météo plus grande
+- Capture de l'auteur : la description de la météo (carte du HUD et rangée « Coming up » de la boutique) n'avait pas grossi. Les maxima de l'ajustement automatique passent à `Scaled(15)` (HUD) et `Scaled(14)` (boutique), avec `fontSize` de départ identique ; l'ajustement continue de réduire si le texte ne tient pas dans la boîte. Non vérifié dans Unity ; si le texte reste petit, c'est que la boîte (56 px au HUD, 52 px à la boutique) est trop basse : on l'agrandira.

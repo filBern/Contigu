@@ -320,7 +320,8 @@ namespace Contigu.Presentation
             _weatherEffectLabel.verticalOverflow = VerticalWrapMode.Truncate; // best fit only shrinks a bounded text
             _weatherEffectLabel.resizeTextForBestFit = true;
             _weatherEffectLabel.resizeTextMinSize = 9;
-            _weatherEffectLabel.resizeTextMaxSize = UITheme.Scaled(12);
+            _weatherEffectLabel.resizeTextMaxSize = UITheme.Scaled(14);
+            _weatherEffectLabel.fontSize = UITheme.Scaled(14);
             _weatherEffectLabel.verticalOverflow = VerticalWrapMode.Truncate;
             _weatherEffectLabel.rectTransform.anchorMin = Vector2.zero;
             _weatherEffectLabel.rectTransform.anchorMax = Vector2.one;
