@@ -9816,3 +9816,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Sprig du menu en flipbook
 - `generate_sprig.py` produit 3 dessins de Sprig content et de Sprig en fête (`Sprig_Happy`, `_1`, `_2` ; `Sprig_Cheer`, `_1`, `_2` ; `.meta` à guid neuf) : bras, pousse et jambes légèrement différents, tremblé différent. `MainMenuView` les alterne toutes les 0,14 s (0-1-2-1) selon la pose (content ou en fête) ; figé sur le premier dessin avec « mouvement réduit », ou si un dessin manque. Non vérifié dans Unity.
+
+## 2026-11-16 — Ennemis en flipbook
+- `inkify.py enemies --variants` écrit 2 dessins de plus par portrait (`Enemies/<Nom>_1.png`, `_2.png`, 34 fichiers, `.meta` à guid neuf) : même dessin, ondulation du contour différente et léger décalage/inclinaison (±1,5 px, ±1,8°).
+- `SpriteFlipbook` (nouveau) est attaché aux portraits de la bande des ennemis (`HudView`) et de l'aperçu « Coming up » (`ShopView`) : il alterne le sprite avec ses frères `_1`/`_2` en 0-1-2-1 toutes les 0,14 s (phase aléatoire par portrait), sans que le code qui assigne le sprite de base change ; figé avec « mouvement réduit » ou sans frères. Non vérifié dans Unity. Non repris : portraits dans la Collection (statiques).

@@ -17,21 +17,28 @@ def flatten(svg):
     grads = {m.group(1): mid(m.group(2)) for m in re.finditer(r'<(?:linear|radial)Gradient id="([^"]+)"[^>]*>(.*?)</(?:linear|radial)Gradient>', svg, re.S)}
     svg = re.sub(r'url\(#([^)]+)\)', lambda m: grads.get(m.group(1), m.group(0)) if m.group(1) in grads else m.group(0), svg)
     return re.sub(r'\sfilter="url\(#[^)]+\)"', '', svg)
-def inkify(svg, px):
+def inkify(svg, px, variant=0):
     svg = flatten(svg)
     m = re.search(r'viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"', svg)
     vw = float(m.group(3)) if m else px
     u = vw / px                      # user units per output pixel
     out, wob = 2.6 * px / 256 * 1.0, 3.2 * px / 256
-    f = ('<defs><filter id="nb" x="-12%%" y="-12%%" width="124%%" height="124%%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="1" seed="4" result="n"/>'
+    f = ('<defs><filter id="nb" x="-12%%" y="-12%%" width="124%%" height="124%%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="1" seed="%d" result="n"/>'
          '<feDisplacementMap in="SourceGraphic" in2="n" scale="%.2f" result="w"/><feMorphology in="w" operator="dilate" radius="%.2f" result="d"/>'
-         '<feFlood flood-color="%s"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="w"/></feMerge></filter></defs>') % (wob * u * 2, out * u, INK)
+         '<feFlood flood-color="%s"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="w"/></feMerge></filter></defs>') % (4 + 7 * variant, wob * u * 2, out * u, INK)
     svg = re.sub(r'(width|height)="[\d.]+"', lambda k: '%s="%d"' % (k.group(1), px), svg, count=2)
     i = svg.index('>') + 1
     j = svg.rindex('</svg>')
-    return svg[:i] + f + '<g filter="url(#nb)">' + svg[i:j] + '</g>' + svg[j:]
+    jig = ''
+    if variant:   # flipbook frame: the whole drawing nudged and tilted a little
+        import random
+        r = random.Random(variant * 31 + px)
+        jig = ' transform="translate(%.1f %.1f) rotate(%.1f %.1f %.1f)"' % (r.uniform(-1.5, 1.5) * px / 128 * u, r.uniform(-1.5, 1.5) * px / 128 * u, r.uniform(-1.8, 1.8), vw / 2, vw / 2)
+    return svg[:i] + f + '<g filter="url(#nb)"><g%s>' % jig + svg[i:j] + '</g></g>' + svg[j:]
 if __name__ == '__main__':
-    names = sys.argv[1:] or list(SETS)
+    args = sys.argv[1:]
+    variants = '--variants' in args       # also write <Name>_1 / <Name>_2 (flipbook frames) next to each PNG
+    names = [a for a in args if not a.startswith('--')] or list(SETS)
     jobs = []
     os.makedirs('svg_ink', exist_ok=True)
     for s in names:
@@ -50,6 +57,12 @@ if __name__ == '__main__':
             n = f[:-4]; png = RES + pd + '/' + n + '.png'
             if not os.path.exists(png): continue
             p = 'svg_ink/%s_%s.svg' % (s, n)
-            open(p, 'w').write(inkify(open(SRC + sd + '/' + f).read(), px)); jobs.append((p, png, px, px, True))
+            src = open(SRC + sd + '/' + f).read()
+            if not variants:
+                open(p, 'w').write(inkify(src, px)); jobs.append((p, png, px, px, True))
+            else:
+                for k in (1, 2):
+                    pk = 'svg_ink/%s_%s_%d.svg' % (s, n, k)
+                    open(pk, 'w').write(inkify(src, px, k)); jobs.append((pk, RES + pd + '/%s_%d.png' % (n, k), px, px, True))
     json.dump(jobs, open('jobs_ink.json', 'w')); print(len(jobs), 'icons')
     subprocess.run(['node', 'render.js', 'jobs_ink.json'], check=True, env=dict(os.environ, NODE_PATH=subprocess.check_output(['npm', 'root', '-g']).decode().strip()))

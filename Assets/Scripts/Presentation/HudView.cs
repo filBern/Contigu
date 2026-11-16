@@ -454,6 +454,7 @@ namespace Contigu.Presentation
 
                 slot.gameObject.SetActive(false);
                 _enemySlots.Add(slot.gameObject);
+                SpriteFlipbook.Attach(icon);
                 _enemyIconImages.Add(icon);
                 _enemyIconLabels.Add(label);
                 _enemyIconViews.Add(iconView);

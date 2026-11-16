@@ -944,6 +944,7 @@ namespace Contigu.Presentation
                 UIFactory.StretchFull(icon.rectTransform);
                 UIFactory.AddDropShadow(icon, 4f, 0.4f);
                 icon.sprite = HudView.EnemyIconSprite(upcoming[i]);
+                SpriteFlipbook.Attach(icon);
 
                 // Same hover-tooltip component as HudView's own enemy band (see EnemyIconView), just fed
                 // the base MaxHp here since no EnemyInstance exists yet for a round that isn't built.
