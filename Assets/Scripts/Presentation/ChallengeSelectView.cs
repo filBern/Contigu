@@ -43,6 +43,9 @@ namespace Contigu.Presentation
 
         /// <summary>The "Collection" button: open the collection of discoveries.</summary>
         public event Action CollectionRequested;
+
+        /// <summary>The "Back" button (top right): leave the challenge picker for the main menu.</summary>
+        public event Action BackRequested;
         private Button _continueButton;
 
         private RectTransform _root;
@@ -360,6 +363,16 @@ namespace Contigu.Presentation
             collectionRect.anchoredPosition = new Vector2(30f, -44f);
             collectionRect.sizeDelta = new Vector2(210f, 54f);
             collectionButton.onClick.AddListener(() => { if (CollectionRequested != null) { CollectionRequested(); } });
+
+            // Back to the main menu, mirrored from the Collection button (top right; one big touch target).
+            var backButton = UIFactory.CreateButton(_root, "Back", "Back", UISprites.Garden("Red") ?? UISprites.CancelButtonBackground, 22);
+            var backRect = backButton.GetComponent<RectTransform>();
+            backRect.anchorMin = new Vector2(1f, 1f);
+            backRect.anchorMax = new Vector2(1f, 1f);
+            backRect.pivot = new Vector2(1f, 1f);
+            backRect.anchoredPosition = new Vector2(-30f, -44f);
+            backRect.sizeDelta = new Vector2(210f, 54f);
+            backButton.onClick.AddListener(() => { if (BackRequested != null) { BackRequested(); } });
         }
 
         private Button BuildLevelButton(Transform card, string name, string label, float x, int direction)

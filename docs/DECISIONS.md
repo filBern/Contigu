@@ -9806,3 +9806,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-16 — Cadres plus « dessinés à la main »
 - Constat (capture de la boîte « Coming up ») : les cadres faisaient propres et 3D. Les contours des sprites de cadre sont plus ondulés (`ink.py` : amplitude du tremblé ×2,5, segments plus courts), régénérés avec `generate_notebook.py` et `generate_tiles.py` (boutons, panneaux, barres, tuiles).
 - Code : `UITheme.Border` passe de l'ardoise (#13212e) à l'encre (#2a2420) ; `ButtonDepth` n'a plus l'extrusion sombre ni l'ombre douce, seulement un léger décalage encre (0,45) sous le bouton. Non vérifié dans Unity.
+
+## 2026-11-16 — Bouton Back sur le choix de challenge
+- `ChallengeSelectView` : bouton « Back » (rouge) en haut à droite, symétrique de « Collection » ; l'événement `BackRequested` est relié à `OnMainMenuRequested` (même sortie que « Save and quit » : retour à la scène du menu principal, sans run en cours c'est un simple retour au titre). Non vérifié dans Unity.
