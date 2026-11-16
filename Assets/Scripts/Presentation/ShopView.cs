@@ -155,7 +155,7 @@ namespace Contigu.Presentation
             _tooltip = tooltip;
 
             // Opaque: the HUD behind must not show through, the shop is its own place (a market stall's back wall, awning and shelves).
-            var overlay = UIFactory.CreatePanel(parent, "ShopOverlay", new Color(0.19f, 0.13f, 0.10f, 1f));
+            var overlay = UIFactory.CreatePanel(parent, "ShopOverlay", UITheme.Background);
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
             // Enabled with the shop's own activation (the overlay starts inactive), so it zooms the UI exactly while the shop is on screen.
@@ -383,7 +383,7 @@ namespace Contigu.Presentation
         {
             for (int i = 0; i < 16; i++)
             {
-                var plank = UIFactory.CreatePanel(_root, "Plank_" + i, i % 2 == 0 ? new Color(0.22f, 0.15f, 0.11f, 1f) : new Color(0.17f, 0.115f, 0.085f, 1f));
+                var plank = UIFactory.CreatePanel(_root, "Plank_" + i, i % 2 == 0 ? new Color(0.925f, 0.875f, 0.765f, 1f) : new Color(0.90f, 0.85f, 0.73f, 1f));
                 plank.raycastTarget = false;
                 plank.rectTransform.anchorMin = new Vector2(i / 16f, 0f);
                 plank.rectTransform.anchorMax = new Vector2((i + 1) / 16f, 1f);

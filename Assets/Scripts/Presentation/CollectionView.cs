@@ -52,7 +52,7 @@ namespace Contigu.Presentation
         {
             _tooltip = tooltip;
             // The shop's back wall (dark planks), like the seed bag: the collection is a shelf of planters in the same stall.
-            var overlay = UIFactory.CreatePanel(parent, "CollectionOverlay", new Color(0.17f, 0.115f, 0.085f, 1f));
+            var overlay = UIFactory.CreatePanel(parent, "CollectionOverlay", UITheme.Background);
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
             StallBackdrop.AddPlanks(_root);
@@ -160,7 +160,7 @@ namespace Contigu.Presentation
                 bool chosen = Tabs[i] == _current;
                 _tabImages[i].sprite = (chosen ? UISprites.Garden("Gold") : UISprites.Garden("Wood")) ?? _tabImages[i].sprite;
                 _tabImages[i].color = Color.white;
-                _tabLabels[i].color = chosen ? new Color(1f, 0.89f, 0.48f, 1f) : new Color(0.96f, 0.89f, 0.75f, 1f);
+                _tabLabels[i].color = chosen ? UITheme.Ink : new Color(0.165f, 0.141f, 0.125f, 0.7f);
             }
             int percent = total > 0 ? Mathf.FloorToInt(100f * found / total) : 0;
             _overallLabel.text = "Discovered " + found + " / " + total + "  (" + percent + "%)";
@@ -233,7 +233,7 @@ namespace Contigu.Presentation
             bool locked = entry.Unlock != null && Unlocks != null && !Unlocks.IsUnlocked(entry.Unlock.Kind, entry.Unlock.Id);
             if (!discovered)
             {
-                var mark = UIFactory.CreateText(cell.transform, "Mark", locked ? "X" : "?", Mathf.RoundToInt(size * 0.5f), new Color(1f, 0.93f, 0.8f, 0.7f));
+                var mark = UIFactory.CreateText(cell.transform, "Mark", locked ? "X" : "?", Mathf.RoundToInt(size * 0.5f), new Color(0.165f, 0.141f, 0.125f, 0.5f));
                 mark.raycastTarget = false;
                 UIFactory.StretchFull(mark.rectTransform);
             }

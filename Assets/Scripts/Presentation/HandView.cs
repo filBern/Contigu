@@ -342,7 +342,7 @@ namespace Contigu.Presentation
             _shuffleCountLabel.rectTransform.offsetMin = new Vector2(52f, 0f);
             _shuffleCountLabel.rectTransform.offsetMax = new Vector2(-12f, 0f);
             var labelOutline = _shuffleCountLabel.gameObject.AddComponent<Outline>();
-            labelOutline.effectColor = UITheme.Border;
+            labelOutline.effectColor = UITheme.TextHalo;
             labelOutline.effectDistance = new Vector2(2f, -2f);
 
             _shuffleButton.onClick.AddListener(() =>

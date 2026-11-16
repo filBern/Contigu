@@ -200,7 +200,7 @@ namespace Contigu.Presentation
             if (lettered)
             {
                 var outline = text.gameObject.AddComponent<Outline>();
-                outline.effectColor = UITheme.Border;
+                outline.effectColor = UITheme.TextHalo;
                 outline.effectDistance = new Vector2(2f, -2f);
             }
             return btn;

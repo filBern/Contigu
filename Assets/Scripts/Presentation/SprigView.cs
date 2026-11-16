@@ -111,7 +111,7 @@ namespace Contigu.Presentation
             _toastRoot.gameObject.SetActive(false);
 
             // Guide: dimmed full-screen click catcher + frame + big Sprig.
-            var dim = UIFactory.CreatePanel(parent, "SprigGuide", new Color(0.03f, 0.05f, 0.08f, 0.5f));
+            var dim = UIFactory.CreatePanel(parent, "SprigGuide", new Color(0.925f, 0.875f, 0.765f, 0.82f));
             _guideRoot = dim.rectTransform;
             UIFactory.StretchFull(_guideRoot);
             var click = dim.gameObject.AddComponent<Button>();

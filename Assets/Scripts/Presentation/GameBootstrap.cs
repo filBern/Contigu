@@ -782,7 +782,7 @@ namespace Contigu.Presentation
             var deckButton = UIFactory.CreateButton(parent, "ShowDeckButton", "Seed bag", UISprites.Garden("Blue") ?? UISprites.HandUtilityButtonBackground, 12);
             var deckLabel = deckButton.GetComponentInChildren<Text>();
             var deckOutline = deckLabel.gameObject.AddComponent<Outline>();
-            deckOutline.effectColor = UITheme.Border;
+            deckOutline.effectColor = UITheme.TextHalo;
             deckOutline.effectDistance = new Vector2(2f, -2f);
             deckLabel.fontSize = 25;
             var deckRect = deckButton.GetComponent<RectTransform>();
@@ -796,7 +796,7 @@ namespace Contigu.Presentation
             var menuColumnButton = UIFactory.CreateButton(parent, "MenuButton", "Menu", UISprites.Garden("Gold") ?? UISprites.HandUtilityButtonBackground, 12);
             var menuColumnLabel = menuColumnButton.GetComponentInChildren<Text>();
             var menuOutline = menuColumnLabel.gameObject.AddComponent<Outline>();
-            menuOutline.effectColor = UITheme.Border;
+            menuOutline.effectColor = UITheme.TextHalo;
             menuOutline.effectDistance = new Vector2(2f, -2f);
             menuColumnLabel.fontSize = 25;
             var menuColumnRect = menuColumnButton.GetComponent<RectTransform>();

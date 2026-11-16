@@ -71,20 +71,20 @@ namespace Contigu.Presentation
             var bannerLayout = _banner.gameObject.AddComponent<LayoutElement>();
             bannerLayout.preferredWidth = PillWidth * 2f + PillSpacing * 2f;
             bannerLayout.preferredHeight = 34f;
-            _bannerText = UIFactory.CreateText(_banner.transform, "RoundBannerText", "ROUND 1 / 12", 22, Color.white);
+            _bannerText = UIFactory.CreateText(_banner.transform, "RoundBannerText", "ROUND 1 / 12", 22, UITheme.Ink);
             _bannerText.raycastTarget = false;
             UIFactory.StretchFull(_bannerText.rectTransform);
             AddTextOutline(_bannerText);
 
             // Running total (chips x mult), in a dark inset box.
             var totalBox = UIFactory.CreateSlicedImage(_root, "TotalBox", UISprites.CardBackground);
-            totalBox.color = new Color(0.12f, 0.16f, 0.21f, 1f);
+            totalBox.color = new Color(1f, 0.97f, 0.90f, 1f);
             totalBox.raycastTarget = false;
             UIFactory.AddThickOutline(totalBox, UITheme.Border, 2f);
             var totalBoxLayout = totalBox.gameObject.AddComponent<LayoutElement>();
             totalBoxLayout.preferredWidth = PillWidth * 2f + PillSpacing * 2f;
             totalBoxLayout.preferredHeight = 58f;
-            _totalText = UIFactory.CreateText(totalBox.transform, "TotalText", "0", 46, Color.white);
+            _totalText = UIFactory.CreateText(totalBox.transform, "TotalText", "0", 46, UITheme.Ink);
             _totalText.raycastTarget = false;
             UIFactory.StretchFull(_totalText.rectTransform);
             AddTextOutline(_totalText);
@@ -109,7 +109,7 @@ namespace Contigu.Presentation
             chipsLayout.preferredWidth = PillWidth;
             chipsLayout.preferredHeight = PillHeight;
             _chipsPill = chipsPill.rectTransform;
-            _chipsText = UIFactory.CreateText(chipsPill.transform, "ChipsText", "0", 40, Color.white);
+            _chipsText = UIFactory.CreateText(chipsPill.transform, "ChipsText", "0", 40, UITheme.Ink);
             UIFactory.StretchFull(_chipsText.rectTransform);
             AddTextOutline(_chipsText);
 
@@ -125,7 +125,7 @@ namespace Contigu.Presentation
             multLayout.preferredWidth = PillWidth;
             multLayout.preferredHeight = PillHeight;
             _multPill = multPill.rectTransform;
-            _multText = UIFactory.CreateText(multPill.transform, "MultText", "1", 40, Color.white);
+            _multText = UIFactory.CreateText(multPill.transform, "MultText", "1", 40, UITheme.Ink);
             UIFactory.StretchFull(_multText.rectTransform);
             AddTextOutline(_multText);
 
@@ -135,7 +135,7 @@ namespace Contigu.Presentation
         private static void AddTextOutline(Text text)
         {
             var outline = text.gameObject.AddComponent<Outline>();
-            outline.effectColor = UITheme.Border;
+            outline.effectColor = UITheme.TextHalo;
             outline.effectDistance = new Vector2(2f, -2f);
         }
 

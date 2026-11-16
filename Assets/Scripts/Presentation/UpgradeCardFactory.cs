@@ -50,7 +50,7 @@ namespace Contigu.Presentation
             }
 
             // No FontStyle.Bold: the Digitalt font has no true bold face, so Unity's legacy Text synthesizes one by double-drawing a shifted copy, which reads as blurry. Size alone carries the emphasis.
-            var nameLabel = UIFactory.CreateText(container, "Name", def.Name, 33, Color.white);
+            var nameLabel = UIFactory.CreateText(container, "Name", def.Name, 33, UITheme.Ink);
             PositionRow(nameLabel, -iconBlock, NameHeight);
 
             float descY = -(iconBlock + NameHeight + LineSpacing);
@@ -58,13 +58,13 @@ namespace Contigu.Presentation
             {
                 var rarityLabel = UIFactory.CreateText(container, "Rarity",
                     UpgradeVisualDefaults.GetRarityLabel(def.Rarity) + " · " + UpgradeVisualDefaults.GetPoolLabel(def.Pool),
-                    21, Color.white);
+                    21, UITheme.Ink);
                 rarityLabel.fontStyle = FontStyle.Italic;
                 PositionRow(rarityLabel, descY, RarityHeight);
                 descY -= (RarityHeight + LineSpacing);
             }
 
-            var descLabel = UIFactory.CreateText(container, "Desc", DescriptionTextFormatter.Colorize(def.Description, 23), 23, Color.white);
+            var descLabel = UIFactory.CreateText(container, "Desc", DescriptionTextFormatter.Colorize(def.Description, 23), 23, UITheme.Ink);
             InlineIconLabel.Set(descLabel, descLabel.text, Contigu.Data.VisualDefaults.PollenSprite);
             float descHeight = PreferredHeight(descLabel, Width);
             PositionRow(descLabel, descY, descHeight);

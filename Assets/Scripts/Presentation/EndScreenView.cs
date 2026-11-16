@@ -34,7 +34,7 @@ namespace Contigu.Presentation
         public RectTransform Build(Transform parent)
         {
             // The shop's back wall (dark planks), one big planter on it, and the outcome as a plaque: the same look as the seed bag and the shop.
-            var overlay = UIFactory.CreatePanel(parent, "EndScreen", new Color(0.17f, 0.115f, 0.085f, 1f));
+            var overlay = UIFactory.CreatePanel(parent, "EndScreen", UITheme.Background);
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
             StallBackdrop.AddPlanks(_root);
@@ -228,7 +228,7 @@ namespace Contigu.Presentation
                 + "   ·   Runs played: " + metaStats.TotalRunsPlayed
                 + "   ·   Victories: " + metaStats.TotalVictories
                 + (string.IsNullOrEmpty(unlockedText) ? "" : "\n" + unlockedText);
-            _metaStatsText.color = isNewBestScore ? new Color(0.62f, 0.9f, 0.45f) : UITheme.TextOnBackground;
+            _metaStatsText.color = isNewBestScore ? new Color(0.16f, 0.45f, 0.12f) : UITheme.TextOnBackground;
         }
 
         public void Hide()

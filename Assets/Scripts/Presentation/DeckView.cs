@@ -63,7 +63,7 @@ namespace Contigu.Presentation
             _tooltip = tooltip;
 
             // The shop's back wall (the same dark planks), so the seed bag reads as part of the same stall.
-            var overlay = UIFactory.CreatePanel(parent, "DeckOverlay", new Color(0.17f, 0.115f, 0.085f, 1f));
+            var overlay = UIFactory.CreatePanel(parent, "DeckOverlay", UITheme.Background);
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
             StallBackdrop.AddPlanks(_root);
@@ -76,7 +76,7 @@ namespace Contigu.Presentation
             header.anchoredPosition = new Vector2(0f, -22f);
             header.sizeDelta = new Vector2(360f, 48f);
 
-            _countLabel = UIFactory.CreateText(_root, "Count", "", 22, new Color(0.96f, 0.89f, 0.75f, 1f));
+            _countLabel = UIFactory.CreateText(_root, "Count", "", 22, UITheme.Ink);
             _countLabel.rectTransform.anchorMin = new Vector2(0.5f, 1f);
             _countLabel.rectTransform.anchorMax = new Vector2(0.5f, 1f);
             _countLabel.rectTransform.pivot = new Vector2(0.5f, 1f);

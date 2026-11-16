@@ -338,7 +338,7 @@ namespace Contigu.Presentation
         private void BuildEnemyBand(Transform parent)
         {
             // A plain dark slate band: the golden Pollen and the cream chips read on it, and nothing competes with the pests.
-            var band = UIFactory.CreatePanel(parent, "EnemyBand", new Color(0.16f, 0.26f, 0.36f, 1f));
+            var band = UIFactory.CreatePanel(parent, "EnemyBand", new Color(0.86f, 0.79f, 0.64f, 1f));
             UIFactory.AddThickOutline(band, UITheme.Border);
             band.rectTransform.anchorMin = new Vector2(0f, 1f);
             band.rectTransform.anchorMax = new Vector2(1f, 1f);
@@ -448,7 +448,7 @@ namespace Contigu.Presentation
                 label.horizontalOverflow = HorizontalWrapMode.Overflow;
                 label.verticalOverflow = VerticalWrapMode.Overflow;
                 var labelOutline = label.gameObject.AddComponent<Outline>();
-                labelOutline.effectColor = UITheme.Border;
+                labelOutline.effectColor = UITheme.TextHalo;
                 labelOutline.effectDistance = new Vector2(1.5f, -1.5f);
                 UIFactory.StretchFull(label.rectTransform);
 

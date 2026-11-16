@@ -190,7 +190,7 @@ namespace Contigu.Presentation
             invalidMarker.gameObject.SetActive(false);
 
             // Spells out a modifier cell's effect ("+18", "x2", "x4") as text.
-            var effectLabel = UIFactory.CreateText(cellGo, "EffectLabel", "", 11, Color.white, TextAnchor.LowerCenter);
+            var effectLabel = UIFactory.CreateText(cellGo, "EffectLabel", "", 11, UITheme.Ink, TextAnchor.LowerCenter);
             effectLabel.rectTransform.anchorMin = new Vector2(0f, 0f);
             effectLabel.rectTransform.anchorMax = new Vector2(1f, 0f);
             effectLabel.rectTransform.pivot = new Vector2(0.5f, 0f);

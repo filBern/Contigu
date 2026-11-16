@@ -50,7 +50,7 @@ namespace Contigu.Presentation
 
         public RectTransform Build(Transform parent)
         {
-            var overlay = UIFactory.CreatePanel(parent, "ShapeCarouselOverlay", new Color(0f, 0f, 0f, 0.88f));
+            var overlay = UIFactory.CreatePanel(parent, "ShapeCarouselOverlay", new Color(0.925f, 0.875f, 0.765f, 0.96f));
             _root = overlay.rectTransform;
             UIFactory.StretchFull(_root);
 

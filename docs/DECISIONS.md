@@ -9783,3 +9783,9 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-16 — Style « cahier », étape 6 : cartes d'upgrades et icônes restantes
 - `Design/Notebook/inkify.py` étendu : `upgrades` (106 pancartes `Icons/Upgrades`), `mystery` (5), `growth` (badges de stade et de racines ; `Fruit_Glow` est une lueur, laissée telle quelle), `challenges` (6 icônes de challenge, sources PNG enveloppées dans un SVG pour passer par le même filtre).
 - Limites : les icônes de `Growth` et de `Challenges` gardent leur gros contour bleu marine d'origine (il est dans l'image) sous le nouveau contour encre ; `Icons/Modifiers` (anciens modificateurs, quasi inutilisés) et `Pollen`/`GoldenTile` non repris. Les pancartes d'upgrades ne sont plus affichées dans la boutique (seuls les glyphes le sont). Non vérifié dans Unity.
+
+## 2026-11-16 — Style « cahier » : correction de la lisibilité des textes
+- Constat (capture de l'auteur) : le texte encre portait encore le contour sombre prévu pour du texte clair (Seed bag, Menu, Shuffle, PV des ennemis : des blobs), et des écrans plein cadre gardaient un fond sombre sous du texte devenu encre.
+- Contours de texte : `UITheme.TextHalo` (halo papier) remplace `UITheme.Border` sur les textes encre (boutons lettrés, Combo, Seed bag, Menu, Shuffle, PV).
+- Fonds : les écrans plein cadre (Collection, Deck, Fin de run, Boutique, choix de challenge, Menu/réglages, carrousels, tutoriel, révélation d'upgrade, guide de Sprig) passent au papier ; bande des ennemis et en-tête d'infobulle en beige ; boîte du total (ComboView) en crème.
+- Textes clairs codés en dur passés à l'encre (Combo, carte d'upgrade, Collection, étiquettes de pledge, nom de challenge, étiquette d'effet de case, compte du deck). Non vérifié dans Unity.

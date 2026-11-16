@@ -23,8 +23,8 @@ namespace Contigu.Presentation
         private const float ArrowButtonSize = 76f;
         private const float ArrowGap = 28f;
         private const float PopDuration = 0.18f;
-        private static readonly Color BackdropWood = new Color(0.15f, 0.10f, 0.08f, 1f);
-        private static readonly Color BackdropStripe = new Color(0.20f, 0.13f, 0.10f, 1f);
+        private static readonly Color BackdropWood = new Color(0.925f, 0.875f, 0.765f, 1f);
+        private static readonly Color BackdropStripe = new Color(0.90f, 0.85f, 0.73f, 1f);
         private static readonly Color AwningRed = new Color(0.78f, 0.25f, 0.22f, 1f);
         private static readonly Color AwningCream = new Color(0.96f, 0.90f, 0.76f, 1f);
         // Entrance fade — Show() can now fire slightly before the main menu's uncover sweep has fully
@@ -245,7 +245,7 @@ namespace Contigu.Presentation
                 chip.Value.sprite = on ? (UISprites.Garden("Gold") ?? PledgeOffSprite(chip.Key, chip.Value)) : PledgeOffSprite(chip.Key, chip.Value);
                 chip.Value.color = on ? Color.white : PledgeOffTint;
                 if (_pledgeChecks.TryGetValue(chip.Key, out var check)) { check.SetActive(on); }
-                if (_pledgeLabels.TryGetValue(chip.Key, out var label) && label != null) { label.color = on ? new Color(1f, 0.89f, 0.48f, 1f) : new Color(0.72f, 0.94f, 0.54f, 0.65f); }
+                if (_pledgeLabels.TryGetValue(chip.Key, out var label) && label != null) { label.color = on ? UITheme.Ink : new Color(0.165f, 0.141f, 0.125f, 0.6f); }
             }
         }
 
@@ -441,7 +441,7 @@ namespace Contigu.Presentation
             playRect.sizeDelta = new Vector2(hasSave ? CardWidth - 140f : CardWidth - 60f, hasSave ? 44f : 56f);
             _playButtonLabel.fontSize = hasSave ? 20 : 26;
             _playButtonLabel.resizeTextMaxSize = _playButtonLabel.fontSize;
-            _playButtonLabel.color = hasSave ? new Color(0.72f, 0.94f, 0.54f, 1f) : new Color(1f, 0.89f, 0.48f, 1f);
+            _playButtonLabel.color = UITheme.Ink;
             if (_playButton.interactable && !_playArmed) { _playButtonLabel.text = hasSave ? "New run" : "Play"; }
         }
 
@@ -573,7 +573,7 @@ namespace Contigu.Presentation
             var plot = UISprites.Garden(PlotNameFor(challenge));
             _banner.sprite = plot ?? UISprites.CardBackground;
             _banner.color = plot != null ? Color.white : accent;
-            _nameLabel.color = plot == null ? UITheme.TextOnBackground : plot.name.EndsWith("Light") ? new Color(0.10f, 0.20f, 0.10f, 1f) : UIFactory.PlotTextColor(plot.name);
+            _nameLabel.color = UITheme.Ink;
             var icon = Resources.Load<Sprite>("Icons/Challenges/" + challenge.Name);
             _bannerIcon.sprite = icon;
             _bannerIcon.enabled = icon != null;
