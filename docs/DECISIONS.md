@@ -9830,3 +9830,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Sacs de fertilizers redessinés (au lieu du filtre de silhouette)
 - Retour de l'auteur : l'effet « dessiné à la main » des sacs (filtre d'ondulation + contour de silhouette d'`inkify.py`) était laid (bords déchiquetés). `Design/Notebook/generate_bags.py` redessine l'enveloppe du sac avec la bibliothèque d'encre (double trait propre, remplissage crayon par RARETÉ : crème / bleu / orange / or, extrémités serties à hachures, bande de la couleur de la catégorie, fenêtre crème de 4 formes selon la clé) autour du motif vectoriel existant (`generate_icons.py`, recoloré à l'encre et à peine ondulé). 133 sacs réécrits dans `Icons/Fertilizers` ; les autres (sans motif dans le générateur) restent tels quels. Non vérifié dans Unity.
+
+## 2026-11-16 — Les 4 derniers sacs (Glow) au nouveau dessin
+- `generate_bags.py` couvre aussi `EclatCoral/Teal/Violet/Lime` (Poppy/Iris/Sunflower/Fern Glow, sans entrée dans `generate_icons.F` : leurs anciens sacs de toile étaient faits à la main) : même sac, rareté Uncommon (bleu), motif d'étoile brillante de la couleur de la fleur. Les 137 sacs sont maintenant au même style. Non vérifié dans Unity.

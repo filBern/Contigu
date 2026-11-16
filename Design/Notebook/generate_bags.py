@@ -17,7 +17,10 @@ def window(d, shape, cx, cy, r):
     elif shape == 2: d.line([(cx - r * .5, cy - r), (cx + r * .5, cy - r), (cx + r, cy), (cx + r * .5, cy + r), (cx - r * .5, cy + r), (cx - r, cy)], w=3, closed=True, fill='#fffaf0', a=1)
     else: d.line([(cx - r, cy - r * .9), (cx + r, cy - r * .9), (cx + r, cy + r * .1), (cx, cy + r * 1.05), (cx - r, cy + r * .1)], w=3, closed=True, fill='#fffaf0', a=1)
 JOBS = []
-for k, (m, kind, txt, cat) in G.F.items():
+# The four "Glow" fertilizers have no entry in generate_icons.F (their old sacks were drawn by hand): same bag, with the glow star motif of their color.
+EXTRA = {'EclatCoral': G.glow('#c8403f'), 'EclatTeal': G.glow('#4f7fd0'), 'EclatViolet': G.glow('#e8a82e'), 'EclatLime': G.glow('#5a9e45')}
+ITEMS = [(k, v[0], v[3], None) for k, v in G.F.items()] + [(k, None, 'Couleurs', fn) for k, fn in EXTRA.items()]
+for k, m, cat, motif_fn in ITEMS:
     name, category, rarity = G.game_info(k)
     catcol = G.CAT_COLORS[G.sack_category(k, cat)]
     band = CATPASTEL.get(G.CAT[G.sack_category(k, cat)] if G.sack_category(k, cat) in G.CAT else '#8c63b0', '#c3a6e0')
@@ -34,7 +37,7 @@ for k, (m, kind, txt, cat) in G.F.items():
     elif bstyle == 1: d.line([(50, 58), (206, 58), (206, 70), (50, 70)], w=2.4, closed=True, fill=band, a=.8); d.line([(50, 194), (206, 194), (208, 214), (48, 214)], w=2.4, closed=True, fill=band, a=1)
     else: d.line([(46, 62), (66, 62), (66, 212), (48, 212)], w=2.4, closed=True, fill=band, a=1); d.line([(190, 62), (210, 62), (208, 212), (190, 212)], w=2.4, closed=True, fill=band, a=1)
     window(d, wshape, 128, 124, 58)
-    motif = G.M[m]().replace(G.O, INK)
+    motif = (motif_fn() if motif_fn else G.M[m]()).replace(G.O, INK)
     d.o.append('<g filter="url(#lw)"><g transform="translate(%g %g) scale(1.0)">%s</g></g>' % (128 - 50, 124 - 46, motif))
     svg = d.svg(256, 256).replace('<defs>', '<defs><filter id="lw" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="1" seed="2"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>', 1)
     open('svg/Bag_%s.svg' % k, 'w').write(svg)
