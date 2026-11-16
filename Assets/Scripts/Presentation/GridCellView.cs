@@ -133,7 +133,7 @@ namespace Contigu.Presentation
                 _lockedOverlay.color = lockedSprite != null ? Color.white : VisualDefaults.LockedColor;
                 // The empty cell underneath is what remains once the lock fades out.
                 Background.sprite = VisualDefaults.EmptyTileSprite;
-                Background.color = VisualDefaults.EmptyTileSprite != null ? new Color(0.6f, 0.6f, 0.6f, 1f) : VisualDefaults.EmptyCellColor;
+                Background.color = VisualDefaults.EmptyTileSprite != null ? Color.white : VisualDefaults.EmptyCellColor;
             }
             else if (isFilled)
             {
@@ -158,8 +158,8 @@ namespace Contigu.Presentation
             else
             {
                 Background.sprite = VisualDefaults.EmptyTileSprite;
-                // Dimmed so a planted (colored) tile pops out of the empty plots around it.
-                Background.color = VisualDefaults.EmptyTileSprite != null ? new Color(0.6f, 0.6f, 0.6f, 1f) : VisualDefaults.EmptyCellColor;
+                // Notebook style: the empty plot is pale beige already (no dimming), a planted tile pops by its crayon color.
+                Background.color = VisualDefaults.EmptyTileSprite != null ? Color.white : VisualDefaults.EmptyCellColor;
             }
 
             // Fallback overlay for a filled, non-obstacle cell when TileSprite itself failed to load.

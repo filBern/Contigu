@@ -9757,3 +9757,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - C# : `UITheme.Background` devient le papier (#ecdfc3), `UITheme.Ink` ajouté, `TextOnBackground`/`TextMutedOnBackground` passent à l'encre, `PlotTextColor` renvoie l'encre pour tous les corps de bouton, l'en-tête d'infobulle prend l'encre.
 - **Non vérifié dans Unity** (seul le CI compile). Risques connus : textes clairs codés en dur ailleurs sur d'anciens fonds sombres ; lucioles/pétales de `AnimatedBackgroundView` pensés pour un fond nuit (peu visibles sur papier) ; tuiles de pièces, icônes, ennemis, météo, Sprig, titre et sacs de fertilizers pas encore au nouveau style.
 - Suite prévue : tuiles et pièces, icônes (fertilizers, upgrades, traits), ennemis et météo, Sprig et titre, puis ambiance animée.
+
+## 2026-11-16 — Style « cahier », étape 2 : tuiles et pièces
+- `Design/Notebook/generate_tiles.py` (+ `render.js jobs_tiles.json`) réécrit, à noms et tailles identiques, les tuiles de pièces `Tiles/Ember` (Poppy), `Frost` (Iris), `Gold` (Sunflower), `Moss` (Fern), `Joker`, les cases spéciales `Golden`, `Frozen`, `Bonus` (x2), `Icons/LockedTile`, `Icons/GoldenStar`, ainsi que les pétales de récolte (`Icons/Petals/*`) et les projectiles d'attaque (`Icons/Attacks/*`) : lit d'un crayon de la couleur de la pièce, contour encre, fleur dessinée à l'encre. Les pièces de la main et les aperçus utilisent les mêmes sprites.
+- `GridCellView` : la case vide n'est plus assombrie (0,6 gris) : elle est déjà beige pâle, la tuile plantée ressort par sa couleur.
+- Non vérifié dans Unity. Reste : icônes (fertilizers, upgrades, traits), ennemis, météo, Sprig, titre, ambiance animée.
