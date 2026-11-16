@@ -9793,3 +9793,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-16 — Police manuscrite (Patrick Hand) partout
 - `UIFactory.DefaultFont()` charge `Font/PatrickHand-Regular` (déjà utilisée pour les bulles de Sprig), avec repli sur Digitalt puis la police intégrée. `Tools/qa/glyph_audit.py` vérifie maintenant les glyphes de Patrick Hand : seul « → » manquait (sous-titre de montée de niveau), remplacé par « > ».
 - Patrick Hand est plus fine et plus petite que Digitalt (pas de gras) : certaines tailles seront peut-être à augmenter après un test visuel. Non vérifié dans Unity.
+
+## 2026-11-16 — Pledges : texte blanc sans halo
+- Les puces de pledge (choix de challenge) sont vertes foncées quand elles sont désactivées : leur texte devient blanc, sans le halo papier (qui faisait un contour étrange). Activées (puce dorée pâle), le texte reste encre pour rester lisible. Non vérifié dans Unity.

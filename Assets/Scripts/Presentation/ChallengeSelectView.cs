@@ -203,6 +203,9 @@ namespace Contigu.Presentation
                 AddCheckBar(badge.transform, new Vector2(3f, 0f), 15f, 45f);
                 _pledgeChecks[pledge] = badge.gameObject;
                 _pledgeLabels[pledge] = chip.GetComponentInChildren<Text>();
+                // The chips are dark green: white text, no halo (a paper halo around light text looks odd).
+                var pledgeOutline = _pledgeLabels[pledge].GetComponent<Outline>();
+                if (pledgeOutline != null) { Destroy(pledgeOutline); }
                 chip.onClick.AddListener(() =>
                 {
                     _selectedPledges ^= pledge;
@@ -245,7 +248,7 @@ namespace Contigu.Presentation
                 chip.Value.sprite = on ? (UISprites.Garden("Gold") ?? PledgeOffSprite(chip.Key, chip.Value)) : PledgeOffSprite(chip.Key, chip.Value);
                 chip.Value.color = on ? Color.white : PledgeOffTint;
                 if (_pledgeChecks.TryGetValue(chip.Key, out var check)) { check.SetActive(on); }
-                if (_pledgeLabels.TryGetValue(chip.Key, out var label) && label != null) { label.color = on ? UITheme.Ink : new Color(0.165f, 0.141f, 0.125f, 0.6f); }
+                if (_pledgeLabels.TryGetValue(chip.Key, out var label) && label != null) { label.color = on ? UITheme.Ink : Color.white; }
             }
         }
 
