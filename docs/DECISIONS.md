@@ -9850,3 +9850,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-16 — Compteur de Pollen : boîte et icône
 - Capture de l'auteur : la boîte du Pollen était trop grosse. Cause : le chiffre (84) était passé à 105 par `TextScale`, et la boîte épouse son contenu. La taille demandée est divisée par `TextScale` pour garder un chiffre de 84 px visuels comme avant.
 - L'icône `Icons/Pollen.png` est redessinée (`Design/Notebook/generate_pollen.py`) : grain jaune crayon à six bosses, contour encre, reflet. Non vérifié dans Unity.
+
+## 2026-11-16 — Planches latérales et bande des ennemis en style cahier
+- Capture de l'auteur : les planches brunes de gauche et de droite et la bande des ennemis n'étaient pas « dessinées à la main ». Elles utilisaient le sprite `Card` (désormais crayon + contour encre) mais teinté brun foncé et entouré d'un contour Unity net, avec liseré et clous. `UITweaks.boardWood` passe à un blanc chaud (défaut et asset), les contours moteur, le liseré et les clous sont retirés (colonne de gauche et de droite) ; la bande des ennemis devient une image 9-slice du même sprite (au lieu d'un aplat + contour moteur). Non vérifié dans Unity.

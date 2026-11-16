@@ -38,7 +38,7 @@ MonoBehaviour:
   screenMargin: 16
   columnGap: 24
   leftColumnFramePad: 10
-  boardWood: {r: 0.33, g: 0.22, b: 0.13, a: 1}
+  boardWood: {r: 1, g: 0.96, b: 0.88, a: 1}
   boardDark: {r: 0.13, g: 0.09, b: 0.06, a: 1}
   handSlotSize: 150
   handSlotSpacing: 12

@@ -158,7 +158,6 @@ namespace Contigu.Presentation
             containerImage.sprite = UISprites.CardBackground;
             containerImage.type = Image.Type.Sliced;
             containerImage.raycastTarget = false;
-            UIFactory.AddThickOutline(containerImage, BoardDark);
             var container = containerImage.rectTransform;
             container.sizeDelta = new Vector2(ColumnWidth, _columnHeight);
             _handContainer = containerImage;
@@ -1087,24 +1086,7 @@ namespace Contigu.Presentation
         /// <summary>A lighter lip along the top and a nail in each corner, like the left column's board.</summary>
         private static void AddBoardTrim(RectTransform board)
         {
-            var lip = UIFactory.CreatePanel(board, "Lip", new Color(0.46f, 0.31f, 0.18f, 1f));
-            lip.raycastTarget = false;
-            lip.rectTransform.anchorMin = new Vector2(0f, 1f);
-            lip.rectTransform.anchorMax = new Vector2(1f, 1f);
-            lip.rectTransform.pivot = new Vector2(0.5f, 1f);
-            lip.rectTransform.anchoredPosition = new Vector2(0f, -3f);
-            lip.rectTransform.sizeDelta = new Vector2(-16f, 3f);
-            for (int i = 0; i < 4; i++)
-            {
-                var nail = UIFactory.CreatePanel(board, "Nail" + i, BoardDark);
-                nail.raycastTarget = false;
-                float x = i % 2 == 0 ? 0f : 1f;
-                float y = i < 2 ? 1f : 0f;
-                nail.rectTransform.anchorMin = nail.rectTransform.anchorMax = new Vector2(x, y);
-                nail.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                nail.rectTransform.anchoredPosition = new Vector2(x == 0f ? 6f : -6f, y == 1f ? -6f : 6f);
-                nail.rectTransform.sizeDelta = new Vector2(5f, 5f);
-            }
+            // Notebook style: no carpentry trim (lip, nails); the board sprite has its own hand-drawn outline.
         }
 
         private void UpdateHandSizeLayout()

@@ -43,7 +43,7 @@ namespace Contigu.Presentation
         public float screenMargin = 16f;
         public float columnGap = 24f;
         [Tooltip("Débord de la planche de bois autour de la colonne de gauche.")] [Range(0f, 30f)] public float leftColumnFramePad = 10f;
-        public Color boardWood = new Color(0.33f, 0.22f, 0.13f, 1f);
+        public Color boardWood = new Color(1f, 0.96f, 0.88f, 1f); // a warm white tint over the crayon "Card" sprite (notebook style; was dark wood)
         public Color boardDark = new Color(0.13f, 0.09f, 0.06f, 1f);
         [Range(100f, 200f)] public float handSlotSize = 150f;
         [Range(0f, 30f)] public float handSlotSpacing = 12f;

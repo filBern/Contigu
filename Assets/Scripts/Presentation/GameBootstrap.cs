@@ -744,37 +744,16 @@ namespace Contigu.Presentation
         {
             float Pad = UITweaks.Current.leftColumnFramePad;
             var wood = UITweaks.Current.boardWood;
-            var dark = UITweaks.Current.boardDark;
             var frame = UIFactory.CreateSlicedImage(parent, "LeftColumnFrame", UISprites.CardBackground);
             frame.color = wood;
             frame.raycastTarget = false;
-            UIFactory.AddThickOutline(frame, dark);
+            // Notebook style: the "Card" sprite carries its own hand-drawn outline; no engine outline, lip or nails.
             var rect = frame.rectTransform;
             rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(columnWidth + 2f * Pad, topY - bottomY + 2f * Pad);
             rect.anchoredPosition = new Vector2(centerX, (topY + bottomY) * 0.5f);
             // Behind everything it frames (the score card is the first of them).
             rect.SetSiblingIndex(behind.GetSiblingIndex());
-
-            // A lighter lip along the top, like the shop's signs, and a nail in each corner.
-            var lip = UIFactory.CreatePanel(rect, "Lip", new Color(0.46f, 0.31f, 0.18f, 1f));
-            lip.raycastTarget = false;
-            lip.rectTransform.anchorMin = new Vector2(0f, 1f);
-            lip.rectTransform.anchorMax = new Vector2(1f, 1f);
-            lip.rectTransform.pivot = new Vector2(0.5f, 1f);
-            lip.rectTransform.anchoredPosition = new Vector2(0f, -3f);
-            lip.rectTransform.sizeDelta = new Vector2(-16f, 3f);
-            for (int i = 0; i < 4; i++)
-            {
-                var nail = UIFactory.CreatePanel(rect, "Nail" + i, dark);
-                nail.raycastTarget = false;
-                float x = i % 2 == 0 ? 0f : 1f;
-                float y = i < 2 ? 1f : 0f;
-                nail.rectTransform.anchorMin = nail.rectTransform.anchorMax = new Vector2(x, y);
-                nail.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                nail.rectTransform.anchoredPosition = new Vector2(x == 0f ? 6f : -6f, y == 1f ? -6f : 6f);
-                nail.rectTransform.sizeDelta = new Vector2(5f, 5f);
-            }
         }
 
         /// <summary>The seed bag and the menu (settings and the rules): stacked, full width, at the bottom of the left column.</summary>
