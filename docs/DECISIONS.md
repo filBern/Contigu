@@ -9859,3 +9859,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-19 — Bouclier du Reclaimer en linework, plus petit
 - Retour de l'auteur : le bouclier de l'ennemi était trop gros et pas en linework. `Design/Notebook/generate_shield.py` redessine `Icons/Shield.png` (contour encre double, filet intérieur, pousse à l'encre, sans remplissage : l'ennemi reste visible dessous) et `Icons/ShieldShard.png` (éclat au trait). `HudView` : le bouclier fait ~24 px de moins que le portrait (marges +12 au lieu de -6). Non vérifié dans Unity.
+
+## 2026-11-19 — Bouclier lisible sur les ennemis sombres
+- Capture de l'auteur : sans remplissage, le bouclier se perdait sur un ennemi sombre. `generate_shield.py` ajoute un voile papier à 50 % et un halo papier épais sous le trait d'encre (bouclier et éclats) : toujours du linework, mais lisible sur fond sombre comme clair. Non vérifié dans Unity.
