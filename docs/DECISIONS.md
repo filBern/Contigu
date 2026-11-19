@@ -9868,3 +9868,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-19 — Badges d'upgrade sur les tuiles : contour épais
 - Capture de l'auteur : les badges d'upgrade (icônes `Icons/Traits`, ~40 px à l'écran) manquaient de contraste avec les tuiles colorées (contour de 0,7 px, motifs crème sur crayon pâle). `inkify.py traits` utilise un contour d'encre épais (6 px sur 128, ~2 px à l'écran) pour ce jeu d'icônes seulement (option `thick`). Non vérifié dans Unity.
+
+## 2026-11-19 — Bouton Shuffle (et tout bouton désactivé) trop sombre
+- Capture de l'auteur : le bouton Shuffle apparaissait gris-bleu foncé. C'était l'état désactivé : la teinte 0,62 gris multipliée par le crayon bleu pastel donnait une ardoise sombre. `UIFactory` : `disabledColor` passe à 0,80 gris (opaque), donc tous les boutons désactivés restent pastel, simplement un peu ternis. Non vérifié dans Unity.

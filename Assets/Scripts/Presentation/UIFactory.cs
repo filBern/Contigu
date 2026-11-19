@@ -183,7 +183,7 @@ namespace Contigu.Presentation
             // same everywhere regardless of what's behind it, and stays
             // opaque enough for the thick outline and any text/icon on top
             // to remain legible.
-            colors.disabledColor = new Color(0.62f, 0.62f, 0.62f, 1f);
+            colors.disabledColor = new Color(0.80f, 0.80f, 0.80f, 1f); // notebook style: pastel beds only dim a little (0.62 turned them into a dark slate)
             btn.colors = colors;
 
             // Quick scale-punch on click, on top of the color tint above —
