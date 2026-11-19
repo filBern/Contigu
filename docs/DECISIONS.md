@@ -9901,3 +9901,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-19 — Cadre d'aperçu de ligne complète lisible et dessiné
 - Retour de l'auteur : le contour jaune d'aperçu d'une ligne qui va se compléter n'avait pas le style du reste et contrastait mal. `GridView.BuildLineClearBorder` utilise maintenant un cadre creux dessiné à la main (`Icons/LineClearFrame.png`, 9-slice, `Design/Notebook/generate_lineclear.py`) : trait d'encre extérieur + trait orange vif à l'intérieur, lisible sur le papier et sur toutes les couleurs de tuile. Les quatre barres dorées restent en repli si l'image manque. Non vérifié dans Unity.
+
+## 2026-11-19 — Mesure d'équilibre après « le Mult n'est jamais arrondi »
+- Planner profondeur 2, 400 parties, graine 1, par challenge : Spring 12,0 % (avant ≈ 10), Winter 13,8 % (≈ 10), Summer 3,5 % (≈ 4), Autumn 15,3 % (≈ 17), Orchard 5,5 % (≈ 5), Greenhouse 6,0 % (≈ 6) ; 0 partie bloquée. Les écarts restent dans le bruit (±4 points), sauf Winter (+3,8) à surveiller : aucune retouche d'équilibre. `CLAUDE.md` mis à jour.
