@@ -224,6 +224,19 @@ namespace Contigu.Presentation
             var wrapper = UIFactory.CreateUIObject("LineClearOverlay", parent);
             UIFactory.StretchFull(wrapper);
 
+            // Notebook style: one hand-drawn hollow frame (ink line + orange line, Icons/LineClearFrame, 9-sliced); the four plain gold bars below are the fallback.
+            var frameSprite = Resources.Load<Sprite>("Icons/LineClearFrame");
+            if (frameSprite != null)
+            {
+                var frame = UIFactory.CreatePanel(wrapper, "Frame", Color.white);
+                frame.sprite = frameSprite;
+                frame.type = Image.Type.Sliced;
+                frame.fillCenter = false;
+                frame.raycastTarget = false;
+                UIFactory.StretchFull(frame.rectTransform);
+                return wrapper.gameObject;
+            }
+
             var top = UIFactory.CreatePanel(wrapper, "Top", borderColor);
             top.raycastTarget = false;
             top.rectTransform.anchorMin = new Vector2(0f, 1f);
