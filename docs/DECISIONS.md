@@ -9862,3 +9862,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-19 — Bouclier lisible sur les ennemis sombres
 - Capture de l'auteur : sans remplissage, le bouclier se perdait sur un ennemi sombre. `generate_shield.py` ajoute un voile papier à 50 % et un halo papier épais sous le trait d'encre (bouclier et éclats) : toujours du linework, mais lisible sur fond sombre comme clair. Non vérifié dans Unity.
+
+## 2026-11-19 — Bouclier en flipbook
+- `generate_shield.py` produit 3 dessins du bouclier (`Icons/Shield`, `Shield_1`, `Shield_2`, `.meta` à guid neuf) : tremblé différent, léger décalage et inclinaison. `SpriteFlipbook.Attach` prend maintenant un dossier Resources (`"Enemies"` par défaut) : le bouclier de la bande des ennemis l'utilise avec `"Icons"` et alterne en 0-1-2-1 toutes les 0,14 s (figé avec « mouvement réduit »). Non vérifié dans Unity.

@@ -16,16 +16,20 @@ namespace Contigu.Presentation
         private static readonly Dictionary<Sprite, Sprite[]> FrameCache = new Dictionary<Sprite, Sprite[]>();
 
         private Image _image;
+        private string _folder = "Enemies";
         private Sprite _base;
         private Sprite _lastSet;
         private Sprite[] _frames;
         private float _phase;
 
-        public static void Attach(Image image)
+        /// <summary>Attaches the flipbook; <paramref name="folder"/> is the Resources folder holding the &lt;Name&gt;_1 / &lt;Name&gt;_2 siblings of the sprite (enemy portraits by default).</summary>
+        public static void Attach(Image image, string folder = "Enemies")
         {
             if (image != null && image.GetComponent<SpriteFlipbook>() == null)
             {
-                image.gameObject.AddComponent<SpriteFlipbook>()._image = image;
+                var flipbook = image.gameObject.AddComponent<SpriteFlipbook>();
+                flipbook._image = image;
+                flipbook._folder = folder;
             }
         }
 
@@ -34,7 +38,7 @@ namespace Contigu.Presentation
             _phase = Random.value * 4f;
         }
 
-        private static Sprite[] FramesFor(Sprite baseSprite)
+        private Sprite[] FramesFor(Sprite baseSprite)
         {
             if (baseSprite == null)
             {
@@ -42,8 +46,8 @@ namespace Contigu.Presentation
             }
             if (!FrameCache.TryGetValue(baseSprite, out var frames))
             {
-                var one = Resources.Load<Sprite>("Enemies/" + baseSprite.name + "_1");
-                var two = Resources.Load<Sprite>("Enemies/" + baseSprite.name + "_2");
+                var one = Resources.Load<Sprite>(_folder + "/" + baseSprite.name + "_1");
+                var two = Resources.Load<Sprite>(_folder + "/" + baseSprite.name + "_2");
                 frames = one != null && two != null ? new[] { baseSprite, one, two } : null;
                 FrameCache[baseSprite] = frames;
             }

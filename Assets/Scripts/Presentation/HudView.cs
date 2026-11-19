@@ -419,6 +419,7 @@ namespace Contigu.Presentation
                 shieldImage.raycastTarget = false;
                 shieldImage.preserveAspect = true;
                 shieldImage.sprite = Resources.Load<Sprite>("Icons/Shield");
+                SpriteFlipbook.Attach(shieldImage, "Icons");
                 UIFactory.StretchFull(shieldImage.rectTransform);
                 // Linework shield (notebook style), a little smaller than the portrait so it does not bury the pest.
                 shieldImage.rectTransform.offsetMin = new Vector2(12f, 12f);
