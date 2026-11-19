@@ -182,11 +182,23 @@ namespace Contigu.Presentation
             var invalidMarker = UIFactory.CreatePanel(cellGo, "InvalidMarker", UITheme.Danger);
             UIFactory.SetAnchor(invalidMarker.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
             invalidMarker.rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            invalidMarker.rectTransform.sizeDelta = new Vector2(20f, 20f);
             invalidMarker.rectTransform.anchoredPosition = Vector2.zero;
-            var invalidMarkerOutline = invalidMarker.gameObject.AddComponent<Outline>();
-            invalidMarkerOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
-            invalidMarkerOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            // A hand-drawn red X (Icons/InvalidMark, with its own ink outline); the flat red square with an engine outline is the fallback.
+            var invalidSprite = Resources.Load<Sprite>("Icons/InvalidMark");
+            if (invalidSprite != null)
+            {
+                invalidMarker.sprite = invalidSprite;
+                invalidMarker.color = Color.white;
+                invalidMarker.preserveAspect = true;
+                invalidMarker.rectTransform.sizeDelta = new Vector2(38f, 38f);
+            }
+            else
+            {
+                invalidMarker.rectTransform.sizeDelta = new Vector2(20f, 20f);
+                var invalidMarkerOutline = invalidMarker.gameObject.AddComponent<Outline>();
+                invalidMarkerOutline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+                invalidMarkerOutline.effectDistance = new Vector2(1.5f, -1.5f);
+            }
             invalidMarker.gameObject.SetActive(false);
 
             // Spells out a modifier cell's effect ("+18", "x2", "x4") as text.

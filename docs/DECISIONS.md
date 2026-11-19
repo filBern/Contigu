@@ -9887,3 +9887,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-19 — Icône « empoisonné » redessinée à la main
 - Retour de l'auteur : la tête de mort restait dans l'ancien style (vectoriel lisse, yeux marine). `Design/Notebook/generate_poison.py` la redessine (crâne vert crayon, contour encre épais tremblé, yeux/nez à l'encre, dents, reflet) dans `Icons/Traits/Poison.png` ; `inkify.py traits` ignore ce fichier pour ne pas l'écraser. Non vérifié dans Unity.
+
+## 2026-11-19 — Autres marqueurs de la grille redessinés
+- `Design/Notebook/generate_markers.py` : disques de stade de croissance (`Icons/Growth/Stage_Bud/Bloom/Fruit`), badges de racines (`Roots_Resonance`, `Roots_Sap`), éclat et flash de glace (`IceShard`, `IceFlash`) et croix rouge de placement invalide (`Icons/InvalidMark.png`, nouveau, `.meta` à guid neuf), tous dessinés à la main (crayon + contour encre épais). `GridView` : le marqueur invalide utilise la croix (38 px, sans contour moteur) au lieu du carré rouge plat, avec repli sur l'ancien. `inkify.py` ne traite plus `growth` (il écraserait ces dessins). Pas refaits : `Fruit_Glow` (lueur), `GoldenTile` (repli 32 px, remplacé par `GoldenStar`), cadre doré de ligne complète (barres fines, dans `GridView`). Non vérifié dans Unity.
