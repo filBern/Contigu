@@ -61,6 +61,10 @@ tile(302, '#f7d26a', sunflower, 'T_Gold', 'Tiles/Gold.png'); tile(303, '#9fd37e'
 tile(304, '#c3a6e0', joker, 'T_Joker', 'Tiles/Joker.png'); tile(305, '#e0cd9e', golden, 'T_Golden', 'Tiles/Golden.png')
 tile(306, '#cfe8f5', frozen, 'T_Frozen', 'Tiles/Frozen.png'); tile(307, '#9ec3ee', bonus, 'T_Bonus', 'Tiles/Bonus.png')
 tile(308, '#c9bfa8', locked, 'T_Locked', 'Icons/LockedTile.png')
+# flipbook frames of the five piece tiles: Ember_1/_2 ... (same drawing, different wobble and a tiny nudge), alternated in game by SpriteFlipbook
+for k in (1, 2):
+    for i, (n, bed, fn) in enumerate((('Ember', '#ec9a8c', poppy), ('Frost', '#9ec3ee', iris), ('Gold', '#f7d26a', sunflower), ('Moss', '#9fd37e', fern), ('Joker', '#c3a6e0', joker))):
+        tile(500 + k * 20 + i, bed, fn, 'T_%s_%d' % (n, k), 'Tiles/%s_%d.png' % (n, k))
 d = D(309); star(d, 64, 64, 52, '#f1c84a'); emit('GoldenStar', d, 128, 128, 'Icons/GoldenStar.png')
 # --- harvest petals (128, pointing up) and attack projectiles (256, pointing right)
 COL = {'Coral': '#e8483f', 'Teal': '#5b86e0', 'Violet': '#f1b92a', 'Lime': '#5aa845', 'Joker': '#a77ccf'}

@@ -68,6 +68,7 @@ namespace Contigu.Presentation
             X = x;
             Y = y;
             Background = background;
+            SpriteFlipbook.Attach(background, "Tiles");   // boiling-line flipbook of the piece tiles (Tiles/<Name>_1, _2); empty/special plots have no frames and stay still
             _fillTile = fillTile;
             _badgeGolden = badgeGolden;
             _badgeSpecial = badgeSpecial;

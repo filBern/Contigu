@@ -211,12 +211,20 @@ namespace Contigu.Presentation
             return btn;
         }
 
+        private static bool HasHandDrawnOutline(string spriteName)
+        {
+            return spriteName.StartsWith("Plot") || spriteName.StartsWith("Fill") || spriteName == "Card" || spriteName == "BarTrack" || spriteName == "SlotGroup"
+                || spriteName == "BackgroundCombo" || spriteName == "CountBadge" || spriteName == "SliderHandle" || spriteName == "SlotBadge";
+        }
+
         /// <summary>A soft drop shadow under an icon (faux depth): a darkened copy of the graphic, offset downward, drawn behind it.</summary>
         public static void AddDropShadow(Graphic target, float distance, float alpha = 0.32f)
         {
+            // Notebook style: a light pencil-ink offset (hard edge, no blur), smaller than the old 3D drop shadow.
             var shadow = target.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, alpha);
-            shadow.effectDistance = new Vector2(distance * 0.35f, -distance);
+            var ink = UITheme.Ink;
+            shadow.effectColor = new Color(ink.r, ink.g, ink.b, alpha * 0.7f);
+            shadow.effectDistance = new Vector2(distance * 0.3f, -distance * 0.5f);
             shadow.useGraphicAlpha = true;
         }
 
@@ -232,6 +240,11 @@ namespace Contigu.Presentation
         /// </summary>
         public static void AddThickOutline(Image target, Color color, float thickness = 3f)
         {
+            // Notebook style: sprites that already carry their own hand-drawn ink outline (plots, cards, bars, badges) get no engine outline on top.
+            if (target.sprite != null && HasHandDrawnOutline(target.sprite.name))
+            {
+                return;
+            }
             var outline = target.gameObject.AddComponent<Outline>();
             outline.effectColor = color;
             outline.effectDistance = new Vector2(thickness, -thickness);

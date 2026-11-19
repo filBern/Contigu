@@ -215,6 +215,7 @@ namespace Contigu.Presentation
             image.raycastTarget = false;
             image.sprite = sprite;
             image.preserveAspect = true;
+            SpriteFlipbook.Attach(image, "Ambient");
             var rt = image.rectTransform;
             rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
             rt.pivot = new Vector2(0.5f, 0.5f);

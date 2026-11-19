@@ -9871,3 +9871,9 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-19 — Bouton Shuffle (et tout bouton désactivé) trop sombre
 - Capture de l'auteur : le bouton Shuffle apparaissait gris-bleu foncé. C'était l'état désactivé : la teinte 0,62 gris multipliée par le crayon bleu pastel donnait une ardoise sombre. `UIFactory` : `disabledColor` passe à 0,80 gris (opaque), donc tous les boutons désactivés restent pastel, simplement un peu ternis. Non vérifié dans Unity.
+
+## 2026-11-19 — Contours moteur, ombres et animations (suite de la transition)
+- `UIFactory.AddThickOutline` ne pose plus de contour moteur sur les sprites qui ont déjà leur contour dessiné à la main (`Plot*`, `Fill*`, `Card`, `BarTrack`, `SlotGroup`, `BackgroundCombo`, `CountBadge`, `SliderHandle`, `SlotBadge`) : fini le trait noir uniforme autour des boutons et cartes ; il reste sur les aplats et sprites sans contour.
+- `UIFactory.AddDropShadow` : ombre « crayon » (encre à 70 % de l'alpha demandé, décalage réduit de moitié), au lieu du noir plus marqué.
+- Flipbook : `SpriteFlipbook` est attaché au fond de chaque case de la grille (dossier `Tiles` : 2 dessins de plus pour Ember, Frost, Gold, Moss, Joker ; les cases vides ou spéciales n'ont pas de frères et restent fixes) et à chaque créature/particule d'ambiance (dossier `Ambient`, 22 dessins : abeille, papillon, chat, flamme, feuilles, pétale, goutte, flocon, étincelle, grain de soleil). Phase aléatoire par image pour que le plateau « bouille » sans clignoter en bloc. Générés par `generate_tiles.py` et `generate_ambient.py` (`.meta` à guid neuf).
+- Non fait : effets de score (popups de chiffres), tuiles de transition. Non vérifié dans Unity ; `dotnet test` non relancé (Core inchangé).

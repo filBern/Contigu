@@ -52,6 +52,10 @@ def sunmote(d):
     d.blob(48, 48, 36, 36, 14, w=W, fill='#ffd966', a=.9); d.blob(38, 38, 9, 9, 8, w=1.6, fill='#fff3c0', a=.4)
 for i, (n, f) in enumerate((('Bee', bee), ('Butterfly', butterfly), ('Cat', cat), ('Flame', flame), ('Leaf', leaf), ('MapleLeaf', maple), ('Petal', petal), ('Raindrop', raindrop), ('Snowflake', snow), ('Sparkle', sparkle), ('SunMote', sunmote))):
     amb(n, 400 + i, f)
+# flipbook frames of the roaming creatures and particles (Bee_1/_2 ...), alternated in game by SpriteFlipbook
+for k in (1, 2):
+    for i, (n, f) in enumerate((('Bee', bee), ('Butterfly', butterfly), ('Cat', cat), ('Flame', flame), ('Leaf', leaf), ('MapleLeaf', maple), ('Petal', petal), ('Raindrop', raindrop), ('Snowflake', snow), ('Sparkle', sparkle), ('SunMote', sunmote))):
+        amb('%s_%d' % (n, k), 600 + k * 30 + i, f)
 # plot-button flowers
 for i, (n, c, ctr, k) in enumerate((('Red', '#e5534b', '#2a1418', 5), ('Blue', '#6f9ae6', '#ffd45a', 6), ('Yellow', '#f5c542', '#8a5a20', 8), ('White', '#fff3e0', '#e8a82e', 6))):
     d = D(430 + i)
