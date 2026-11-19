@@ -46,6 +46,7 @@ if __name__ == '__main__':
     for s in names:
         sd, pd, px = SETS[s]
         for f in sorted(os.listdir(SRC + sd)):
+            if s == 'traits' and f == 'Poison.svg': continue   # redrawn by hand: generate_poison.py
             if s == 'growth' and f.startswith('Fruit_Glow'): continue   # a glow overlay, not a drawing
             if s == 'challenges' and f.endswith('.png'):    # raster sources: wrapped in an SVG so the same ink filter applies
                 import base64

@@ -9884,3 +9884,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-19 — Badge « empoisonné » plus grand
 - Capture de l'auteur : la tête de mort verte sur une case empoisonnée (`GridView`, `BadgePoison`) était trop petite : 20 → 34 px (coin bas-gauche, marge 2 px). Non vérifié dans Unity.
+
+## 2026-11-19 — Icône « empoisonné » redessinée à la main
+- Retour de l'auteur : la tête de mort restait dans l'ancien style (vectoriel lisse, yeux marine). `Design/Notebook/generate_poison.py` la redessine (crâne vert crayon, contour encre épais tremblé, yeux/nez à l'encre, dents, reflet) dans `Icons/Traits/Poison.png` ; `inkify.py traits` ignore ce fichier pour ne pas l'écraser. Non vérifié dans Unity.
