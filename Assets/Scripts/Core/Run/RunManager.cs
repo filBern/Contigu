@@ -686,15 +686,15 @@ namespace Contigu.Core
                 case ModifierId.Tourbillon:
                     return "Currently +" + FormatMultDisplay(ShufflesRemaining * ScoringConstants.WhirlwindMultPerShuffle * levelFactor) + " Mult";
                 case ModifierId.Exterminateur:
-                    return "Currently +" + Mathf.RoundToInt(CountDefeatedEnemies() * ScoringConstants.PestControlMultPerKill * levelFactor) + " Mult";
+                    return "Currently +" + FormatMultDisplay(CountDefeatedEnemies() * ScoringConstants.PestControlMultPerKill * levelFactor) + " Mult";
                 case ModifierId.Epines:
-                    return AnyEnemyHasActiveMalus() ? "Active: +" + Mathf.RoundToInt(ScoringConstants.ThornsMultBonus * levelFactor) + " Mult" : "Inactive: no enemy lock or blight right now";
+                    return AnyEnemyHasActiveMalus() ? "Active: +" + FormatMultDisplay(ScoringConstants.ThornsMultBonus * levelFactor) + " Mult" : "Inactive: no enemy lock or blight right now";
                 case ModifierId.Barometre:
-                    return CurrentWeather != WeatherId.Clear ? "Active: +" + Mathf.RoundToInt(ScoringConstants.BarometerMultBonus * levelFactor) + " Mult" : "Inactive: calm skies";
+                    return CurrentWeather != WeatherId.Clear ? "Active: +" + FormatMultDisplay(ScoringConstants.BarometerMultBonus * levelFactor) + " Mult" : "Inactive: calm skies";
                 case ModifierId.ChasseurTempete:
                     return WeatherCatalog.IsHarsh(CurrentWeather) ? "Active: x" + ScoringConstants.StormChaserMultiplier : "Inactive: the weather isn't harsh";
                 case ModifierId.Polyvalence:
-                    return "Currently +" + Mathf.RoundToInt(CountDistinctModifierCategoriesHeld() * ScoringConstants.PolyvalenceMultPerCategory * levelFactor) + " Mult";
+                    return "Currently +" + FormatMultDisplay(CountDistinctModifierCategoriesHeld() * ScoringConstants.PolyvalenceMultPerCategory * levelFactor) + " Mult";
                 default:
                     return GetNewModifierStateText(id, levelFactor);
             }

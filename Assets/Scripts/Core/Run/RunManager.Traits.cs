@@ -629,9 +629,11 @@ namespace Contigu.Core
                 {
                     if (WeatherCatalog.IsHarsh(CurrentWeather))
                     {
-                        int amount = Mathf.Max(1, Mathf.RoundToInt(ScoringConstants.StormChaserMultiplier * GetModifierLevelFactor(i)));
+                        float exact = Mathf.Max(1f, ScoringConstants.StormChaserMultiplier * GetModifierLevelFactor(i));
+                        int amount = Mathf.RoundToInt(exact);
                         placement.ModifierMultiplier *= amount;
                         var multEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placement.PlacedCells[0], amount);
+                        multEvent.PreciseAmount = exact;
                         multEvent.TriggeringModifier = ModifierId.ChasseurTempete;
                         multEvent.TriggeringModifierIndex = i;
                         events.Add(multEvent);
@@ -678,10 +680,11 @@ namespace Contigu.Core
             {
                 return;
             }
+            // Mult is never rounded: the event carries the exact amount (the fold reads it). Only the legacy aggregate fields keep their types:
+            // AdditiveMultBonus stays a whole number for the "whole" call sites (read by other code and tests), ProgressiveAdditiveMult is the float one.
             if (whole)
             {
-                amount = Mathf.RoundToInt(amount);
-                placement.AdditiveMultBonus += (int)amount;
+                placement.AdditiveMultBonus += Mathf.RoundToInt(amount);
             }
             else
             {
@@ -690,10 +693,7 @@ namespace Contigu.Core
             var multEvent = new ScoreEvent(ScoreEventType.MultBonus, placement.PlacedCells[0], Mathf.RoundToInt(amount));
             multEvent.TriggeringModifier = id;
             multEvent.TriggeringModifierIndex = index;
-            if (!whole)
-            {
-                multEvent.PreciseAmount = amount;
-            }
+            multEvent.PreciseAmount = amount;
             events.Add(multEvent);
         }
 

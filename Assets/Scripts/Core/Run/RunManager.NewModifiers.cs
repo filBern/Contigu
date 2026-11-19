@@ -171,9 +171,11 @@ namespace Contigu.Core
         /// <summary>An xN contribution at <paramref name="index"/>'s place in the fold (scaled by that slot's level, never below x1).</summary>
         private void AddRunStateMultiplier(PlacementResult placement, List<ScoreEvent> events, ModifierId id, int index, int baseMultiplier)
         {
-            int amount = Mathf.Max(1, Mathf.RoundToInt(baseMultiplier * GetModifierLevelFactor(index)));
+            float exact = Mathf.Max(1f, baseMultiplier * GetModifierLevelFactor(index));
+            int amount = Mathf.RoundToInt(exact);
             placement.ModifierMultiplier *= amount;
             var multEvent = new ScoreEvent(ScoreEventType.ModifierMultiplier, placement.PlacedCells[0], amount);
+            multEvent.PreciseAmount = exact;
             multEvent.TriggeringModifier = id;
             multEvent.TriggeringModifierIndex = index;
             events.Add(multEvent);
@@ -200,9 +202,9 @@ namespace Contigu.Core
                 case ModifierId.Saisons:
                     return "Currently +" + FormatMultDisplay(CurrentRoundIndex * ScoringConstants.SeasonedMultPerRound * level) + " Mult";
                 case ModifierId.Outsider:
-                    return HasActiveEncounter && EnemyHpFraction() > 0.5f ? "Active: +" + Mathf.RoundToInt(ScoringConstants.UnderdogMultBonus * level) + " Mult" : "Inactive: the enemies are below half HP";
+                    return HasActiveEncounter && EnemyHpFraction() > 0.5f ? "Active: +" + FormatMultDisplay(ScoringConstants.UnderdogMultBonus * level) + " Mult" : "Inactive: the enemies are below half HP";
                 case ModifierId.CoupFinal:
-                    return HasActiveEncounter && EnemyHpFraction() <= ScoringConstants.FinishingBlowHpFraction ? "Active: +" + Mathf.RoundToInt(ScoringConstants.FinishingBlowMultBonus * level) + " Mult" : "Inactive: the enemies still have more than a quarter of their HP";
+                    return HasActiveEncounter && EnemyHpFraction() <= ScoringConstants.FinishingBlowHpFraction ? "Active: +" + FormatMultDisplay(ScoringConstants.FinishingBlowMultBonus * level) + " Mult" : "Inactive: the enemies still have more than a quarter of their HP";
                 case ModifierId.DerniereGraine:
                     return PiecesRemainingThisRound == 1 ? "Active: x" + ScoringConstants.LastSeedMultiplier : "Inactive: not the last seed";
                 case ModifierId.PremiereGraine:
@@ -212,19 +214,19 @@ namespace Contigu.Core
                 case ModifierId.BanqueGraines:
                     return "Currently +" + FormatMultDisplay(Deck.DeckCount * ScoringConstants.SeedBankMultPerSeed * level) + " Mult";
                 case ModifierId.SousBois:
-                    return "Currently +" + Mathf.RoundToInt(CountAliveEnemies() * ScoringConstants.UnderbrushMultPerEnemy * level) + " Mult";
+                    return "Currently +" + FormatMultDisplay(CountAliveEnemies() * ScoringConstants.UnderbrushMultPerEnemy * level) + " Mult";
                 case ModifierId.DanseDePluie:
-                    return WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.Rain ? "Active: +" + Mathf.RoundToInt(ScoringConstants.WeatherDancerMultBonus * level) + " Mult" : "Inactive: it isn't raining";
+                    return WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.Rain ? "Active: +" + FormatMultDisplay(ScoringConstants.WeatherDancerMultBonus * level) + " Mult" : "Inactive: it isn't raining";
                 case ModifierId.DanseDuSoleil:
-                    return WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.Sunshine || WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.GoldenHour ? "Active: +" + Mathf.RoundToInt(ScoringConstants.WeatherDancerMultBonus * level) + " Mult" : "Inactive: no sun today";
+                    return WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.Sunshine || WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.GoldenHour ? "Active: +" + FormatMultDisplay(ScoringConstants.WeatherDancerMultBonus * level) + " Mult" : "Inactive: no sun today";
                 case ModifierId.Rustique:
-                    return WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.Frost ? "Active: +" + Mathf.RoundToInt(ScoringConstants.WeatherDancerMultBonus * level) + " Mult" : "Inactive: no frost today";
+                    return WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.Frost ? "Active: +" + FormatMultDisplay(ScoringConstants.WeatherDancerMultBonus * level) + " Mult" : "Inactive: no frost today";
                 case ModifierId.CavalierVent:
-                    return WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.Wind || WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.Hurricane ? "Active: +" + Mathf.RoundToInt(ScoringConstants.WeatherDancerMultBonus * level) + " Mult" : "Inactive: no wind today";
+                    return WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.Wind || WeatherCatalog.Mechanic(CurrentWeather) == WeatherId.Hurricane ? "Active: +" + FormatMultDisplay(ScoringConstants.WeatherDancerMultBonus * level) + " Mult" : "Inactive: no wind today";
                 case ModifierId.Matinal:
-                    return CurrentRoundIndex < ScoringConstants.EarlyBirdRounds ? "Active: +" + Mathf.RoundToInt(ScoringConstants.EarlyBirdMultBonus * level) + " Mult" : "Inactive: past round " + ScoringConstants.EarlyBirdRounds;
+                    return CurrentRoundIndex < ScoringConstants.EarlyBirdRounds ? "Active: +" + FormatMultDisplay(ScoringConstants.EarlyBirdMultBonus * level) + " Mult" : "Inactive: past round " + ScoringConstants.EarlyBirdRounds;
                 case ModifierId.Marathonien:
-                    return CurrentRoundIndex >= ScoringConstants.MarathonerFirstRoundIndex ? "Active: +" + Mathf.RoundToInt(ScoringConstants.MarathonerMultBonus * level) + " Mult" : "Inactive: before round " + (ScoringConstants.MarathonerFirstRoundIndex + 1);
+                    return CurrentRoundIndex >= ScoringConstants.MarathonerFirstRoundIndex ? "Active: +" + FormatMultDisplay(ScoringConstants.MarathonerMultBonus * level) + " Mult" : "Inactive: before round " + (ScoringConstants.MarathonerFirstRoundIndex + 1);
                 case ModifierId.WildCluster:
                     return "Per Joker tile in the group: +" + FormatMultDisplay(ScoringConstants.WildClusterMultPerJoker * level) + " Mult";
                 case ModifierId.WildReserve:
