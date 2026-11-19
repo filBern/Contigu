@@ -420,8 +420,9 @@ namespace Contigu.Presentation
                 shieldImage.preserveAspect = true;
                 shieldImage.sprite = Resources.Load<Sprite>("Icons/Shield");
                 UIFactory.StretchFull(shieldImage.rectTransform);
-                shieldImage.rectTransform.offsetMin = new Vector2(-6f, -6f);
-                shieldImage.rectTransform.offsetMax = new Vector2(6f, 6f);
+                // Linework shield (notebook style), a little smaller than the portrait so it does not bury the pest.
+                shieldImage.rectTransform.offsetMin = new Vector2(12f, 12f);
+                shieldImage.rectTransform.offsetMax = new Vector2(-12f, -12f);
                 shieldImage.gameObject.SetActive(false);
                 _enemyShieldImages.Add(shieldImage);
                 _shieldHeld.Add(false);

@@ -9856,3 +9856,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-16 — Compteur de Pollen plus compact
 - Capture de l'auteur : la boîte du Pollen restait trop grosse et mordait sur la planche de gauche. Chiffre ramené à 58 px visuels (au lieu de 84), largeur minimale 100 (au lieu de 150), icône 46 (au lieu de 54), marges et espacement réduits, plus d'ombre portée ; le chiffre passe à l'encre. Non vérifié dans Unity ; si encore trop grand, les valeurs sont toutes dans `HudView` (`LueurContainer`).
+
+## 2026-11-19 — Bouclier du Reclaimer en linework, plus petit
+- Retour de l'auteur : le bouclier de l'ennemi était trop gros et pas en linework. `Design/Notebook/generate_shield.py` redessine `Icons/Shield.png` (contour encre double, filet intérieur, pousse à l'encre, sans remplissage : l'ennemi reste visible dessous) et `Icons/ShieldShard.png` (éclat au trait). `HudView` : le bouclier fait ~24 px de moins que le portrait (marges +12 au lieu de -6). Non vérifié dans Unity.
