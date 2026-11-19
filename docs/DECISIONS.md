@@ -9881,3 +9881,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-19 — Boutique : étagères et devanture à plat
 - `ShelfArt` : l'étagère n'est plus une planche 3D (dessus clair, arête arrière, face éclairée, dessous sombre, trois marches d'ombre sur le mur) mais un dessus beige crayon avec un filet d'encre à l'avant ; l'ombre de contact des objets devient un ovale d'encre léger.
 - `ShopView`/`StallBackdrop` : plus de planches verticales (le papier est le mur) ; auvent rayé corail/crème pastel avec un trait d'encre en bas au lieu du bord noir et des trois ombres portées. Non vérifié dans Unity.
+
+## 2026-11-19 — Badge « empoisonné » plus grand
+- Capture de l'auteur : la tête de mort verte sur une case empoisonnée (`GridView`, `BadgePoison`) était trop petite : 20 → 34 px (coin bas-gauche, marge 2 px). Non vérifié dans Unity.

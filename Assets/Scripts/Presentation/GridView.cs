@@ -165,14 +165,14 @@ namespace Contigu.Presentation
             var badgePoison = UIFactory.CreatePanel(cellGo, "BadgePoison", UITheme.Danger);
             UIFactory.SetAnchor(badgePoison.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f));
             badgePoison.rectTransform.pivot = new Vector2(0f, 0f);
-            badgePoison.rectTransform.sizeDelta = new Vector2(20f, 20f);
+            badgePoison.rectTransform.sizeDelta = new Vector2(34f, 34f);
             var poisonSprite = PieceTraitVisualDefaults.GetPoisonSprite();
             if (poisonSprite != null)
             {
                 badgePoison.sprite = poisonSprite;
                 badgePoison.color = Color.white;
             }
-            badgePoison.rectTransform.anchoredPosition = new Vector2(3f, 3f);
+            badgePoison.rectTransform.anchoredPosition = new Vector2(2f, 2f);
             var badgePoisonOutline = badgePoison.gameObject.AddComponent<Outline>();
             badgePoisonOutline.effectColor = new Color(0f, 0f, 0f, 0.85f);
             badgePoisonOutline.effectDistance = new Vector2(1.5f, -1.5f);
