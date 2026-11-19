@@ -7,16 +7,7 @@ namespace Contigu.Presentation
     {
         public static void AddPlanks(RectTransform root)
         {
-            const int Planks = 16;
-            for (int i = 0; i < Planks; i++)
-            {
-                var plank = UIFactory.CreatePanel(root, "Plank_" + i, i % 2 == 0 ? new Color(0.925f, 0.875f, 0.765f, 1f) : new Color(0.90f, 0.85f, 0.73f, 1f));
-                plank.raycastTarget = false;
-                plank.rectTransform.anchorMin = new Vector2(i / (float)Planks, 0f);
-                plank.rectTransform.anchorMax = new Vector2((i + 1) / (float)Planks, 1f);
-                plank.rectTransform.offsetMin = Vector2.zero;
-                plank.rectTransform.offsetMax = Vector2.zero;
-            }
+            // Notebook style: the paper is the wall; no plank stripes.
         }
     }
 }

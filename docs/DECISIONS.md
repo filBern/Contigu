@@ -9877,3 +9877,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - `UIFactory.AddDropShadow` : ombre « crayon » (encre à 70 % de l'alpha demandé, décalage réduit de moitié), au lieu du noir plus marqué.
 - Flipbook : `SpriteFlipbook` est attaché au fond de chaque case de la grille (dossier `Tiles` : 2 dessins de plus pour Ember, Frost, Gold, Moss, Joker ; les cases vides ou spéciales n'ont pas de frères et restent fixes) et à chaque créature/particule d'ambiance (dossier `Ambient`, 22 dessins : abeille, papillon, chat, flamme, feuilles, pétale, goutte, flocon, étincelle, grain de soleil). Phase aléatoire par image pour que le plateau « bouille » sans clignoter en bloc. Générés par `generate_tiles.py` et `generate_ambient.py` (`.meta` à guid neuf).
 - Non fait : effets de score (popups de chiffres), tuiles de transition. Non vérifié dans Unity ; `dotnet test` non relancé (Core inchangé).
+
+## 2026-11-19 — Boutique : étagères et devanture à plat
+- `ShelfArt` : l'étagère n'est plus une planche 3D (dessus clair, arête arrière, face éclairée, dessous sombre, trois marches d'ombre sur le mur) mais un dessus beige crayon avec un filet d'encre à l'avant ; l'ombre de contact des objets devient un ovale d'encre léger.
+- `ShopView`/`StallBackdrop` : plus de planches verticales (le papier est le mur) ; auvent rayé corail/crème pastel avec un trait d'encre en bas au lieu du bord noir et des trois ombres portées. Non vérifié dans Unity.

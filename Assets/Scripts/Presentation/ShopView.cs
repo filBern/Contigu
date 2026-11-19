@@ -384,18 +384,10 @@ namespace Contigu.Presentation
         /// <summary>Back wall planks and a striped awning along the top, so the shop reads as a stall rather than a dimmed game screen.</summary>
         private void BuildStallBackdrop()
         {
+            // Notebook style: the paper is the wall; no plank stripes.
             for (int i = 0; i < 16; i++)
             {
-                var plank = UIFactory.CreatePanel(_root, "Plank_" + i, i % 2 == 0 ? new Color(0.925f, 0.875f, 0.765f, 1f) : new Color(0.90f, 0.85f, 0.73f, 1f));
-                plank.raycastTarget = false;
-                plank.rectTransform.anchorMin = new Vector2(i / 16f, 0f);
-                plank.rectTransform.anchorMax = new Vector2((i + 1) / 16f, 1f);
-                plank.rectTransform.offsetMin = Vector2.zero;
-                plank.rectTransform.offsetMax = Vector2.zero;
-            }
-            for (int i = 0; i < 16; i++)
-            {
-                var stripe = UIFactory.CreatePanel(_root, "Awning_" + i, i % 2 == 0 ? new Color(0.78f, 0.25f, 0.22f, 1f) : new Color(0.96f, 0.91f, 0.78f, 1f));
+                var stripe = UIFactory.CreatePanel(_root, "Awning_" + i, i % 2 == 0 ? new Color(0.93f, 0.60f, 0.54f, 1f) : new Color(0.99f, 0.95f, 0.84f, 1f));
                 stripe.raycastTarget = false;
                 stripe.rectTransform.anchorMin = new Vector2(i / 16f, 1f);
                 stripe.rectTransform.anchorMax = new Vector2((i + 1) / 16f, 1f);
@@ -403,26 +395,13 @@ namespace Contigu.Presentation
                 stripe.rectTransform.anchoredPosition = Vector2.zero;
                 stripe.rectTransform.sizeDelta = new Vector2(0f, 30f);
             }
-            var awningEdge = UIFactory.CreatePanel(_root, "AwningEdge", new Color(0.08f, 0.05f, 0.04f, 0.85f));
+            var awningEdge = UIFactory.CreatePanel(_root, "AwningEdge", new Color(0.165f, 0.141f, 0.125f, 1f));
             awningEdge.raycastTarget = false;
             awningEdge.rectTransform.anchorMin = new Vector2(0f, 1f);
             awningEdge.rectTransform.anchorMax = new Vector2(1f, 1f);
             awningEdge.rectTransform.pivot = new Vector2(0.5f, 1f);
             awningEdge.rectTransform.anchoredPosition = new Vector2(0f, -30f);
-            awningEdge.rectTransform.sizeDelta = new Vector2(0f, 8f);
-            // The awning throws a soft shadow on the back wall (three steps of black).
-            float[] shadowHeights = { 10f, 20f, 34f };
-            float[] shadowAlphas = { 0.26f, 0.16f, 0.08f };
-            for (int i = shadowHeights.Length - 1; i >= 0; i--)
-            {
-                var step = UIFactory.CreatePanel(_root, "AwningShadow" + i, new Color(0f, 0f, 0f, shadowAlphas[i]));
-                step.raycastTarget = false;
-                step.rectTransform.anchorMin = new Vector2(0f, 1f);
-                step.rectTransform.anchorMax = new Vector2(1f, 1f);
-                step.rectTransform.pivot = new Vector2(0.5f, 1f);
-                step.rectTransform.anchoredPosition = new Vector2(0f, -38f);
-                step.rectTransform.sizeDelta = new Vector2(0f, shadowHeights[i]);
-            }
+            awningEdge.rectTransform.sizeDelta = new Vector2(0f, 4f);
         }
 
         /// <summary>A small plaque (a plot, like the buttons) naming a section ("Blister", "Workshop"), hung above its shelf.</summary>
