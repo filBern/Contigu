@@ -2390,6 +2390,17 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Macon_WithAThirtyPercentBonus_AddsTwoPointSixMult_NotRoundedToThree()
+        {
+            // Regression: a fertilizer's effect bonus (maturation, sap, resonance) rescales its events; an additive +Mult must keep the real value.
+            var single = PieceShapeCatalog.Get(ShapeId.Single);
+            var modifiers = new List<ModifierId> { ModifierId.Macon };
+            var grid = new GridManager();
+            var result = grid.PlacePiece(single, PieceColor.Coral, 0, 0, modifiers, new List<int> { 1 }, new List<float> { 0.3f });
+            Assert.AreEqual(1f + ScoringConstants.MaconBonus * 1.3f, result.Mult, 0.0001f);
+        }
+
+        [Test]
         public void ModifierLevels_OutOfRangeOrNullList_LeavesEveryModifierAtLevelOne()
         {
             // The overwhelmingly common case (every EditMode test above

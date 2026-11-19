@@ -95,11 +95,16 @@ namespace Contigu.Core
                 events[i].TriggeringModifierIndex = modifierIndex;
                 if (levelFactor != 1f)
                 {
-                    events[i].Amount = Mathf.RoundToInt(events[i].Amount * levelFactor);
+                    // An additive "+Mult" keeps the true scaled value (Mason +2 at +30% is +2.6, not 3): Mult is folded from PreciseAmount when it is set.
                     if (events[i].PreciseAmount.HasValue)
                     {
                         events[i].PreciseAmount = events[i].PreciseAmount.Value * levelFactor;
                     }
+                    else if (events[i].Type == ScoreEventType.MultBonus)
+                    {
+                        events[i].PreciseAmount = events[i].Amount * levelFactor;
+                    }
+                    events[i].Amount = Mathf.RoundToInt(events[i].Amount * levelFactor);
                 }
             }
         }
