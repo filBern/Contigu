@@ -9865,3 +9865,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-19 — Bouclier en flipbook
 - `generate_shield.py` produit 3 dessins du bouclier (`Icons/Shield`, `Shield_1`, `Shield_2`, `.meta` à guid neuf) : tremblé différent, léger décalage et inclinaison. `SpriteFlipbook.Attach` prend maintenant un dossier Resources (`"Enemies"` par défaut) : le bouclier de la bande des ennemis l'utilise avec `"Icons"` et alterne en 0-1-2-1 toutes les 0,14 s (figé avec « mouvement réduit »). Non vérifié dans Unity.
+
+## 2026-11-19 — Badges d'upgrade sur les tuiles : contour épais
+- Capture de l'auteur : les badges d'upgrade (icônes `Icons/Traits`, ~40 px à l'écran) manquaient de contraste avec les tuiles colorées (contour de 0,7 px, motifs crème sur crayon pâle). `inkify.py traits` utilise un contour d'encre épais (6 px sur 128, ~2 px à l'écran) pour ce jeu d'icônes seulement (option `thick`). Non vérifié dans Unity.

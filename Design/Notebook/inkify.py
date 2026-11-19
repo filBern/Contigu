@@ -17,12 +17,14 @@ def flatten(svg):
     grads = {m.group(1): mid(m.group(2)) for m in re.finditer(r'<(?:linear|radial)Gradient id="([^"]+)"[^>]*>(.*?)</(?:linear|radial)Gradient>', svg, re.S)}
     svg = re.sub(r'url\(#([^)]+)\)', lambda m: grads.get(m.group(1), m.group(0)) if m.group(1) in grads else m.group(0), svg)
     return re.sub(r'\sfilter="url\(#[^)]+\)"', '', svg)
-def inkify(svg, px, variant=0):
+def inkify(svg, px, variant=0, thick=False):
     svg = flatten(svg)
     m = re.search(r'viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"', svg)
     vw = float(m.group(3)) if m else px
     u = vw / px                      # user units per output pixel
     out, wob = 2.6 * px / 256 * 1.0, 3.2 * px / 256
+    if thick:   # small badges (sprout icons on tiles): a heavy outline so they read on any tile color
+        out = 6.0 * px / 128
     f = ('<defs><filter id="nb" x="-12%%" y="-12%%" width="124%%" height="124%%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="1" seed="%d" result="n"/>'
          '<feDisplacementMap in="SourceGraphic" in2="n" scale="%.2f" result="w"/><feMorphology in="w" operator="dilate" radius="%.2f" result="d"/>'
          '<feFlood flood-color="%s"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="w"/></feMerge></filter></defs>') % (4 + 7 * variant, wob * u * 2, out * u, INK)
@@ -59,7 +61,7 @@ if __name__ == '__main__':
             p = 'svg_ink/%s_%s.svg' % (s, n)
             src = open(SRC + sd + '/' + f).read()
             if not variants:
-                open(p, 'w').write(inkify(src, px)); jobs.append((p, png, px, px, True))
+                open(p, 'w').write(inkify(src, px, thick=(s == 'traits'))); jobs.append((p, png, px, px, True))
             else:
                 for k in (1, 2):
                     pk = 'svg_ink/%s_%s_%d.svg' % (s, n, k)
