@@ -520,6 +520,12 @@ namespace Contigu.Presentation
             LayoutRebuilder.ForceRebuildLayoutImmediate(_rowsContainer);
             for (int i = 0; i < mods.Count - 1; i++)
             {
+                // The order, drawn: an arrow from each fertilizer to the next one (it crosses the panel where the grid wraps to its next row).
+                var chain = ChainArrow.Create(_rowsContainer, _rowBadges[i].rectTransform, _rowBadges[i + 1].rectTransform);
+                if (chain != null)
+                {
+                    _rootLinks.Add(chain);
+                }
                 float sap = SapProvider != null ? SapProvider(i + 1) : 0f;
                 bool resonate = ModifierCatalog.Get(mods[i]).Category == ModifierCatalog.Get(mods[i + 1]).Category;
                 if (sap <= 0f && !resonate)
@@ -534,13 +540,13 @@ namespace Contigu.Presentation
                 if (sap > 0f)
                 {
                     bool fruit = FertilizerGrowth.StageOf(GrowthProvider != null ? GrowthProvider(i) : 0) == GrowthStage.Fruit;
-                    string body = giver + " (" + (fruit ? "Fruit" : "Bloom") + ") feeds " + receiver + " on its right.\n" + DescriptionTextFormatter.Amount(sap, DescriptionTextFormatter.EffectUnitOf(ModifierCatalog.Get(mods[i + 1]).Description));
+                    string body = giver + " (" + (fruit ? "Fruit" : "Bloom") + ") feeds " + receiver + ", the next fertilizer (" + (i + 2) + ").\n" + DescriptionTextFormatter.Amount(sap, DescriptionTextFormatter.EffectUnitOf(ModifierCatalog.Get(mods[i + 1]).Description));
                     AddRootLink("Sap", Resources.Load<Sprite>("Icons/Growth/Roots_Sap"), fruit ? SapFruitTint : SapBloomTint, a, b, offset, "Sap", body);
                 }
                 if (resonate)
                 {
                     string kind = ModifierVisualDefaults.GetCategoryLabel(ModifierCatalog.Get(mods[i]).Category);
-                    string body = giver + " and " + receiver + " are both " + kind + " fertilizers (same category).\n" + DescriptionTextFormatter.Amount(FertilizerGrowth.ResonancePerNeighbor, "effect") + " each.";
+                    string body = giver + " and " + receiver + " are both " + kind + " fertilizers (same category) and follow each other in the order (" + (i + 1) + " and " + (i + 2) + ").\n" + DescriptionTextFormatter.Amount(FertilizerGrowth.ResonancePerNeighbor, "effect") + " each.";
                     AddRootLink("Resonance", Resources.Load<Sprite>("Icons/Growth/Roots_Resonance"), Color.white, a, b, -offset, "Resonance", body);
                 }
             }
