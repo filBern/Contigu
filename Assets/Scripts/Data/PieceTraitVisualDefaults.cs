@@ -235,7 +235,7 @@ namespace Contigu.Data
                 case PieceTraitKind.Gambler:
                     return "A coin flip: +" + ScoringConstants.GamblerWinBonus + " pts or -" + ScoringConstants.GamblerLossPenalty + " pts.";
                 case PieceTraitKind.Warden:
-                    return "Frees the 4 plots around it from enemy effects (locks, ice, poison) and makes them immune for the round.";
+                    return "Frees the 4 plots around it from enemy effects (locks, ice, poison) and makes them immune while it stays on the board.";
                 case PieceTraitKind.Aegis:
                     return "Frees its own plot from enemy effects (locks, ice, poison) and makes it immune for the round.";
                 case PieceTraitKind.Sower:

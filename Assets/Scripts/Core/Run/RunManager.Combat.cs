@@ -604,7 +604,7 @@ namespace Contigu.Core
                 for (int y = 0; y < GridManager.Size; y++)
                 {
                     var cell = Grid.GetCell(x, y);
-                    if (!cell.IsPoisoned && !cell.IsImmune)
+                    if (!cell.IsPoisoned && !Grid.IsPlotImmune(new Vector2Int(x, y)))
                     {
                         candidates.Add(new Vector2Int(x, y));
                     }
@@ -644,7 +644,7 @@ namespace Contigu.Core
             for (int i = 0; i < offsets.Length; i++)
             {
                 var neighbor = pos + offsets[i];
-                if (GridManager.InBounds(neighbor.x, neighbor.y) && !Grid.GetCell(neighbor).IsPoisoned && !Grid.GetCell(neighbor).IsImmune)
+                if (GridManager.InBounds(neighbor.x, neighbor.y) && !Grid.GetCell(neighbor).IsPoisoned && !Grid.IsPlotImmune(neighbor))
                 {
                     candidates.Add(neighbor);
                 }

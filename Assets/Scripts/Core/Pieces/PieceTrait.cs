@@ -147,7 +147,7 @@ namespace Contigu.Core
         /// <summary>"Gambler Sprout" — 50%: +40 pts. 50%: -10 pts.</summary>
         Gambler,
 
-        /// <summary>"Warden Sprout" — Frees the 4 plots around it from enemy effects and makes them immune for the round.</summary>
+        /// <summary>"Warden Sprout" — Frees the 4 plots around it from enemy effects and makes them immune while it stays on the board.</summary>
         Warden,
 
         /// <summary>"Aegis Sprout" — Frees its own plot from enemy effects and makes it immune for the round.</summary>

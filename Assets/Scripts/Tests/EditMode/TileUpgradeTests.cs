@@ -876,6 +876,25 @@ namespace Contigu.Tests
         }
 
         [Test]
+        public void Warden_ProtectsItsFourPlotsOnlyWhileItsTileIsOnTheBoard()
+        {
+            var run = NewRun();
+            PlantAt(run, PieceTraitKind.Warden, PieceColor.Coral, 2, 2);
+            var around = new[] { new Vector2Int(1, 2), new Vector2Int(3, 2), new Vector2Int(2, 1), new Vector2Int(2, 3) };
+            foreach (var p in around)
+            {
+                Assert.IsTrue(run.Grid.IsPlotImmune(p), "protected while the Warden stands: " + p);
+            }
+            Assert.IsFalse(run.Grid.IsPlotImmune(new Vector2Int(4, 4)), "a far plot is never protected");
+
+            run.Grid.GetCell(2, 2).ClearFill();   // the Warden tile is destroyed
+            foreach (var p in around)
+            {
+                Assert.IsFalse(run.Grid.IsPlotImmune(p), "no longer protected once it is gone: " + p);
+            }
+        }
+
+        [Test]
         public void WardenAndAegis_FreeAndShieldPlots()
         {
             var run = NewRun();
@@ -893,7 +912,7 @@ namespace Contigu.Tests
             {
                 var cell = run.Grid.GetCell(p);
                 Assert.IsFalse(cell.IsLocked || cell.IsFrozen || cell.IsPoisoned, p.ToString());
-                Assert.IsTrue(cell.IsImmune);
+                Assert.IsTrue(run.Grid.IsPlotImmune(p), p.ToString());   // Warden: derived from its tile
             }
             Assert.IsTrue(run.Grid.GetCell(0, 0).IsLocked, "plots that are not around it keep their lock");
 
@@ -901,7 +920,7 @@ namespace Contigu.Tests
             var picked = run.Grid.FreezeRandomCells(GridManager.Size * GridManager.Size, new SystemRandomProvider(1));
             foreach (var p in picked)
             {
-                Assert.IsFalse(run.Grid.GetCell(p).IsImmune && (p == new Vector2Int(1, 2) || p == new Vector2Int(3, 2) || p == new Vector2Int(2, 1) || p == new Vector2Int(2, 3)), p.ToString());
+                Assert.IsFalse(run.Grid.IsPlotImmune(new Vector2Int(p.x, p.y)) && (p == new Vector2Int(1, 2) || p == new Vector2Int(3, 2) || p == new Vector2Int(2, 1) || p == new Vector2Int(2, 3)), p.ToString());
             }
 
             var own = NewRun();

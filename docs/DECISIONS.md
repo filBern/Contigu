@@ -9904,3 +9904,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-19 — Mesure d'équilibre après « le Mult n'est jamais arrondi »
 - Planner profondeur 2, 400 parties, graine 1, par challenge : Spring 12,0 % (avant ≈ 10), Winter 13,8 % (≈ 10), Summer 3,5 % (≈ 4), Autumn 15,3 % (≈ 17), Orchard 5,5 % (≈ 5), Greenhouse 6,0 % (≈ 6) ; 0 partie bloquée. Les écarts restent dans le bruit (±4 points), sauf Winter (+3,8) à surveiller : aucune retouche d'équilibre. `CLAUDE.md` mis à jour.
+
+## 2026-11-20 — Warden Sprout : protection tant que la tuile existe
+- Retour de l'auteur : le texte promettait une immunité pour la manche, alors que l'effet voulu est « libère et immunise les 4 parcelles autour, jusqu'à ce que la tuile soit détruite ». Avant, `CleanseAndShield` posait `Cell.IsImmune` sur les 4 voisines pour le reste de la manche, même Warden détruit.
+- Maintenant (Core) : Warden libère toujours les 4 parcelles à la pose (`CleanseAndShield(..., shield: false)`) mais ne pose plus `IsImmune` ; l'immunité est dérivée par `GridManager.IsPlotImmune(pos)` (la parcelle est immune elle-même — Aegis — ou une tuile remplie portant Warden occupe un voisin orthogonal). Elle cesse dès que la tuile est détruite (`ClearFill` efface la trait d'origine). Les effets ennemis (verrous, glace, poison, contamination) consultent `IsPlotImmune`. Aegis ne change pas (immunité de sa parcelle pour la manche).
+- Textes : « …immune while it stays on the board. » (définition, infobulle, commentaire, `PROGRESSION.md`). Test ajouté (`Warden_ProtectsItsFourPlotsOnlyWhileItsTileIsOnTheBoard`), test existant adapté. `dotnet test` : 661 réussis.

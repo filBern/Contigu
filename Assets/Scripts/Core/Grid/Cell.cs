@@ -70,7 +70,7 @@ namespace Contigu.Core
         /// </summary>
         public bool IsPoisoned;
 
-        /// <summary>Warden / Aegis Sprout: enemy effects (locks, ice, poison, contamination) can no longer land on this plot for the rest of the round — it stays with the plot, not the tile on it.</summary>
+        /// <summary>Aegis Sprout (Warden's protection is derived from its tile, see GridManager.IsPlotImmune): enemy effects (locks, ice, poison, contamination) can no longer land on this plot for the rest of the round — it stays with the plot, not the tile on it.</summary>
         public bool IsImmune;
 
         /// <summary>Growth Sprout's counter: how many times this tile's upgrade already scored this round (it moves with the tile).</summary>

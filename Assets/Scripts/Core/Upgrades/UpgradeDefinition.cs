@@ -328,7 +328,7 @@ namespace Contigu.Core
 
         public static readonly UpgradeDefinition WardenTile = new UpgradeDefinition(
             UpgradeId.WardenTile, UpgradePool.Grid, "Warden Sprout",
-            "Frees the 4 plots around it from enemy effects and makes them immune for the round.", false, UpgradeRarity.Uncommon);
+            "Frees the 4 plots around it from enemy effects and makes them immune while it stays on the board.", false, UpgradeRarity.Uncommon);
 
         public static readonly UpgradeDefinition AegisTile = new UpgradeDefinition(
             UpgradeId.AegisTile, UpgradePool.Grid, "Aegis Sprout",

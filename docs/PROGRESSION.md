@@ -56,7 +56,7 @@ Au départ : Golden Cells, Tinted Cells, Pip, Lucky, Catalyst, Chameleon, Spark,
 | Keystone Sprout | Rare | +5 Mult when it sits on a corner or in the middle. | Plant 80 tiles on corners in one run |
 | Growth Sprout | Rare | +1 pt, then +1 more every time it scores this round. | Clear 10 rounds without a Shuffle in one run |
 | Gambler Sprout | Uncommon | 50%: +40 pts. 50%: -10 pts. | Reach round 3 |
-| Warden Sprout | Uncommon | Frees the 4 plots around it from enemy effects and makes them immune for the rou | Suffer 1500 locked, frozen or blighted plots in total |
+| Warden Sprout | Uncommon | Frees the 4 plots around it from enemy effects and makes them immune while it stays on the boa | Suffer 1500 locked, frozen or blighted plots in total |
 | Aegis Sprout | Uncommon | Frees its own plot from enemy effects and makes it immune for the round. | Have 18 plots locked, frozen or blighted at once |
 | Sower Sprout | Rare | Plants a free tile of its color on a neighboring empty plot. | Plant 35 seeds in one round |
 | Kin Sprout | Uncommon | +4 pts per other upgraded tile touching it. | Have 15 upgraded tiles on the garden at once |

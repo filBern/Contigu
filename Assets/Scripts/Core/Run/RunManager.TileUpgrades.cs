@@ -484,7 +484,7 @@ namespace Contigu.Core
                 case PieceTraitKind.Warden:
                     for (int s = 0; s < TileUpgradeSteps.Length; s++)
                     {
-                        CleanseAndShield(pos + TileUpgradeSteps[s], placement);
+                        CleanseAndShield(pos + TileUpgradeSteps[s], placement, shield: false);
                     }
                     break;
                 case PieceTraitKind.Aegis:
@@ -827,7 +827,7 @@ namespace Contigu.Core
             }
         }
 
-        private void CleanseAndShield(Vector2Int pos, PlacementResult placement)
+        private void CleanseAndShield(Vector2Int pos, PlacementResult placement, bool shield = true)
         {
             if (!GridManager.InBounds(pos.x, pos.y))
             {
@@ -842,7 +842,10 @@ namespace Contigu.Core
                 cell.IsLineClearObstacle = false;
             }
             cell.IsPoisoned = false;
-            cell.IsImmune = true;
+            if (shield)
+            {
+                cell.IsImmune = true;   // Aegis: stays with the plot for the round (Warden's protection is derived from its tile, see GridManager.IsPlotImmune)
+            }
             for (int i = 0; i < _currentEncounter.Count; i++)
             {
                 var enemy = _currentEncounter[i];

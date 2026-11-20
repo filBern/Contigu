@@ -6,6 +6,37 @@ namespace Contigu.Core
     /// <summary>Random locking/freezing of cells, permanent bonus squares and clearing random filled cells.</summary>
     public sealed partial class GridManager
     {
+        /// <summary>
+        /// Whether enemy effects (locks, ice, poison, contamination) can no longer land on this plot: it is immune itself (Aegis Sprout, for the round), or a
+        /// Warden Sprout tile stands on one of its 4 neighbors. Warden's protection is derived, not stored: it lasts only while that tile is on the board,
+        /// and ends as soon as it is destroyed.
+        /// </summary>
+        public bool IsPlotImmune(Vector2Int pos)
+        {
+            if (!InBounds(pos.x, pos.y))
+            {
+                return false;
+            }
+            if (GetCell(pos).IsImmune)
+            {
+                return true;
+            }
+            var steps = new[] { new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(0, -1) };
+            for (int i = 0; i < steps.Length; i++)
+            {
+                var n = pos + steps[i];
+                if (InBounds(n.x, n.y))
+                {
+                    var neighbor = GetCell(n);
+                    if (neighbor.IsFilled && neighbor.OriginTrait.HasValue && neighbor.OriginTrait.Value.Kind == PieceTraitKind.Warden)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         /// <summary>Locks up to <paramref name="count"/> random cells for the boss round, avoiding cells that already carry a golden/tinted/multiplier modifier when possible.</summary>
         public IReadOnlyList<Vector2Int> LockRandomCells(int count, IRandomProvider rng)
         {
@@ -13,7 +44,7 @@ namespace Contigu.Core
             foreach (var pos in AllPositions())
             {
                 var cell = GetCell(pos);
-                if (!cell.IsLocked && !cell.IsFilled && !cell.HasAnyModifier && !cell.IsImmune)
+                if (!cell.IsLocked && !cell.IsFilled && !cell.HasAnyModifier && !IsPlotImmune(pos))
                 {
                     candidates.Add(pos);
                 }
@@ -27,7 +58,7 @@ namespace Contigu.Core
                 foreach (var pos in AllPositions())
                 {
                     var cell = GetCell(pos);
-                    if (!cell.IsLocked && !cell.IsFilled && cell.HasAnyModifier && !cell.IsImmune)
+                    if (!cell.IsLocked && !cell.IsFilled && cell.HasAnyModifier && !IsPlotImmune(pos))
                     {
                         candidates.Add(pos);
                     }
@@ -296,7 +327,7 @@ namespace Contigu.Core
             foreach (var pos in AllPositions())
             {
                 var cell = GetCell(pos);
-                if (!cell.IsLocked && !cell.IsFilled && !cell.IsImmune)
+                if (!cell.IsLocked && !cell.IsFilled && !IsPlotImmune(pos))
                 {
                     candidates.Add(pos);
                 }
@@ -351,7 +382,7 @@ namespace Contigu.Core
             foreach (var pos in AllPositions())
             {
                 var cell = GetCell(pos);
-                if (!cell.IsLocked && !cell.IsFilled && !cell.IsImmune)
+                if (!cell.IsLocked && !cell.IsFilled && !IsPlotImmune(pos))
                 {
                     candidates.Add(pos);
                 }
