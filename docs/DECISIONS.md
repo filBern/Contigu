@@ -9931,3 +9931,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - `PageTurn` : vague 0,18 → 0,34 s et rebond 0,14 → 0,22 s (≈ 0,56 s pour couvrir, autant pour découvrir).
 - La page tournée joue aussi après le choix d'un challenge (`OnChallengeChosen`) et après « Continue saved run » (`OnContinueRequested`) : la manche est installée derrière la page.
 - Le balayage de tuiles entre le menu principal et l'écran de choix de challenge est retiré : « Play » charge directement la scène (`MainMenuBootstrap.OnPlayClicked`) et le sélecteur s'affiche tout de suite (`GameBootstrap`). `MainMenuTransitionView` et ses tuiles `Tiles/Sweep` restent dans le projet, plus appelés. Non vérifié dans Unity.
+
+## 2026-11-24 — Menu → choix de challenge : aucune transition
+- Retour de l'auteur : en cliquant sur Play, le menu disparaissait puis le sélecteur apparaissait en fondu, ce qui faisait une drôle de transition ; il ne doit y en avoir aucune. `ChallengeSelectView.Show(metaStats, instant)` : `instant` saute le fondu (alpha à 1 tout de suite) ; `GameBootstrap` l'utilise à l'ouverture de la scène de jeu. Les autres ouvertures (nouvelle partie après une fin de run, etc.) gardent leur fondu. Non vérifié dans Unity ; il peut rester un bref écran vide pendant le chargement de la scène elle-même, que le code ne peut pas masquer.

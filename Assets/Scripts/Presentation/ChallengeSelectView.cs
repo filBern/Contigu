@@ -462,7 +462,8 @@ namespace Contigu.Presentation
             if (_playButton.interactable && !_playArmed) { _playButtonLabel.text = hasSave ? "New run" : "Play"; }
         }
 
-        public void Show(MetaStats metaStats)
+        /// <summary>Opens the picker; <paramref name="instant"/> skips the fade-in (arriving from the main menu, where nothing should transition).</summary>
+        public void Show(MetaStats metaStats, bool instant = false)
         {
             SfxManager.Play(SfxId.Overlay);
             _metaStats = metaStats;
@@ -479,6 +480,12 @@ namespace Contigu.Presentation
             if (_fadeCoroutine != null)
             {
                 StopCoroutine(_fadeCoroutine);
+            }
+            if (instant)
+            {
+                _canvasGroup.alpha = 1f;
+                _fadeCoroutine = null;
+                return;
             }
             _canvasGroup.alpha = 0f;
             _fadeCoroutine = StartCoroutine(FadeInRoutine());

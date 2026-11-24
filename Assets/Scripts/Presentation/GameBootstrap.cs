@@ -154,7 +154,7 @@ namespace Contigu.Presentation
             // OnChallengeChosen) fires right after.
             //
             // The picker shows straight away: the menu no longer plays a tile sweep (the page turn plays once a challenge is chosen, see OnChallengeChosen).
-            _challengeSelectView.Show(_metaStats);
+            _challengeSelectView.Show(_metaStats, instant: true);
         }
 
         /// <summary>Scales every AudioSource in the scene (see AudioListener.volume) by VolumeSettings.MasterVolume — real, immediate effect even with zero clips loaded yet, unlike Music/SFX which have no bus of their own to attenuate without an AudioMixer.</summary>
