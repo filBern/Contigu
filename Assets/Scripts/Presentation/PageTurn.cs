@@ -1,25 +1,25 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// "Turning the page" between the round and the shop (both ways): a green crayon sheet, led by Sprig, sweeps in from the right, a ruled notebook page
-    /// (margin, doodles) follows a beat behind and covers the screen, the swap happens under it, then the page leaves to the left and the green sheet after it.
-    /// With reduced motion the swap is immediate. Input is blocked while it runs. Art: Icons/PageTurn_Green and PageTurn_Paper (Design/Notebook/generate_page.py).
+    /// "Turning the page" between the round and the shop (both ways), quickly: crayon scribbles and big flowers (Icons/Doodles) pop in over the screen in a
+    /// wave from left to right while the paper fills in underneath, until it is covered; the swap happens there; then the doodles pop back out in the same
+    /// wave and the paper clears. With reduced motion the swap is immediate. Input is blocked while it runs.
     /// </summary>
     public static class PageTurn
     {
-        private const float CoverSeconds = 0.3f;
-        private const float StaggerSeconds = 0.12f;
-        private const float HoldSeconds = 0.08f;
-        private const float UncoverSeconds = 0.34f;
-        // The sprites are 1300 px wide, their leading 40 px being the edge: the 1260 px behind it span the screen.
-        private const float SpriteWidth = 1300f;
-        private const float EdgeWidth = 40f;
-        private const float BodyWidth = 1260f;
+        private const int Columns = 9;
+        private const int Rows = 5;
+        private const float DoodleSize = 330f;
+        private const float WaveSeconds = 0.18f;
+        private const float PopSeconds = 0.14f;
+        private const float HoldSeconds = 0.02f;
+        private const int DoodleKinds = 8;
 
         public static void Play(MonoBehaviour host, Transform canvasRoot, Action atCover)
         {
@@ -31,87 +31,102 @@ namespace Contigu.Presentation
             host.StartCoroutine(Run(canvasRoot, atCover));
         }
 
-        private static RectTransform BuildSheet(Transform parent, string name, string spritePath, Color fallback, float scale)
+        private struct Piece
         {
-            var sprite = Resources.Load<Sprite>(spritePath);
-            var image = UIFactory.CreatePanel(parent, name, sprite != null ? Color.white : fallback);
-            image.sprite = sprite;
-            image.preserveAspect = false;
-            image.raycastTarget = true;
-            var rect = image.rectTransform;
-            rect.anchorMin = new Vector2(0f, 0f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 0.5f);
-            rect.sizeDelta = new Vector2(SpriteWidth * scale, 0f);
-            rect.SetAsLastSibling();
-            return rect;
+            public RectTransform Rect;
+            public float Delay;        // 0..WaveSeconds, left to right with a little disorder
+            public float Spin;
         }
 
         private static IEnumerator Run(Transform canvasRoot, Action atCover)
         {
-            float screenWidth = Mathf.Max(1f, ((RectTransform)canvasRoot).rect.width);
-            float scale = screenWidth / BodyWidth;
-            float edge = EdgeWidth * scale;
-            var green = BuildSheet(canvasRoot, "PageTurnGreen", "Icons/PageTurn_Green", new Color(0.62f, 0.83f, 0.49f, 1f), scale);
-            var paper = BuildSheet(canvasRoot, "PageTurnPaper", "Icons/PageTurn_Paper", UITheme.Background, scale);
-            green.SetSiblingIndex(paper.GetSiblingIndex() - 1);
+            var canvasRect = (RectTransform)canvasRoot;
+            float width = Mathf.Max(1f, canvasRect.rect.width);
+            float height = Mathf.Max(1f, canvasRect.rect.height);
+            var paper = UIFactory.CreatePanel(canvasRoot, "PageTurn", new Color(UITheme.Background.r, UITheme.Background.g, UITheme.Background.b, 0f));
+            paper.raycastTarget = true;                        // blocks clicks while the page is down
+            UIFactory.StretchFull(paper.rectTransform);
+            paper.rectTransform.SetAsLastSibling();
 
-            // Sprig runs ahead of the green sheet (a flipbook of her cheering pose).
-            var sprigSprite = Resources.Load<Sprite>("Characters/Sprig_Cheer");
-            if (sprigSprite != null)
+            var rng = new System.Random(7);
+            var pieces = new List<Piece>();
+            float scale = Mathf.Max(width / 1920f, 0.5f);
+            for (int r = 0; r < Rows; r++)
             {
-                var sprig = UIFactory.CreatePanel(green, "Sprig", Color.white);
-                sprig.sprite = sprigSprite;
-                sprig.preserveAspect = true;
-                sprig.raycastTarget = false;
-                sprig.rectTransform.anchorMin = sprig.rectTransform.anchorMax = new Vector2(0f, 0.5f);
-                sprig.rectTransform.pivot = new Vector2(1f, 0.5f);
-                sprig.rectTransform.sizeDelta = new Vector2(300f, 300f);
-                sprig.rectTransform.anchoredPosition = new Vector2(edge + 24f, 0f);
-                SpriteFlipbook.Attach(sprig, "Characters");
+                for (int c = 0; c < Columns; c++)
+                {
+                    var sprite = Resources.Load<Sprite>("Icons/Doodles/Doodle_" + rng.Next(DoodleKinds));
+                    var image = UIFactory.CreatePanel(paper.rectTransform, "Doodle", sprite != null ? Color.white : new Color(0.95f, 0.65f, 0.6f, 1f));
+                    image.sprite = sprite;
+                    image.preserveAspect = true;
+                    image.raycastTarget = false;
+                    var rect = image.rectTransform;
+                    rect.anchorMin = rect.anchorMax = new Vector2(0f, 0f);
+                    rect.pivot = new Vector2(0.5f, 0.5f);
+                    float jitterX = ((float)rng.NextDouble() - 0.5f) * width / Columns * 0.7f;
+                    float jitterY = ((float)rng.NextDouble() - 0.5f) * height / Rows * 0.7f;
+                    rect.anchoredPosition = new Vector2((c + 0.5f) * width / Columns + jitterX, (r + 0.5f) * height / Rows + jitterY);
+                    float size = DoodleSize * scale * (0.85f + (float)rng.NextDouble() * 0.35f);
+                    rect.sizeDelta = new Vector2(size, size);
+                    rect.localScale = Vector3.zero;
+                    float wave = (c / (float)(Columns - 1)) * 0.8f + (float)rng.NextDouble() * 0.2f;
+                    pieces.Add(new Piece { Rect = rect, Delay = wave * WaveSeconds, Spin = ((float)rng.NextDouble() - 0.5f) * 50f });
+                }
             }
 
+            // Cover: the doodles pop in, the paper fills in under them.
             float t = 0f;
-            float total = CoverSeconds + StaggerSeconds;
+            float total = WaveSeconds + PopSeconds;
             while (t < total)
             {
                 t += GameSpeed.AnimationDelta;
-                Place(green, Mathf.Clamp01(t / CoverSeconds), screenWidth, edge, true);
-                Place(paper, Mathf.Clamp01((t - StaggerSeconds) / CoverSeconds), screenWidth, edge, true);
+                Apply(pieces, t, true);
+                paper.color = new Color(paper.color.r, paper.color.g, paper.color.b, Mathf.Clamp01(t / (total * 0.85f)));
                 yield return null;
             }
-            Place(green, 1f, screenWidth, edge, true);
-            Place(paper, 1f, screenWidth, edge, true);
+            Apply(pieces, total, true);
+            paper.color = new Color(paper.color.r, paper.color.g, paper.color.b, 1f);
             if (atCover != null) { atCover(); }
-            green.SetAsLastSibling();
-            paper.SetAsLastSibling();
+            paper.rectTransform.SetAsLastSibling();
             t = 0f;
             while (t < HoldSeconds)
             {
                 t += GameSpeed.AnimationDelta;
                 yield return null;
             }
+
+            // Uncover: the same wave, the doodles shrink away and the paper clears.
+            paper.raycastTarget = false;
             t = 0f;
-            total = UncoverSeconds + StaggerSeconds;
             while (t < total)
             {
                 t += GameSpeed.AnimationDelta;
-                float q = Mathf.Clamp01(t / UncoverSeconds);
-                Place(paper, q, screenWidth, edge, false);
-                Place(green, Mathf.Clamp01((t - StaggerSeconds) / UncoverSeconds), screenWidth, edge, false);
-                if (q >= 1f) { paper.GetComponent<Image>().raycastTarget = false; }
+                Apply(pieces, t, false);
+                paper.color = new Color(paper.color.r, paper.color.g, paper.color.b, 1f - Mathf.Clamp01((t - total * 0.15f) / (total * 0.85f)));
                 yield return null;
             }
             UnityEngine.Object.Destroy(paper.gameObject);
-            UnityEngine.Object.Destroy(green.gameObject);
         }
 
-        /// <summary>Puts a sheet's leading edge at its place: covering, from the right edge of the screen to its left edge; leaving, on to fully past the left edge.</summary>
-        private static void Place(RectTransform sheet, float progress, float screenWidth, float edge, bool covering)
+        private static void Apply(List<Piece> pieces, float t, bool popIn)
         {
-            float e = progress * progress * (3f - 2f * progress);
-            float edgeX = covering ? screenWidth * (1f - e) : -(screenWidth + edge + 24f) * e;
-            sheet.anchoredPosition = new Vector2(edgeX - edge, 0f);
+            for (int i = 0; i < pieces.Count; i++)
+            {
+                var piece = pieces[i];
+                if (piece.Rect == null) { continue; }
+                float p = Mathf.Clamp01((t - piece.Delay) / PopSeconds);
+                float s;
+                if (popIn)
+                {
+                    s = p < 0.7f ? Mathf.Lerp(0f, 1.15f, p / 0.7f) : Mathf.Lerp(1.15f, 1f, (p - 0.7f) / 0.3f);
+                }
+                else
+                {
+                    s = 1f - p * p;
+                }
+                piece.Rect.localScale = new Vector3(s, s, 1f);
+                piece.Rect.localRotation = Quaternion.Euler(0f, 0f, piece.Spin * (popIn ? 1f - p : p));
+            }
         }
     }
 }
