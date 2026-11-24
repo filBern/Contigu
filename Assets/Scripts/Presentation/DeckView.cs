@@ -20,13 +20,13 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class DeckView : MonoBehaviour
     {
-        private const float MaxCardWidth = 138f;
-        private const float MaxCardHeight = 128f;
+        private const float MaxCardWidth = 250f;
+        private const float MaxCardHeight = 200f;
         private const float MinCardHeight = 64f;
-        private const float ListTop = 110f;
+        private const float ListTop = 188f;
         private const float BottomMargin = 14f;
-        private const float CardSpacing = 6.25f;
-        private const float PreviewTileSize = 27f;
+        private const float CardSpacing = 14f;
+        private const float PreviewTileSize = 46f;
         private const float FooterHeight = 30f;
         private const float SectionHeaderHeight = 28f;
         private const float SectionHeaderToGridGap = 5f;
@@ -34,13 +34,10 @@ namespace Contigu.Presentation
         private const float ListWidth = 1150f;
         private const float ListHeight = 700f;
 
-        // One column per possible shape keeps all shapes of a color on a
-        // single line (Joker uses the same bounded shape catalog).
-        private static int ColumnsPerSection
-        {
-            get { return InitialDeckFactory.ShapeOrder.Length; }
-        }
-
+        // One tab per color present in the bag (Poppy, Iris, ..., Joker): a single color's cards at a time, big enough to read, instead of every color crammed on one screen.
+        private const int CardColumns = 4;
+        private PieceColor? _selectedColor;
+        private RectTransform _tabsContainer;
         private RunManager _run;
         private DeckManager _deck;
         private TooltipView _tooltip;
@@ -82,6 +79,12 @@ namespace Contigu.Presentation
             _countLabel.rectTransform.pivot = new Vector2(0.5f, 1f);
             _countLabel.rectTransform.anchoredPosition = new Vector2(0f, -78f);
             _countLabel.rectTransform.sizeDelta = new Vector2(900f, 26f);
+
+            _tabsContainer = UIFactory.CreateUIObject("Tabs", _root);
+            _tabsContainer.anchorMin = _tabsContainer.anchorMax = new Vector2(0.5f, 1f);
+            _tabsContainer.pivot = new Vector2(0.5f, 1f);
+            _tabsContainer.anchoredPosition = new Vector2(0f, -112f);
+            _tabsContainer.sizeDelta = new Vector2(ListWidth, 62f);
 
             // Top-pivoted (not centered) since sections are positioned by a
             // running Y cursor in RebuildRows, top-down — each section's
@@ -152,6 +155,7 @@ namespace Contigu.Presentation
         private void RebuildRows()
         {
             ClearChildren(_listContainer);
+            ClearChildren(_tabsContainer);
             _countLabel.text = _deck.DeckCount + " seeds";
             // The Lean Bag pledge only counts at the end of the run, so the bag starts above its limit: say so here, where the player looks at the bag.
             if (_run != null && (_run.Pledges & Pledge.LeanBag) != Pledge.None)
@@ -160,53 +164,58 @@ namespace Contigu.Presentation
             }
 
             var composition = _deck.GetDeckComposition();
-            var sections = new List<(PieceColor Color, List<(ShapeId Shape, int Count)> Types)>();
-            int widestSection = 0;
+            var present = new List<(PieceColor Color, List<(ShapeId Shape, int Count)> Types, int Total)>();
             for (int c = 0; c < ColorSectionOrder.Length; c++)
             {
-                var color = ColorSectionOrder[c];
-                var types = CollectTypesForColor(composition, color);
+                var types = CollectTypesForColor(composition, ColorSectionOrder[c]);
                 if (types.Count == 0)
                 {
                     continue;
                 }
-                sections.Add((color, types));
-                if (types.Count > widestSection)
-                {
-                    widestSection = types.Count;
-                }
+                int total = 0;
+                for (int t = 0; t < types.Count; t++) { total += types[t].Count; }
+                present.Add((ColorSectionOrder[c], types, total));
+            }
+            if (present.Count == 0)
+            {
+                return;
+            }
+            if (!_selectedColor.HasValue || present.FindIndex(x => x.Color == _selectedColor.Value) < 0)
+            {
+                _selectedColor = present[0].Color;
             }
 
-            // Cards grow to fill the free height: fewer colors, taller cards.
-            // The overlay is as big as the screen's canvas, which is not always the reference size (a wide window crops the height): fit to what is really there.
+            // The tabs: one per color, tinted like its planter, the chosen one lit and the others dimmed. Each is a big touch target.
+            float tabWidth = Mathf.Min(220f, (_listWidth - (present.Count - 1) * 10f) / present.Count);
+            float tabsWidth = present.Count * tabWidth + (present.Count - 1) * 10f;
+            for (int i = 0; i < present.Count; i++)
+            {
+                var color = present[i].Color;
+                var tab = UIFactory.CreateButton(_tabsContainer, "Tab_" + color, VisualDefaults.GetColorName(color) + " " + present[i].Total, UISprites.Garden(PlanterFor(color).Replace("Light", "")) ?? UISprites.CardBackground, 18);
+                var tabRect = tab.GetComponent<RectTransform>();
+                tabRect.anchorMin = tabRect.anchorMax = new Vector2(0.5f, 0.5f);
+                tabRect.pivot = new Vector2(0.5f, 0.5f);
+                tabRect.sizeDelta = new Vector2(tabWidth, MobileSetup.TouchMin(56f));
+                tabRect.anchoredPosition = new Vector2(-tabsWidth / 2f + tabWidth / 2f + i * (tabWidth + 10f), 0f);
+                var tabImage = tab.GetComponent<Image>();
+                bool chosen = color == _selectedColor.Value;
+                tabImage.color = chosen ? Color.white : new Color(1f, 1f, 1f, 0.55f);
+                var captured = color;
+                tab.onClick.AddListener(() => { _selectedColor = captured; RebuildRows(); });
+            }
+
+            var selected = present.Find(x => x.Color == _selectedColor.Value);
             var rootRect = _root.rect;
             float availableHeight = rootRect.height > 100f ? rootRect.height - ListTop - BottomMargin : ListHeight;
             float availableWidth = rootRect.width > 100f ? Mathf.Min(ListWidth, rootRect.width - 24f) : ListWidth;
-            float perSection = availableHeight / Mathf.Max(1, sections.Count) - SectionHeaderHeight - SectionHeaderToGridGap - SectionGap;
-            _cardHeight = Mathf.Clamp(perSection, MinCardHeight, MaxCardHeight);
-            _cardWidth = Mathf.Min(MaxCardWidth, (availableWidth - (ColumnsPerSection - 1) * CardSpacing) / ColumnsPerSection);
+            int rows = Mathf.CeilToInt(selected.Types.Count / (float)CardColumns);
+            _cardWidth = Mathf.Min(MaxCardWidth, (availableWidth - (CardColumns - 1) * CardSpacing) / CardColumns);
+            _cardHeight = Mathf.Clamp((availableHeight - (rows - 1) * CardSpacing) / Mathf.Max(1, rows), MinCardHeight, MaxCardHeight);
             _listWidth = availableWidth;
             _listContainer.sizeDelta = new Vector2(_listWidth, availableHeight);
-
-            // Every section shares the same horizontal offset/width, based on whichever section has the most distinct types (capped at the number of possible shapes), so the whole block reads as centered rather than flush left.
-            int columnsUsed = Mathf.Min(ColumnsPerSection, widestSection);
+            int columnsUsed = Mathf.Min(CardColumns, selected.Types.Count);
             float contentWidth = columnsUsed * _cardWidth + (columnsUsed - 1) * CardSpacing;
-            float xOffset = (_listWidth - contentWidth) / 2f;
-
-            float y = 0f;
-            for (int i = 0; i < sections.Count; i++)
-            {
-                int colorTotal = 0;
-                var types = sections[i].Types;
-                for (int t = 0; t < types.Count; t++)
-                {
-                    colorTotal += types[t].Count;
-                }
-                y = BuildColorSectionHeader(sections[i].Color, colorTotal, y, xOffset, contentWidth);
-                y -= SectionHeaderToGridGap;
-                y = BuildColorSectionGrid(types, sections[i].Color, y, xOffset);
-                y -= SectionGap;
-            }
+            BuildColorSectionGrid(selected.Types, selected.Color, 0f, (_listWidth - contentWidth) / 2f);
         }
 
         /// <summary>Every (shape, count) the deck currently has in <paramref name="color"/>, in InitialDeckFactory.ShapeOrder's fixed order; GetDeckComposition's own Dictionary iteration order isn't guaranteed.</summary>
@@ -224,32 +233,19 @@ namespace Contigu.Presentation
             return result;
         }
 
-        /// <summary>Section label tinted the color it groups, stating <paramref name="totalCount"/> (this color's piece total across every shape). Starts at <paramref name="xOffset"/> and spans <paramref name="contentWidth"/>, matching its grid's centered columns. Returns the Y cursor for whatever comes next.</summary>
-        private float BuildColorSectionHeader(PieceColor color, int totalCount, float y, float xOffset, float contentWidth)
-        {
-            string headerText = VisualDefaults.GetColorName(color).ToUpperInvariant() + " (" + totalCount + ")";
-            var label = UIFactory.CreateText(_listContainer, "Header_" + color, headerText, 24, VisualDefaults.GetColor(color), TextAnchor.LowerLeft);
-            label.rectTransform.anchorMin = new Vector2(0f, 1f);
-            label.rectTransform.anchorMax = new Vector2(0f, 1f);
-            label.rectTransform.pivot = new Vector2(0f, 1f);
-            label.rectTransform.anchoredPosition = new Vector2(xOffset, y);
-            label.rectTransform.sizeDelta = new Vector2(contentWidth, SectionHeaderHeight);
-            return y - SectionHeaderHeight;
-        }
-
         /// <summary>Places all shape cards in one centered horizontal row for this color, with each card aligned to the same columns used by the other sections. Returns the Y cursor for whatever comes next.</summary>
         private float BuildColorSectionGrid(List<(ShapeId Shape, int Count)> types, PieceColor color, float y, float xOffset)
         {
             for (int i = 0; i < types.Count; i++)
             {
-                int col = i % ColumnsPerSection;
-                int row = i / ColumnsPerSection;
+                int col = i % CardColumns;
+                int row = i / CardColumns;
                 float x = xOffset + col * (_cardWidth + CardSpacing);
                 float cardY = y - row * (_cardHeight + CardSpacing);
                 BuildTypeCard(x, cardY, types[i].Shape, color, types[i].Count);
             }
 
-            int rowCount = Mathf.CeilToInt(types.Count / (float)ColumnsPerSection);
+            int rowCount = Mathf.CeilToInt(types.Count / (float)CardColumns);
             float gridHeight = rowCount * _cardHeight + (rowCount - 1) * CardSpacing;
             return y - gridHeight;
         }
