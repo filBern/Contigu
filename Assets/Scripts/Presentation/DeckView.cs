@@ -191,7 +191,7 @@ namespace Contigu.Presentation
             for (int i = 0; i < present.Count; i++)
             {
                 var color = present[i].Color;
-                var tab = UIFactory.CreateButton(_tabsContainer, "Tab_" + color, VisualDefaults.GetColorName(color) + " " + present[i].Total, UISprites.Garden(PlanterFor(color).Replace("Light", "")) ?? UISprites.CardBackground, 18);
+                var tab = UIFactory.CreateButton(_tabsContainer, "Tab_" + color, VisualDefaults.GetColorName(color) + " - " + present[i].Total, UISprites.Garden(PlanterFor(color).Replace("Light", "")) ?? UISprites.CardBackground, 18);
                 var tabRect = tab.GetComponent<RectTransform>();
                 tabRect.anchorMin = tabRect.anchorMax = new Vector2(0.5f, 0.5f);
                 tabRect.pivot = new Vector2(0.5f, 0.5f);

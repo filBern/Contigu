@@ -9937,3 +9937,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-24 — Onglet « Sunflower 8 » sur une seule ligne
 - Capture de l'auteur : le libellé long de l'onglet Sunflower passait sur trois lignes et débordait. Libellés d'onglet sans retour à la ligne (`horizontalOverflow = Overflow`) et taille de départ 15 (au lieu de 18) avant le facteur de texte ; `bestFit` conserve un minimum de 10. Non vérifié dans Unity.
+
+## 2026-11-24 — Onglets du Seed bag : « Nom - nombre »
+- Demande de l'auteur : un tiret entre le nom de la couleur et le nombre (« Poppy - 8 »). Non vérifié dans Unity.
