@@ -153,25 +153,8 @@ namespace Contigu.Presentation
             // picked. TutorialView's first-launch auto-show (see
             // OnChallengeChosen) fires right after.
             //
-            // The main menu's own tile sweep survived the scene load (DontDestroyOnLoad) covering the whole
-            // screen — now that this scene's UI is actually built and ready underneath it, continue the same
-            // animation by sweeping the tiles away instead of leaving the screen covered. PendingReveal is
-            // null when this scene was entered any other way (e.g. opened directly in the editor), so the
-            // carousel just shows immediately then, same as before this sweep existed. When it isn't null,
-            // ChallengeSelectView.Show is deferred to PlayUncoverSweep's onNearlyRevealed callback — a beat
-            // before the very last tile vanishes (see EarlyRevealOffset) rather than its full completion —
-            // so the carousel's own fade-in (see ChallengeSelectView.Show) overlaps the tail of the sweep
-            // instead of only starting once the screen is already fully clear.
-            if (MainMenuTransitionView.PendingReveal != null)
-            {
-                var reveal = MainMenuTransitionView.PendingReveal;
-                MainMenuTransitionView.PendingReveal = null;
-                reveal.PlayUncoverSweep(onNearlyRevealed: () => _challengeSelectView.Show(_metaStats), onRevealed: null);
-            }
-            else
-            {
-                _challengeSelectView.Show(_metaStats);
-            }
+            // The picker shows straight away: the menu no longer plays a tile sweep (the page turn plays once a challenge is chosen, see OnChallengeChosen).
+            _challengeSelectView.Show(_metaStats);
         }
 
         /// <summary>Scales every AudioSource in the scene (see AudioListener.volume) by VolumeSettings.MasterVolume — real, immediate effect even with zero clips loaded yet, unlike Music/SFX which have no bus of their own to attenuate without an AudioMixer.</summary>

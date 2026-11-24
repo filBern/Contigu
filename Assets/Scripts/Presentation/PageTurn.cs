@@ -16,8 +16,8 @@ namespace Contigu.Presentation
         private const int Columns = 9;
         private const int Rows = 5;
         private const float DoodleSize = 330f;
-        private const float WaveSeconds = 0.18f;
-        private const float PopSeconds = 0.14f;
+        private const float WaveSeconds = 0.34f;
+        private const float PopSeconds = 0.22f;
         private const float HoldSeconds = 0.02f;
         private const int DoodleKinds = 8;
 

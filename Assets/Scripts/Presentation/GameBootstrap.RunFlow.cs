@@ -519,21 +519,26 @@ namespace Contigu.Presentation
                 return;
             }
 
-            _challengeSelectView.Hide();
-            StartNewRun(challenge, _challengeSelectView.SelectedPledges);
-            _roundBannerView.Play(_run);
-            PlayRoundIntro();
-            ShowFirstEncounterIntros();
-            if (_run.CurrentWeather != WeatherId.Clear)
+            // Turn the page (see PageTurn): the run is set up behind it, then revealed.
+            var pledges = _challengeSelectView.SelectedPledges;
+            PageTurn.Play(this, _mainRoot.GetComponentInParent<Canvas>().rootCanvas.transform, () =>
             {
-                _hudView.PulseWeather();
-            }
+                _challengeSelectView.Hide();
+                StartNewRun(challenge, pledges);
+                _roundBannerView.Play(_run);
+                PlayRoundIntro();
+                ShowFirstEncounterIntros();
+                if (_run.CurrentWeather != WeatherId.Clear)
+                {
+                    _hudView.PulseWeather();
+                }
 
-            // The tutorial is shown once; after it, a new run starts without any tip.
-            if (GamePrefs.ConsumeFirstTime(TutorialSeenPrefsKey))
-            {
-                StartCoroutine(RunSprigGuideAfterDelay());
-            }
+                // The tutorial is shown once; after it, a new run starts without any tip.
+                if (GamePrefs.ConsumeFirstTime(TutorialSeenPrefsKey))
+                {
+                    StartCoroutine(RunSprigGuideAfterDelay());
+                }
+            });
         }
 
         private System.Collections.IEnumerator RunSprigGuideAfterDelay()
@@ -619,23 +624,27 @@ namespace Contigu.Presentation
                 _challengeSelectView.Refresh(_metaStats);
                 return;
             }
-            _challengeSelectView.Hide();
-            BeginRun(resumed, resumed.Challenge);
-            if (_run.State == RunState.AwaitingShop)
+            // Same page turn as after a challenge is chosen.
+            PageTurn.Play(this, _mainRoot.GetComponentInParent<Canvas>().rootCanvas.transform, () =>
             {
-                // Saved in the shop: back in it, with the offers and the Pollen it opened with.
-                HandleStateTransition(_run.State);
-                SetStatusText("Welcome back! The shop is as it was when it opened.");
-                return;
-            }
-            _roundBannerView.Play(_run);
-            PlayRoundIntro();
-            ShowFirstEncounterIntros();
-            if (_run.CurrentWeather != WeatherId.Clear)
-            {
-                _hudView.PulseWeather();
-            }
-            SetStatusText("Welcome back! Your run resumes at the start of the round.");
+                _challengeSelectView.Hide();
+                BeginRun(resumed, resumed.Challenge);
+                if (_run.State == RunState.AwaitingShop)
+                {
+                    // Saved in the shop: back in it, with the offers and the Pollen it opened with.
+                    HandleStateTransition(_run.State);
+                    SetStatusText("Welcome back! The shop is as it was when it opened.");
+                    return;
+                }
+                _roundBannerView.Play(_run);
+                PlayRoundIntro();
+                ShowFirstEncounterIntros();
+                if (_run.CurrentWeather != WeatherId.Clear)
+                {
+                    _hudView.PulseWeather();
+                }
+                SetStatusText("Welcome back! Your run resumes at the start of the round.");
+            });
         }
 
         private void BeginRun(RunManager run, ChallengeDefinition challenge)

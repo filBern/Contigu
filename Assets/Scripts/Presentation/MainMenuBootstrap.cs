@@ -57,7 +57,7 @@ namespace Contigu.Presentation
                 return;
             }
             _isTransitioning = true;
-            MainMenuTransitionView.PlayCoverSweep(_canvasRect, () => SceneManager.LoadScene(GameplaySceneName));
+            SceneManager.LoadScene(GameplaySceneName);   // no transition on the way to the challenge picker (the page turn plays after the challenge is chosen)
         }
 
         private static void OnExitClicked()

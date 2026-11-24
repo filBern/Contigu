@@ -9926,3 +9926,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-24 — Transition : gribouillis et fleurs qui remplissent l'écran, plus rapide
 - Retour de l'auteur : encore trop lente ; idée de gribouillis et de fleurs qui remplissent progressivement l'écran. `PageTurn` (réécrit) : 45 images de `Icons/Doodles/Doodle_0..7` (spirale, zigzag, tourbillon, fleurs rose/jaune/bleue, étoile, feuille ; `Design/Notebook/generate_doodles.py`, `.meta` à guid neuf) apparaissent en vague de gauche à droite (rebond), le papier se remplit dessous ; l'échange a lieu écran couvert, puis la même vague les fait repartir. Durées : ~0,32 s pour couvrir, 0,02 s de pause, ~0,32 s pour découvrir (≈ 0,66 s au total, contre ≈ 1,0 s pour les feuilles). Les feuilles `PageTurn_Green/Paper` sont supprimées. Reste réglable (`WaveSeconds`, `PopSeconds`). Non vérifié dans Unity.
+
+## 2026-11-24 — Transition : plus lente à l'apparition ; utilisée après le choix de challenge ; plus de balayage au menu
+- `PageTurn` : vague 0,18 → 0,34 s et rebond 0,14 → 0,22 s (≈ 0,56 s pour couvrir, autant pour découvrir).
+- La page tournée joue aussi après le choix d'un challenge (`OnChallengeChosen`) et après « Continue saved run » (`OnContinueRequested`) : la manche est installée derrière la page.
+- Le balayage de tuiles entre le menu principal et l'écran de choix de challenge est retiré : « Play » charge directement la scène (`MainMenuBootstrap.OnPlayClicked`) et le sélecteur s'affiche tout de suite (`GameBootstrap`). `MainMenuTransitionView` et ses tuiles `Tiles/Sweep` restent dans le projet, plus appelés. Non vérifié dans Unity.
