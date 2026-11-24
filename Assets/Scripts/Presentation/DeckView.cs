@@ -197,6 +197,13 @@ namespace Contigu.Presentation
                 tabRect.pivot = new Vector2(0.5f, 0.5f);
                 tabRect.sizeDelta = new Vector2(tabWidth, MobileSetup.TouchMin(56f));
                 tabRect.anchoredPosition = new Vector2(-tabsWidth / 2f + tabWidth / 2f + i * (tabWidth + 10f), 0f);
+                // A long name ("Sunflower 8") must stay on one line: no wrapping, and a smaller start size.
+                var tabLabel = tab.GetComponentInChildren<Text>();
+                tabLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+                tabLabel.verticalOverflow = VerticalWrapMode.Truncate;
+                tabLabel.fontSize = UITheme.Scaled(15);
+                tabLabel.resizeTextMaxSize = UITheme.Scaled(15);
+                tabLabel.resizeTextMinSize = 10;
                 var tabImage = tab.GetComponent<Image>();
                 bool chosen = color == _selectedColor.Value;
                 tabImage.color = chosen ? Color.white : new Color(1f, 1f, 1f, 0.55f);

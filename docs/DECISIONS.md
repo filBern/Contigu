@@ -9934,3 +9934,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-24 — Menu → choix de challenge : aucune transition
 - Retour de l'auteur : en cliquant sur Play, le menu disparaissait puis le sélecteur apparaissait en fondu, ce qui faisait une drôle de transition ; il ne doit y en avoir aucune. `ChallengeSelectView.Show(metaStats, instant)` : `instant` saute le fondu (alpha à 1 tout de suite) ; `GameBootstrap` l'utilise à l'ouverture de la scène de jeu. Les autres ouvertures (nouvelle partie après une fin de run, etc.) gardent leur fondu. Non vérifié dans Unity ; il peut rester un bref écran vide pendant le chargement de la scène elle-même, que le code ne peut pas masquer.
+
+## 2026-11-24 — Onglet « Sunflower 8 » sur une seule ligne
+- Capture de l'auteur : le libellé long de l'onglet Sunflower passait sur trois lignes et débordait. Libellés d'onglet sans retour à la ligne (`horizontalOverflow = Overflow`) et taille de départ 15 (au lieu de 18) avant le facteur de texte ; `bestFit` conserve un minimum de 10. Non vérifié dans Unity.
