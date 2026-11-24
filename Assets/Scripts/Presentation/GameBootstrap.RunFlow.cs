@@ -320,8 +320,12 @@ namespace Contigu.Presentation
         {
             _roundSummaryView.Show(_run.LastRoundSummary, () =>
             {
-                _shopView.Show(_run);
-                if (_harvestsToPlay.Count > 0) { StartCoroutine(PlayShopHarvest()); }
+                // Turn the page (see PageTurn): the shop appears behind it instead of cutting in.
+                PageTurn.Play(this, _mainRoot.GetComponentInParent<Canvas>().rootCanvas.transform, () =>
+                {
+                    _shopView.Show(_run);
+                    if (_harvestsToPlay.Count > 0) { StartCoroutine(PlayShopHarvest()); }
+                });
             });
         }
 

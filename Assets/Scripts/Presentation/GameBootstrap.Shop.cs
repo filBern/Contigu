@@ -821,17 +821,21 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            _shopView.Hide();
             SaveCheckpoint();
-            RefreshAll();
-            SetStatusText(GetCurrentRoundStatus());
-            _roundBannerView.Play(_run);
-            PlayRoundIntro();
-            ShowFirstEncounterIntros();
-            if (_run.CurrentWeather != WeatherId.Clear)
+            // Turn the page (see PageTurn): the round is set up behind it, then revealed.
+            PageTurn.Play(this, _mainRoot.GetComponentInParent<Canvas>().rootCanvas.transform, () =>
             {
-                _hudView.PulseWeather();
-            }
+                _shopView.Hide();
+                RefreshAll();
+                SetStatusText(GetCurrentRoundStatus());
+                _roundBannerView.Play(_run);
+                PlayRoundIntro();
+                ShowFirstEncounterIntros();
+                if (_run.CurrentWeather != WeatherId.Clear)
+                {
+                    _hudView.PulseWeather();
+                }
+            });
         }
     }
 }
