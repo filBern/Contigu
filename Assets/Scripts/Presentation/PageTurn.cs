@@ -6,14 +6,20 @@ using UnityEngine.UI;
 namespace Contigu.Presentation
 {
     /// <summary>
-    /// "Turning the page" between the round and the shop (both ways): a sheet of paper with an ink edge slides in from the right and covers the screen,
-    /// the swap happens behind it, then it slides out to the left. With reduced motion the swap is immediate. Input is blocked while it runs.
+    /// "Turning the page" between the round and the shop (both ways): a green crayon sheet, led by Sprig, sweeps in from the right, a ruled notebook page
+    /// (margin, doodles) follows a beat behind and covers the screen, the swap happens under it, then the page leaves to the left and the green sheet after it.
+    /// With reduced motion the swap is immediate. Input is blocked while it runs. Art: Icons/PageTurn_Green and PageTurn_Paper (Design/Notebook/generate_page.py).
     /// </summary>
     public static class PageTurn
     {
-        private const float CoverSeconds = 0.26f;
-        private const float HoldSeconds = 0.06f;
-        private const float UncoverSeconds = 0.3f;
+        private const float CoverSeconds = 0.3f;
+        private const float StaggerSeconds = 0.12f;
+        private const float HoldSeconds = 0.08f;
+        private const float UncoverSeconds = 0.34f;
+        // The sprites are 1300 px wide, their leading 40 px being the edge: the 1260 px behind it span the screen.
+        private const float SpriteWidth = 1300f;
+        private const float EdgeWidth = 40f;
+        private const float BodyWidth = 1260f;
 
         public static void Play(MonoBehaviour host, Transform canvasRoot, Action atCover)
         {
@@ -25,62 +31,87 @@ namespace Contigu.Presentation
             host.StartCoroutine(Run(canvasRoot, atCover));
         }
 
+        private static RectTransform BuildSheet(Transform parent, string name, string spritePath, Color fallback, float scale)
+        {
+            var sprite = Resources.Load<Sprite>(spritePath);
+            var image = UIFactory.CreatePanel(parent, name, sprite != null ? Color.white : fallback);
+            image.sprite = sprite;
+            image.preserveAspect = false;
+            image.raycastTarget = true;
+            var rect = image.rectTransform;
+            rect.anchorMin = new Vector2(0f, 0f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 0.5f);
+            rect.sizeDelta = new Vector2(SpriteWidth * scale, 0f);
+            rect.SetAsLastSibling();
+            return rect;
+        }
+
         private static IEnumerator Run(Transform canvasRoot, Action atCover)
         {
-            var paper = UIFactory.CreatePanel(canvasRoot, "PageTurn", UITheme.Background);
-            paper.raycastTarget = true;                       // blocks clicks while the page is down
-            var rect = paper.rectTransform;
-            UIFactory.StretchFull(rect);
-            rect.SetAsLastSibling();
-            // The page's leading (left) edge: an ink line and a soft shadow cast on what is still visible.
-            var edge = UIFactory.CreatePanel(rect, "Edge", UITheme.Ink);
-            edge.raycastTarget = false;
-            edge.rectTransform.anchorMin = new Vector2(0f, 0f);
-            edge.rectTransform.anchorMax = new Vector2(0f, 1f);
-            edge.rectTransform.pivot = new Vector2(1f, 0.5f);
-            edge.rectTransform.sizeDelta = new Vector2(6f, 0f);
-            edge.rectTransform.anchoredPosition = Vector2.zero;
-            var shadow = UIFactory.CreatePanel(rect, "Shadow", new Color(UITheme.Ink.r, UITheme.Ink.g, UITheme.Ink.b, 0.16f));
-            shadow.raycastTarget = false;
-            shadow.rectTransform.anchorMin = new Vector2(0f, 0f);
-            shadow.rectTransform.anchorMax = new Vector2(0f, 1f);
-            shadow.rectTransform.pivot = new Vector2(1f, 0.5f);
-            shadow.rectTransform.sizeDelta = new Vector2(46f, 0f);
-            shadow.rectTransform.anchoredPosition = new Vector2(-6f, 0f);
+            float screenWidth = Mathf.Max(1f, ((RectTransform)canvasRoot).rect.width);
+            float scale = screenWidth / BodyWidth;
+            float edge = EdgeWidth * scale;
+            var green = BuildSheet(canvasRoot, "PageTurnGreen", "Icons/PageTurn_Green", new Color(0.62f, 0.83f, 0.49f, 1f), scale);
+            var paper = BuildSheet(canvasRoot, "PageTurnPaper", "Icons/PageTurn_Paper", UITheme.Background, scale);
+            green.SetSiblingIndex(paper.GetSiblingIndex() - 1);
 
-            float width = Mathf.Max(1f, ((RectTransform)canvasRoot).rect.width);
+            // Sprig runs ahead of the green sheet (a flipbook of her cheering pose).
+            var sprigSprite = Resources.Load<Sprite>("Characters/Sprig_Cheer");
+            if (sprigSprite != null)
+            {
+                var sprig = UIFactory.CreatePanel(green, "Sprig", Color.white);
+                sprig.sprite = sprigSprite;
+                sprig.preserveAspect = true;
+                sprig.raycastTarget = false;
+                sprig.rectTransform.anchorMin = sprig.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+                sprig.rectTransform.pivot = new Vector2(1f, 0.5f);
+                sprig.rectTransform.sizeDelta = new Vector2(300f, 300f);
+                sprig.rectTransform.anchoredPosition = new Vector2(edge + 24f, 0f);
+                SpriteFlipbook.Attach(sprig, "Characters");
+            }
+
             float t = 0f;
-            while (t < CoverSeconds)
+            float total = CoverSeconds + StaggerSeconds;
+            while (t < total)
             {
                 t += GameSpeed.AnimationDelta;
-                float p = Mathf.Clamp01(t / CoverSeconds);
-                rect.anchoredPosition = new Vector2(width * (1f - Ease(p)), 0f);
+                Place(green, Mathf.Clamp01(t / CoverSeconds), screenWidth, edge, true);
+                Place(paper, Mathf.Clamp01((t - StaggerSeconds) / CoverSeconds), screenWidth, edge, true);
                 yield return null;
             }
-            rect.anchoredPosition = Vector2.zero;
+            Place(green, 1f, screenWidth, edge, true);
+            Place(paper, 1f, screenWidth, edge, true);
             if (atCover != null) { atCover(); }
-            rect.SetAsLastSibling();
+            green.SetAsLastSibling();
+            paper.SetAsLastSibling();
             t = 0f;
             while (t < HoldSeconds)
             {
                 t += GameSpeed.AnimationDelta;
                 yield return null;
             }
-            paper.raycastTarget = false;
             t = 0f;
-            while (t < UncoverSeconds)
+            total = UncoverSeconds + StaggerSeconds;
+            while (t < total)
             {
                 t += GameSpeed.AnimationDelta;
-                float p = Mathf.Clamp01(t / UncoverSeconds);
-                rect.anchoredPosition = new Vector2(-width * Ease(p), 0f);
+                float q = Mathf.Clamp01(t / UncoverSeconds);
+                Place(paper, q, screenWidth, edge, false);
+                Place(green, Mathf.Clamp01((t - StaggerSeconds) / UncoverSeconds), screenWidth, edge, false);
+                if (q >= 1f) { paper.GetComponent<Image>().raycastTarget = false; }
                 yield return null;
             }
             UnityEngine.Object.Destroy(paper.gameObject);
+            UnityEngine.Object.Destroy(green.gameObject);
         }
 
-        private static float Ease(float p)
+        /// <summary>Puts a sheet's leading edge at its place: covering, from the right edge of the screen to its left edge; leaving, on to fully past the left edge.</summary>
+        private static void Place(RectTransform sheet, float progress, float screenWidth, float edge, bool covering)
         {
-            return p * p * (3f - 2f * p);
+            float e = progress * progress * (3f - 2f * progress);
+            float edgeX = covering ? screenWidth * (1f - e) : -(screenWidth + edge + 24f) * e;
+            sheet.anchoredPosition = new Vector2(edgeX - edge, 0f);
         }
     }
 }

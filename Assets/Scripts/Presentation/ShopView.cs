@@ -831,13 +831,13 @@ namespace Contigu.Presentation
                 shelfWidth = measuredGap - ShelfEdgeMargin;
             }
             _blisterPlaque.anchoredPosition = new Vector2(0f, top + PlaqueLift);
-            _shelfLayout = new ShelfLayout { FirstShelfY = top - LabelToCardsGap - rowHeight + 6f, SecondShelfY = top - SectionLabelHeight - LabelToCardsGap - rowHeight - ShelfDepth - SectionGap - LabelToCardsGap - rowHeight + 6f, Width = shelfWidth };
+            _shelfLayout = new ShelfLayout { FirstShelfY = top - LabelToCardsGap - rowHeight - 5f, SecondShelfY = top - SectionLabelHeight - LabelToCardsGap - rowHeight - ShelfDepth - SectionGap - LabelToCardsGap - rowHeight - 5f, Width = shelfWidth };
             _blisterCardsContainer.anchoredPosition = new Vector2(0f, top - LabelToCardsGap);
-            _blisterShelf.anchoredPosition = new Vector2(0f, top - LabelToCardsGap - rowHeight + 6f);
+            _blisterShelf.anchoredPosition = new Vector2(0f, top - LabelToCardsGap - rowHeight - 5f);
             float secondTop = top - SectionLabelHeight - LabelToCardsGap - rowHeight - ShelfDepth - SectionGap;
             _upgradePlaque.anchoredPosition = new Vector2(0f, secondTop + PlaqueLift);
             _upgradeCardsContainer.anchoredPosition = new Vector2(0f, secondTop - LabelToCardsGap);
-            _workshopShelf.anchoredPosition = new Vector2(0f, secondTop - LabelToCardsGap - rowHeight + 6f);
+            _workshopShelf.anchoredPosition = new Vector2(0f, secondTop - LabelToCardsGap - rowHeight - 5f);
             // The shelves run exactly from one tablet to the other, so the tablets read as the ends of one display case.
             _blisterShelf.sizeDelta = new Vector2(shelfWidth, 16f);
             _workshopShelf.sizeDelta = new Vector2(shelfWidth, 16f);
