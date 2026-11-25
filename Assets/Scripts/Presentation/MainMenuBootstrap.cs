@@ -28,6 +28,9 @@ namespace Contigu.Presentation
             EnsureEventSystem();
             _canvasRect = BuildCanvas();
 
+            // The living page behind the title and the buttons (doodles drifting and boiling; a tap makes a flower bloom).
+            MenuDoodleLayer.Build(_canvasRect);
+
             _mainMenuView = gameObject.AddComponent<MainMenuView>();
             _mainMenuView.Build(_canvasRect);
 
