@@ -223,8 +223,9 @@ namespace Contigu.Tests
             Assert.AreEqual(RunState.AwaitingShop, run.State);
             int unusedPieces = run.PiecesRemainingThisRound;
             Assert.Greater(unusedPieces, 0, "Round should end with budget still remaining once the quota is reached");
-            Assert.AreEqual(unusedPieces, run.LastRoundEndLueurBonus);
-            Assert.AreEqual(unusedPieces + lueurEarnedFromPlacements, run.Lueur, "Every unused piece should be worth exactly +1 Lueur, on top of whatever line-clear Lueur was earned during play");
+            // The first round also pays RunConfig.FirstRoundPollenBonus (it makes up for its smaller seed budget).
+            Assert.AreEqual(unusedPieces + RunConfig.FirstRoundPollenBonus, run.LastRoundEndLueurBonus);
+            Assert.AreEqual(unusedPieces + RunConfig.FirstRoundPollenBonus + lueurEarnedFromPlacements, run.Lueur, "Every unused piece should be worth exactly +1 Lueur, on top of whatever line-clear Lueur was earned during play");
 
             run.LeaveShop();
 

@@ -211,7 +211,7 @@ namespace Contigu.Core
             // Lueur itself is already final here, same "core computes the end
             // state instantly, presentation fakes the gradual reveal"
             // convention as every other scoring event in PlacePiece.
-            LastRoundEndLueurBonus = PiecesRemainingThisRound + _challenge.RoundEndPollenBonus;
+            LastRoundEndLueurBonus = PiecesRemainingThisRound + _challenge.RoundEndPollenBonus + (CurrentRoundIndex == 0 ? RunConfig.FirstRoundPollenBonus : 0);
             Lueur += LastRoundEndLueurBonus;
             Lueur += GrowModifiers();
             LastRoundSummary = new RoundSummary
@@ -227,7 +227,7 @@ namespace Contigu.Core
                 LinesPollen = _roundLinesPollen,
                 TilePollen = _roundTilePollen,
                 UnusedSeedsPollen = PiecesRemainingThisRound,
-                ChallengePollen = _challenge.RoundEndPollenBonus,
+                ChallengePollen = _challenge.RoundEndPollenBonus + (CurrentRoundIndex == 0 ? RunConfig.FirstRoundPollenBonus : 0),
                 FertilizerPollen = BuildFertilizerPollenList(),
                 Growth = new List<GrowthStep>(LastGrowthSteps)
             };

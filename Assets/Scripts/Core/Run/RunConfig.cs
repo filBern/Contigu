@@ -7,6 +7,13 @@ namespace Contigu.Core
         public const int RoundCount = 12;
         public const int BossRoundIndex = RoundCount - 1; // final scheduled boss, round 12 (0-based index 11)
         public const int BossRoundInterval = 4;
+        /// <summary>
+        /// Seeds in the first round of every challenge (the counter reads 20 / 20): with the enemies at half HP (see ScoringConstants.EarlyRoundHpFactors) it
+        /// takes about 10 placements, so the old 30 was slack. Later rounds keep their own budget.
+        /// </summary>
+        public const int FirstRoundBudget = 20;
+        /// <summary>Extra Pollen at the end of the first round: every unused seed pays 1 Pollen, so the smaller first budget would otherwise cost about this much over a run. (Static so the simulator can try other values.)</summary>
+        public static int FirstRoundPollenBonus = 30;
         /// <summary>An event ("something happens") opens the shop after every this-many-th cleared round (3, 6, 9...).</summary>
         public const int EventRoundInterval = 3;
 

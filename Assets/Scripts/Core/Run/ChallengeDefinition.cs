@@ -120,6 +120,10 @@ namespace Contigu.Core
         /// <summary>The seed budget of any round — Endless rounds keep the last authored budget.</summary>
         public int BudgetFor(int roundIndex)
         {
+            if (roundIndex == 0)
+            {
+                return RunConfig.FirstRoundBudget;
+            }
             return PieceBudgets[System.Math.Min(roundIndex, PieceBudgets.Length - 1)] + PieceBudgetBonus;
         }
 
