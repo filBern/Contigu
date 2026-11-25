@@ -9955,3 +9955,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 - `RunManager.EventsEnabled` (faux par défaut : tests, simulateur et outils qui enchaînent les manches ne sont pas bloqués ; vrai dans le jeu via `BeginRun`). Simulateur : `--events` fait répondre le bot au hasard (aucun jeu malin, règle « pas de guidage »).
 - Présentation (non vérifiée dans Unity) : `EventView` (carte sur papier, histoire, 3 options avec leurs chances, résultat puis Continue), ouverte après l'ouverture de la boutique (`ShowPendingEvent`), page tournée comme transition.
 - Tests : 8 nouveaux (`EventTests`) ; `dotnet test` : 670 réussis. Mesure d'équilibre avec événements à venir.
+
+## 2026-11-25 — Mesure d'équilibre avec événements (bot au hasard)
+- Planner profondeur 2, 400 parties, graine 1, `--events` (le bot répond au hasard à chaque carte) : Spring 13,0 % (sans événements : 12,0 %), Winter 11,3 % (13,8 %) ; manches moyennes franchies 4,21 (4,13) et 3,81 (3,98). Écarts dans le bruit (±4 points) : les événements ne déséquilibrent pas le jeu en moyenne, avec une réponse aveugle. Un joueur qui choisit avec réflexion fera mieux ou moins bien selon les cartes ; non mesuré.
