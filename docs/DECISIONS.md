@@ -9979,3 +9979,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-25 — Première manche : 20 graines (compteur 20 / 20) + prime de Pollen (réglage en cours)
 - Demande de l'auteur : le compteur « 30 / 30 » de la manche 1 doit être 20. `RunConfig.FirstRoundBudget = 20` : `ChallengeDefinition.BudgetFor(0)` renvoie 20 pour tous les challenges (les manches suivantes gardent leur budget). La mesure précédente (`--budget1`) avait montré qu'un budget plus bas coûte ≈ 50 Pollen et ≈ 2 points de victoire (chaque graine inutilisée rapporte 1 Pollen) : prime `RunConfig.FirstRoundPollenBonus` (30 provisoirement, statique pour le simulateur, option `--r1pollen`) payée à la fin de la manche 1, affichée dans le résumé avec le Pollen de challenge. Test adapté. `dotnet test` : 670 réussis. La valeur de la prime sera fixée avec les mesures en cours.
+
+## 2026-11-25 — Prime de Pollen de la manche 1 : 30 retenu
+- Mesure (planner, Spring, 400 parties, graine 1, manche 1 à 20 graines et PV ×0,5) : prime 0 → victoires 7,8 % ; 20 → 10,8 % ; 35 → 13,5 % ; 50 → 13,8 %. Avant la série de changements (30 graines, PV ×1) : 12,8 %. **`FirstRoundPollenBonus = 30`** (entre 20 et 35) retrouve ≈ 12-13 %, avec une manche 1 de 9,6 poses au lieu de 16,7 et un compteur de 20. Aucune retouche de valeur.
