@@ -49,7 +49,7 @@ namespace Contigu.Presentation
             {
                 var sprite = Resources.Load<Sprite>("Icons/Doodles/Doodle_" + (i % KindCount));
                 if (sprite == null) { continue; }
-                var image = UIFactory.CreatePanel(_rect, "Doodle" + i, new Color(1f, 1f, 1f, 0.5f));
+                var image = UIFactory.CreatePanel(_rect, "Doodle" + i, new Color(1f, 1f, 1f, 0.38f));
                 image.sprite = sprite;
                 image.preserveAspect = true;
                 image.raycastTarget = false;
@@ -64,7 +64,7 @@ namespace Contigu.Presentation
                     Phase = Rnd(rng, 0f, 6.28f),
                     BaseRot = Rnd(rng, -25f, 25f),
                     RotAmp = Rnd(rng, 5f, 14f),
-                    Size = Rnd(rng, 70f, 150f)
+                    Size = Rnd(rng, 60f, 120f)
                 };
                 d.Rect.anchorMin = d.Rect.anchorMax = Vector2.zero;
                 d.Rect.pivot = new Vector2(0.5f, 0.5f);

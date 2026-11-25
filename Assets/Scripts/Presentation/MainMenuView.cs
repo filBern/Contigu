@@ -81,12 +81,16 @@ namespace Contigu.Presentation
             // the settings are a small gear in the top right corner; a line of progress under the buttons. No Exit: a web page and an iPad have no window to quit.
             _continueButton = BuildMenuButton("Continue", "Continue", "Green", 36);
             _continueButton.onClick.AddListener(() => { if (ContinueClicked != null) { ContinueClicked(); } });
+            // The label sits in the upper part of the button, the saved-run detail on its own line under it.
+            var continueLabel = _continueButton.GetComponentInChildren<Text>();
+            continueLabel.rectTransform.offsetMin = new Vector2(continueLabel.rectTransform.offsetMin.x, 34f);
+            continueLabel.rectTransform.offsetMax = new Vector2(continueLabel.rectTransform.offsetMax.x, -2f);
             _continueDetail = UIFactory.CreateText(_continueButton.transform, "Detail", "", 16, UITheme.Ink, TextAnchor.LowerCenter);
             _continueDetail.raycastTarget = false;
             _continueDetail.rectTransform.anchorMin = Vector2.zero;
             _continueDetail.rectTransform.anchorMax = Vector2.one;
-            _continueDetail.rectTransform.offsetMin = new Vector2(40f, 6f);
-            _continueDetail.rectTransform.offsetMax = new Vector2(-40f, -52f);
+            _continueDetail.rectTransform.offsetMin = new Vector2(40f, 8f);
+            _continueDetail.rectTransform.offsetMax = new Vector2(-40f, -66f);
             _playButton = BuildMenuButton("Play", "Play", "Gold", 33);
             _playButton.onClick.AddListener(OnPlayClicked);
             _collectionButton = BuildMenuButton("Collection", "Collection", "Blue", 28);
@@ -161,21 +165,30 @@ namespace Contigu.Presentation
                 float half = (PrimaryWidth - RowGap) * 0.5f;
                 Place(_playButton, -(half + RowGap) * 0.5f, secondaryY, half, SecondaryHeight);
                 Place(_collectionButton, (half + RowGap) * 0.5f, secondaryY, half, SecondaryHeight);
-                SetLabel(_playButton, "New run");
+                SetLabel(_playButton, "New run", 22);
+                SetLabel(_collectionButton, "Collection", 22);
             }
             else
             {
                 Place(_playButton, 0f, PrimaryY, PrimaryWidth, PrimaryHeight);
                 Place(_collectionButton, 0f, secondaryY, PrimaryWidth * 0.72f, SecondaryHeight);
-                SetLabel(_playButton, "Play");
+                SetLabel(_playButton, "Play", 33);
+                SetLabel(_collectionButton, "Collection", 28);
             }
             _progressText.rectTransform.anchoredPosition = new Vector2(0f, secondaryY - SecondaryHeight * 0.5f - 26f);
         }
 
-        private static void SetLabel(Button button, string label)
+        private static void SetLabel(Button button, string label, int fontSize)
         {
             var text = button.GetComponentInChildren<Text>();
-            if (text != null) { text.text = label; }
+            if (text == null) { return; }
+            text.text = label;
+            // One line, whatever the button's width: a long label shrinks (best fit) instead of wrapping onto its neighbors.
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Truncate;
+            text.fontSize = UITheme.Scaled(fontSize);
+            text.resizeTextMaxSize = UITheme.Scaled(fontSize);
+            text.resizeTextMinSize = 10;
         }
 
         /// <summary>
