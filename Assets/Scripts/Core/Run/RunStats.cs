@@ -106,6 +106,8 @@ namespace Contigu.Core
         public int UnusedSeedsPollen;
         /// <summary>Pollen from the challenge's own end-of-round bonus.</summary>
         public int ChallengePollen;
+        /// <summary>The first round's extra Pollen (RunConfig.FirstRoundPollenBonus), shown on its own line; 0 in every other round.</summary>
+        public int FirstRoundPollen;
         /// <summary>Pollen per fertilizer: during placements and at the end of the round, merged by fertilizer.</summary>
         public List<PollenSource> FertilizerPollen;
         /// <summary>How each held fertilizer grew at the end of this round (Maturation), in slot order; shown as an animation on the summary.</summary>

@@ -227,7 +227,8 @@ namespace Contigu.Core
                 LinesPollen = _roundLinesPollen,
                 TilePollen = _roundTilePollen,
                 UnusedSeedsPollen = PiecesRemainingThisRound,
-                ChallengePollen = _challenge.RoundEndPollenBonus + (CurrentRoundIndex == 0 ? RunConfig.FirstRoundPollenBonus : 0),
+                ChallengePollen = _challenge.RoundEndPollenBonus,
+                FirstRoundPollen = CurrentRoundIndex == 0 ? RunConfig.FirstRoundPollenBonus : 0,
                 FertilizerPollen = BuildFertilizerPollenList(),
                 Growth = new List<GrowthStep>(LastGrowthSteps)
             };

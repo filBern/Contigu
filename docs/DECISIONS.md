@@ -9982,3 +9982,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-25 — Prime de Pollen de la manche 1 : 30 retenu
 - Mesure (planner, Spring, 400 parties, graine 1, manche 1 à 20 graines et PV ×0,5) : prime 0 → victoires 7,8 % ; 20 → 10,8 % ; 35 → 13,5 % ; 50 → 13,8 %. Avant la série de changements (30 graines, PV ×1) : 12,8 %. **`FirstRoundPollenBonus = 30`** (entre 20 et 35) retrouve ≈ 12-13 %, avec une manche 1 de 9,6 poses au lieu de 16,7 et un compteur de 20. Aucune retouche de valeur.
+
+## 2026-11-25 — La prime de la manche 1 a sa propre ligne
+- Capture de l'auteur : le résumé de la manche 1 affichait « Season bonus +30 » alors que la manche n'a que 20 graines (la prime de compensation était fondue dans le Pollen de challenge). `RoundSummary.FirstRoundPollen` (nouveau) : ligne distincte « First round bonus » (« Season bonus » ne montre plus que le bonus propre du challenge). Test du résumé adapté ; `dotnet test` : 670 réussis. Le montant (30) n'est pas changé : voir la mesure ci-dessus ; à rediscuter avec l'auteur s'il le trouve incohérent.

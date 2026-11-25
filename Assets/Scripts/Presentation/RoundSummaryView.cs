@@ -134,6 +134,7 @@ namespace Contigu.Presentation
             lines.Add(new KeyValuePair<string, int>("Lines harvested (" + summary.LinesHarvested + ")", summary.LinesPollen));
             lines.Add(new KeyValuePair<string, int>("Unused seeds (" + summary.UnusedSeedsPollen + ")", summary.UnusedSeedsPollen));
             if (summary.TilePollen > 0) { lines.Add(new KeyValuePair<string, int>("Seed upgrades", summary.TilePollen)); }
+            if (summary.FirstRoundPollen > 0) { lines.Add(new KeyValuePair<string, int>("First round bonus", summary.FirstRoundPollen)); }
             if (summary.ChallengePollen > 0) { lines.Add(new KeyValuePair<string, int>("Season bonus", summary.ChallengePollen)); }
             var fertilizers = summary.FertilizerPollen;
                         int hidden = 0;

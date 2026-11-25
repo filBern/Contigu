@@ -196,7 +196,7 @@ namespace Contigu.Tests
             var s = run.LastRoundSummary;
             int fertilizerPollen = 0;
             if (s.FertilizerPollen != null) { foreach (var f in s.FertilizerPollen) { fertilizerPollen += f.Amount; } }
-            Assert.AreEqual(run.LastRoundEndLueurBonus, s.UnusedSeedsPollen + s.ChallengePollen + fertilizerPollen);
+            Assert.AreEqual(run.LastRoundEndLueurBonus, s.UnusedSeedsPollen + s.ChallengePollen + s.FirstRoundPollen + fertilizerPollen);
         }
 
         [Test]
