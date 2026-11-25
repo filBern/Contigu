@@ -39,6 +39,7 @@ namespace Contigu.RunSim
                 else if (args[i] == "--late" && i + 1 < args.Length) { lateHp = float.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture); }
                 else if (args[i] == "--no-order") { Bot.OrderFertilizers = false; }
                 else if (args[i] == "--events") { Bot.WithEvents = true; }
+                else if (args[i] == "--budget1" && i + 1 < args.Length) { RunConfig.PieceBudgets[0] = int.Parse(args[++i]); }
                 else if (args[i] == "--early" && i + 1 < args.Length)
                 {
                     var parts = args[++i].Split(',');
