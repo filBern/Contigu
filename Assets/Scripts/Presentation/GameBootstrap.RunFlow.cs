@@ -650,6 +650,12 @@ namespace Contigu.Presentation
         /// <summary>The picker's "Continue": resumes the saved run at the start of the round it was saved in.</summary>
         private void OnContinueRequested()
         {
+            ResumeSavedRun(animate: true);
+        }
+
+        /// <summary>Resumes the saved run; <paramref name="animate"/> plays the page turn (not when arriving from the menu's Continue, which has no transition).</summary>
+        private void ResumeSavedRun(bool animate)
+        {
             var snapshot = RunSaveStore.Load();
             var resumed = snapshot != null ? RunManager.Restore(snapshot, new SystemRandomProvider()) : null;
             if (resumed == null)
@@ -659,7 +665,7 @@ namespace Contigu.Presentation
                 return;
             }
             // Same page turn as after a challenge is chosen.
-            PageTurn.Play(this, _mainRoot.GetComponentInParent<Canvas>().rootCanvas.transform, () =>
+            PageTurn.Play(this, animate ? _mainRoot.GetComponentInParent<Canvas>().rootCanvas.transform : null, () =>
             {
                 _challengeSelectView.Hide();
                 BeginRun(resumed, resumed.Challenge);

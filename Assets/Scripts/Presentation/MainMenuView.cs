@@ -41,7 +41,10 @@ namespace Contigu.Presentation
         /// <summary>Fired when the player opens the Settings overlay from the main menu.</summary>
         public event Action SettingsClicked;
 
-        /// <summary>Fired when the player asks to quit the game entirely.</summary>
+        /// <summary>Fired when the player asks to resume the saved run (shown only when one exists).</summary>
+        public event Action ContinueClicked;
+
+        /// <summary>Kept for compatibility: the menu has no Exit button any more (nothing quits a web page or an iPad app).</summary>
         public event Action ExitClicked;
 
         private RectTransform _root;
@@ -74,90 +77,142 @@ namespace Contigu.Presentation
 
             BuildSprig(_root);
 
-            // Play/Settings tinted with two of the same piece colors the title tiles themselves cycle
-            // through (see TitleTileView.Colors) instead of the plain light-blue every other "Choose"
-            // button in the game uses — on a screen with nothing else going on but the title, that generic
-            // tint read as flat next to it. Exit keeps the usual danger-red pill: it's not a game color,
-            // it's the one button whose job is to read as "leaving", so it stays visually distinct from
-            // Play/Settings rather than joining their palette. A thick comic outline (see
-            // UIFactory.AddThickOutline, used everywhere else for cards/badges but deliberately skipped by
-            // buttons in general — FinishButton's own doc comment) gives all three a bit more presence too.
-            var playButton = UIFactory.CreateButton(_root, "Play", "Play", UISprites.Garden("Gold") ?? UISprites.ChooseButtonBackground, 33);
-            var playRect = playButton.GetComponent<RectTransform>();
-            playRect.anchorMin = new Vector2(0.5f, 0.5f);
-            playRect.anchorMax = new Vector2(0.5f, 0.5f);
-            playRect.pivot = new Vector2(0.5f, 0.5f);
-            playRect.anchoredPosition = new Vector2(RowX(0), ButtonRowY);
-            playRect.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
-            var playImage = playButton.GetComponent<Image>();
-            playImage.color = UISprites.Garden("Gold") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Lime);
-            UIFactory.AddThickOutline(playImage, UITheme.Border);
-            playButton.onClick.AddListener(OnPlayClicked);
-            playButton.gameObject.AddComponent<MainMenuButtonHover>();
-            DisableFeedbackScale(playButton);
+            // Layout (a column, one clear primary action): "Continue" when a run is saved (it leads), else "Play"; under it "New run" and "Collection";
+            // the settings are a small gear in the top right corner; a line of progress under the buttons. No Exit: a web page and an iPad have no window to quit.
+            _continueButton = BuildMenuButton("Continue", "Continue", "Green", 36);
+            _continueButton.onClick.AddListener(() => { if (ContinueClicked != null) { ContinueClicked(); } });
+            _continueDetail = UIFactory.CreateText(_continueButton.transform, "Detail", "", 16, UITheme.Ink, TextAnchor.LowerCenter);
+            _continueDetail.raycastTarget = false;
+            _continueDetail.rectTransform.anchorMin = Vector2.zero;
+            _continueDetail.rectTransform.anchorMax = Vector2.one;
+            _continueDetail.rectTransform.offsetMin = new Vector2(40f, 6f);
+            _continueDetail.rectTransform.offsetMax = new Vector2(-40f, -52f);
+            _playButton = BuildMenuButton("Play", "Play", "Gold", 33);
+            _playButton.onClick.AddListener(OnPlayClicked);
+            _collectionButton = BuildMenuButton("Collection", "Collection", "Blue", 28);
+            _collectionButton.onClick.AddListener(() => { if (CollectionClicked != null) { CollectionClicked(); } });
 
-            var collectionButton = UIFactory.CreateButton(_root, "Collection", "Collection", UISprites.Garden("Green") ?? UISprites.ChooseButtonBackground, 33);
-            var collectionRect = collectionButton.GetComponent<RectTransform>();
-            collectionRect.anchorMin = new Vector2(0.5f, 0.5f);
-            collectionRect.anchorMax = new Vector2(0.5f, 0.5f);
-            collectionRect.pivot = new Vector2(0.5f, 0.5f);
-            collectionRect.anchoredPosition = new Vector2(RowX(1), ButtonRowY);
-            collectionRect.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
-            var collectionImage = collectionButton.GetComponent<Image>();
-            collectionImage.color = UISprites.Garden("Green") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Violet);
-            UIFactory.AddThickOutline(collectionImage, UITheme.Border);
-            collectionButton.onClick.AddListener(() => { if (CollectionClicked != null) { CollectionClicked(); } });
-            collectionButton.gameObject.AddComponent<MainMenuButtonHover>();
-            DisableFeedbackScale(collectionButton);
+            var gear = UIFactory.CreateButton(_root, "Settings", "", UISprites.Garden("Wood") ?? UISprites.ChooseButtonBackground, 14);
+            var gearRect = gear.GetComponent<RectTransform>();
+            gearRect.anchorMin = gearRect.anchorMax = gearRect.pivot = new Vector2(1f, 1f);
+            gearRect.anchoredPosition = new Vector2(-36f, -36f);
+            float gearSize = MobileSetup.TouchMin(68f);
+            gearRect.sizeDelta = new Vector2(gearSize, gearSize);
+            var gearIcon = UIFactory.CreatePanel(gear.transform, "Gear", Color.white);
+            gearIcon.sprite = Resources.Load<Sprite>("Icons/Gear");
+            gearIcon.preserveAspect = true;
+            gearIcon.raycastTarget = false;
+            UIFactory.StretchFull(gearIcon.rectTransform);
+            gearIcon.rectTransform.offsetMin = new Vector2(10f, 10f);
+            gearIcon.rectTransform.offsetMax = new Vector2(-10f, -10f);
+            PlotButtonDecor.Suppress(gear);
+            gear.onClick.AddListener(OnSettingsClicked);
+            gear.gameObject.AddComponent<MainMenuButtonHover>();
+            DisableFeedbackScale(gear);
 
-            var settingsButton = UIFactory.CreateButton(_root, "Settings", "Settings", UISprites.Garden("Blue") ?? UISprites.ChooseButtonBackground, 33);
-            var settingsRect = settingsButton.GetComponent<RectTransform>();
-            settingsRect.anchorMin = new Vector2(0.5f, 0.5f);
-            settingsRect.anchorMax = new Vector2(0.5f, 0.5f);
-            settingsRect.pivot = new Vector2(0.5f, 0.5f);
-            settingsRect.anchoredPosition = new Vector2(RowX(2), ButtonRowY);
-            settingsRect.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
-            var settingsImage = settingsButton.GetComponent<Image>();
-            settingsImage.color = UISprites.Garden("Blue") != null ? Color.white : VisualDefaults.GetColor(PieceColor.Teal);
-            UIFactory.AddThickOutline(settingsImage, UITheme.Border);
-            settingsButton.onClick.AddListener(OnSettingsClicked);
-            settingsButton.gameObject.AddComponent<MainMenuButtonHover>();
-            DisableFeedbackScale(settingsButton);
-
-            var exitButton = UIFactory.CreateButton(_root, "Exit", "Exit", UISprites.CancelButtonBackground, 33);
-            var exitRect = exitButton.GetComponent<RectTransform>();
-            exitRect.anchorMin = new Vector2(0.5f, 0.5f);
-            exitRect.anchorMax = new Vector2(0.5f, 0.5f);
-            exitRect.pivot = new Vector2(0.5f, 0.5f);
-            exitRect.anchoredPosition = new Vector2(RowX(3), ButtonRowY);
-            exitRect.sizeDelta = new Vector2(ButtonWidth, ButtonHeight);
-            UIFactory.AddThickOutline(exitButton.GetComponent<Image>(), UITheme.Border);
-            exitButton.onClick.AddListener(OnExitClicked);
-#if UNITY_WEBGL && !UNITY_EDITOR
-            // A web page has no window of its own to quit: the button would do nothing.
-            exitButton.gameObject.SetActive(false);
-#endif
-            exitButton.gameObject.AddComponent<MainMenuButtonHover>();
-            DisableFeedbackScale(exitButton);
+            _progressText = UIFactory.CreateText(_root, "Progress", "", 19, UITheme.TextMutedOnBackground);
+            _progressText.raycastTarget = false;
+            _progressText.rectTransform.anchorMin = _progressText.rectTransform.anchorMax = _progressText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            _progressText.rectTransform.sizeDelta = new Vector2(900f, 28f);
+            LayoutButtons(false);
 
             _root.gameObject.SetActive(false);
             return _root;
         }
 
-        // The four menu buttons stand in one row (three in a web page, which has no Exit).
-        private const float ButtonWidth = 290f;
-        private const float ButtonHeight = 76f;
-        private const float ButtonGap = 18f;
-        private static float ButtonRowY { get { return UITweaks.Current.buttonRowY; } }
-#if UNITY_WEBGL && !UNITY_EDITOR
-        private const int ButtonCount = 3;
-#else
-        private const int ButtonCount = 4;
-#endif
+        private Button _continueButton;
+        private Text _continueDetail;
+        private Button _playButton;
+        private Button _collectionButton;
+        private Text _progressText;
 
-        private static float RowX(int index)
+        // Primary button at the top of the column, a row of two under it (or a single Collection button when there is no saved run).
+        private const float PrimaryWidth = 420f;
+        private const float PrimaryHeight = 96f;
+        private const float SecondaryHeight = 62f;
+        private const float RowGap = 16f;
+        private static float PrimaryY { get { return UITweaks.Current.buttonRowY + 36f; } }
+
+        private Button BuildMenuButton(string name, string label, string plot, int fontSize)
         {
-            return (index - (ButtonCount - 1) * 0.5f) * (ButtonWidth + ButtonGap);
+            var button = UIFactory.CreateButton(_root, name, label, UISprites.Garden(plot) ?? UISprites.ChooseButtonBackground, fontSize);
+            var rect = button.GetComponent<RectTransform>();
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            button.gameObject.AddComponent<MainMenuButtonHover>();
+            DisableFeedbackScale(button);
+            return button;
+        }
+
+        private static void Place(Button button, float x, float y, float width, float height)
+        {
+            var rect = button.GetComponent<RectTransform>();
+            rect.anchoredPosition = new Vector2(x, y);
+            rect.sizeDelta = new Vector2(width, height);
+        }
+
+        /// <summary>Arranges the column: with a saved run, Continue leads and "New run" and Collection share the row below; without one, Play leads over Collection.</summary>
+        private void LayoutButtons(bool hasSave)
+        {
+            _continueButton.gameObject.SetActive(hasSave);
+            float secondaryY = PrimaryY - PrimaryHeight * 0.5f - RowGap - SecondaryHeight * 0.5f;
+            if (hasSave)
+            {
+                Place(_continueButton, 0f, PrimaryY, PrimaryWidth, PrimaryHeight);
+                float half = (PrimaryWidth - RowGap) * 0.5f;
+                Place(_playButton, -(half + RowGap) * 0.5f, secondaryY, half, SecondaryHeight);
+                Place(_collectionButton, (half + RowGap) * 0.5f, secondaryY, half, SecondaryHeight);
+                SetLabel(_playButton, "New run");
+            }
+            else
+            {
+                Place(_playButton, 0f, PrimaryY, PrimaryWidth, PrimaryHeight);
+                Place(_collectionButton, 0f, secondaryY, PrimaryWidth * 0.72f, SecondaryHeight);
+                SetLabel(_playButton, "Play");
+            }
+            _progressText.rectTransform.anchoredPosition = new Vector2(0f, secondaryY - SecondaryHeight * 0.5f - 26f);
+        }
+
+        private static void SetLabel(Button button, string label)
+        {
+            var text = button.GetComponentInChildren<Text>();
+            if (text != null) { text.text = label; }
+        }
+
+        /// <summary>
+        /// Fills what the menu tells the player about their game: the saved run to continue (challenge and round), their best score and runs, and the
+        /// next unlock they are working toward. Called before Show; anything null is simply left out.
+        /// </summary>
+        public void SetInfo(MetaStats stats, RunSnapshot save)
+        {
+            bool hasSave = save != null;
+            if (hasSave)
+            {
+                string where = ChallengeCatalog.Get(save.Challenge).Name + " - " + (save.InShop ? "shop after round " + (save.RoundIndex + 1) : "round " + (save.RoundIndex + 1));
+                _continueDetail.text = where;
+            }
+            LayoutButtons(hasSave);
+            var parts = new List<string>();
+            if (stats != null)
+            {
+                if (stats.BestScore > 0) { parts.Add("Best score " + stats.BestScore.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)); }
+                if (stats.TotalRunsPlayed > 0) { parts.Add(stats.TotalRunsPlayed + (stats.TotalRunsPlayed == 1 ? " run" : " runs")); }
+                var goals = stats.ReadUnlocks().NextGoals(1);
+                if (goals.Count > 0)
+                {
+                    parts.Add("Next: " + UnlockDisplayName(goals[0].Entry) + " " + goals[0].Value + "/" + goals[0].Threshold);
+                }
+            }
+            _progressText.text = string.Join("   |   ", parts.ToArray());
+        }
+
+        private static string UnlockDisplayName(UnlockEntry entry)
+        {
+            switch (entry.Kind)
+            {
+                case UnlockKind.Challenge: return ChallengeCatalog.Get((ChallengeId)entry.Id).Name;
+                case UnlockKind.Sprout: return UpgradeCatalog.Get((UpgradeId)entry.Id).Name;
+                default: return ModifierCatalog.Get((ModifierId)entry.Id).Name;
+            }
         }
 
         private RectTransform _logoRect;
@@ -271,6 +326,8 @@ namespace Contigu.Presentation
         private const float SprigFlipbookSeconds = 0.14f;
         private static readonly int[] SprigFlipbookOrder = { 0, 1, 2, 1 };
         private float _sprigStart;
+        private float _sprigTapStart = -10f;   // a tap on Sprig makes him hop and cheer right away
+        private const float SprigTapSeconds = 0.7f;
 
         private void BuildSprig(RectTransform parent)
         {
@@ -285,7 +342,10 @@ namespace Contigu.Presentation
             var sprig = UIFactory.CreatePanel(parent, "Sprig", Color.white);
             sprig.sprite = _sprigHappy;
             sprig.preserveAspect = true;
-            sprig.raycastTarget = false;
+            sprig.raycastTarget = true;
+            var tapButton = sprig.gameObject.AddComponent<Button>();
+            tapButton.transition = Selectable.Transition.None;
+            tapButton.onClick.AddListener(() => { _sprigTapStart = Time.unscaledTime; });
             _sprigImage = sprig;
             _sprigRect = sprig.rectTransform;
             _sprigRect.anchorMin = _sprigRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -324,7 +384,15 @@ namespace Contigu.Presentation
             float hop = 0f;
             float stretch = 0f;
             bool cheering = false;
-            if (p >= 1f && cycle > hopStart)
+            float tapped = t - _sprigTapStart;
+            if (p >= 1f && tapped >= 0f && tapped < SprigTapSeconds)
+            {
+                float h = tapped / SprigTapSeconds;
+                hop = Mathf.Sin(h * Mathf.PI) * SprigHopHeight * 1.6f;
+                stretch = Mathf.Sin(h * Mathf.PI) * 0.1f;
+                cheering = true;
+            }
+            else if (p >= 1f && cycle > hopStart)
             {
                 float h = (cycle - hopStart) / SprigHopDuration;
                 hop = Mathf.Sin(h * Mathf.PI) * SprigHopHeight;

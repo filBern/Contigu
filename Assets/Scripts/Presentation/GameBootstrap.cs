@@ -87,6 +87,9 @@ namespace Contigu.Presentation
         private ModifierPanelView _modifierPanelView;
         private TooltipView _tooltipView;
         private DeckView _deckView;
+
+        /// <summary>Set by the main menu's "Continue": the scene then resumes the saved run instead of opening the challenge picker.</summary>
+        public static bool ContinueFromMenu;
         private EventView _eventView;
         private EndScreenView _endScreenView;
         private TutorialView _tutorialView;
@@ -155,6 +158,15 @@ namespace Contigu.Presentation
             // OnChallengeChosen) fires right after.
             //
             // The picker shows straight away: the menu no longer plays a tile sweep (the page turn plays once a challenge is chosen, see OnChallengeChosen).
+            if (ContinueFromMenu)
+            {
+                ContinueFromMenu = false;
+                if (RunSaveStore.Exists)
+                {
+                    ResumeSavedRun(animate: false);
+                    return;
+                }
+            }
             _challengeSelectView.Show(_metaStats, instant: true);
         }
 

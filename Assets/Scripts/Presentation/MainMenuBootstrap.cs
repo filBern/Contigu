@@ -1,3 +1,4 @@
+using Contigu.Core;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -44,8 +45,21 @@ namespace Contigu.Presentation
             _mainMenuView.CollectionClicked += _collectionView.Show;
 
             _mainMenuView.PlayClicked += OnPlayClicked;
+            _mainMenuView.ContinueClicked += OnContinueClicked;
             _mainMenuView.SettingsClicked += _settingsView.Toggle;
-            _mainMenuView.ExitClicked += OnExitClicked;
+            // What the menu shows about the player's game: the run to continue, best score, runs, the next unlock.
+            MetaStats stats = null;
+            RunSnapshot save = null;
+            try
+            {
+                stats = new MetaStatsFileStore().Load();
+                save = RunSaveStore.Load();
+            }
+            catch (System.Exception)
+            {
+                // A damaged save never stops the menu from opening: it just shows no progress.
+            }
+            _mainMenuView.SetInfo(stats, save);
             _mainMenuView.Show();
         }
 
@@ -58,6 +72,13 @@ namespace Contigu.Presentation
             }
             _isTransitioning = true;
             SceneManager.LoadScene(GameplaySceneName);   // no transition on the way to the challenge picker (the page turn plays after the challenge is chosen)
+        }
+
+        /// <summary>"Continue": loads the game scene, which resumes the saved run straight away (no challenge picker).</summary>
+        private void OnContinueClicked()
+        {
+            GameBootstrap.ContinueFromMenu = true;
+            OnPlayClicked();
         }
 
         private static void OnExitClicked()
