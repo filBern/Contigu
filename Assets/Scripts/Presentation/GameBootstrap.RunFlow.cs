@@ -45,7 +45,7 @@ namespace Contigu.Presentation
                         }
                         SetStatusText("Withered away: " + string.Join(", ", names) + (sprouts.Count > 0 ? ". Sprouted: " + string.Join(", ", sprouts) + "." : "."));
                     }
-                    if (_run.LastRoundEndLueurBonus > 0)
+                    if (_run.PiecesRemainingThisRound > 0)
                     {
                         StartCoroutine(PlayRoundEndLueurBonusSequence());
                     }
@@ -110,9 +110,11 @@ namespace Contigu.Presentation
             _handView.SetInteractable(false);
             _modifierPanelView.SetInteractable(false);
 
-            int bonus = _run.LastRoundEndLueurBonus;
+            // Only the unused seeds are counted out, one "+1" each, emptying the seeds counter. The rest of the round-end bonus (first round,
+            // season, fertilizers) is not animated here: it is a line of the round summary that follows.
+            int bonus = _run.PiecesRemainingThisRound;
             int displayedPieces = bonus;
-            int displayedLueur = _run.Lueur - bonus;
+            int displayedLueur = _run.Lueur - _run.LastRoundEndLueurBonus;
             var fromAnchor = _hudView.PiecesBarTransform;
 
             for (int i = 0; i < bonus; i++)
@@ -130,6 +132,7 @@ namespace Contigu.Presentation
             _handView.SetInteractable(true);
             RefreshShuffleButton();
             _modifierPanelView.SetInteractable(true);
+            _hudView.SetLueur(_run.Lueur);   // the rest of the bonus lands with the summary
             ShowRoundSummaryThenShop();
         }
 
