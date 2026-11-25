@@ -17,7 +17,7 @@ JOBS = []
 for k, m, cat, motif_fn in ITEMS:
     name, category, rarity = G.game_info(k)
     cc = G.sack_category(k, cat)
-    band = CATPASTEL.get(G.CAT[cc] if cc in G.CAT else '#8c63b0', '#b996dd')
+    band = G.CAT_COLORS.get(cc, '#9a8fb5')   # the exact color of the category box in the tooltip (ModifierVisualDefaults.CategoryColors)
     h = sum(ord(c) * (i + 7) for i, c in enumerate(k))
     d = D(2000 + h % 991, scratch=True)
     # the card: rarity-colored frame, ink outline
