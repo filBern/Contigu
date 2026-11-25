@@ -19,7 +19,7 @@ for k, m, cat, motif_fn in ITEMS:
     cc = G.sack_category(k, cat)
     band = CATPASTEL.get(G.CAT[cc] if cc in G.CAT else '#8c63b0', '#b996dd')
     h = sum(ord(c) * (i + 7) for i, c in enumerate(k))
-    d = D(2000 + h % 991)
+    d = D(2000 + h % 991, scratch=True)
     # the card: rarity-colored frame, ink outline
     d.box(30, 10, 196, 236, FRAME[rarity], 7, 1.2, 26, 26)
     # the cream picture panel
@@ -33,7 +33,7 @@ for k, m, cat, motif_fn in ITEMS:
     if rarity == 'Legendary':
         for (cx, cy, r) in ((40, 22, 9), (216, 38, 7)):
             d.line([(cx, cy - r), (cx + r * .3, cy - r * .3), (cx + r, cy), (cx + r * .3, cy + r * .3), (cx, cy + r), (cx - r * .3, cy + r * .3), (cx - r, cy), (cx - r * .3, cy - r * .3)], w=2.5, closed=True, fill='#fff3b0', a=.4)
-    svg = d.svg(256, 256).replace('<defs>', '<defs><filter id="lw" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="1" seed="2"/><feDisplacementMap in="SourceGraphic" scale="2.5"/></filter>', 1)
+    svg = d.svg(256, 256).replace('<defs>', '<defs><filter id="lw" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="1" seed="2"/><feDisplacementMap in="SourceGraphic" scale="4"/></filter>', 1)
     open('svg/Card_%s.svg' % k, 'w').write(svg)
     png = RES + k + '.png'
     if os.path.exists(png): JOBS.append(('svg/Card_%s.svg' % k, png, 256, 256, True))
