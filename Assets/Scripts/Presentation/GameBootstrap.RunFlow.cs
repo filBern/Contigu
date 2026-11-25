@@ -671,8 +671,11 @@ namespace Contigu.Presentation
                 BeginRun(resumed, resumed.Challenge);
                 if (_run.State == RunState.AwaitingShop)
                 {
-                    // Saved in the shop: back in it, with the offers and the Pollen it opened with.
-                    HandleStateTransition(_run.State);
+                    // Saved in the shop: straight back in it, with the offers and the Pollen it opened with. No round summary: the round it
+                    // would describe is long over (it showed an empty "Round 0 cleared" before), and its event, if any, is still waiting.
+                    RefreshAll();
+                    _shopView.Show(_run);
+                    ShowPendingEvent();
                     SetStatusText("Welcome back! The shop is as it was when it opened.");
                     return;
                 }

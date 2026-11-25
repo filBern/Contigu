@@ -10008,3 +10008,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-25 — Menu : corrections après la capture de l'auteur
 - « New run » passait sur deux lignes et débordait du bouton (taille 33 ×1,25 dans un bouton de 200 px) : libellés des boutons secondaires sur une seule ligne (`horizontalOverflow = Overflow`), taille 22 avec une partie sauvegardée. Sur « Continue », le titre et la ligne « Spring - shop after round 1 » se chevauchaient : le titre est remonté (marge basse de 34 px) et le détail redescendu. Gribouillis du fond moins présents (opacité 38 % au lieu de 50 %, 60 à 120 px au lieu de 70 à 150). Non vérifié dans Unity.
+
+## 2026-11-25 — Reprise dans la boutique : plus de résumé vide
+- Bug (capture de l'auteur) : « Continue » sur une partie sauvegardée en boutique ouvrait d'abord un résumé « Round 0 cleared » avec des 0 partout, puis la boutique. Cause : la reprise passait par `HandleStateTransition(AwaitingShop)`, qui affiche le résumé de la manche, absent d'une partie reprise. `ResumeSavedRun` ouvre maintenant directement la boutique (et son événement en attente, s'il y en a un). Non vérifié dans Unity.
