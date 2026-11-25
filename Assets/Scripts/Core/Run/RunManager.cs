@@ -843,7 +843,7 @@ namespace Contigu.Core
 
         public int CurrentBudget
         {
-            get { return _challenge.BudgetFor(CurrentRoundIndex); }
+            get { return Mathf.Max(1, _challenge.BudgetFor(CurrentRoundIndex) + EventSeedsDeltaFor(CurrentRoundIndex)); }
         }
 
         /// <summary>Every BossRoundInterval-th round (4, 8, 12) (every RunConfig.BossRoundInterval).</summary>

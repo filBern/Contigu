@@ -50,6 +50,9 @@ namespace Contigu.RunSim
         /// <summary>Called on the fresh run before the first move (QA smoke tests give every run one specific fertilizer or upgrade).</summary>
         public System.Action<RunManager> Setup;
 
+        /// <summary>--events: "something happens" every third round, answered at random.</summary>
+        public static bool WithEvents;
+
         /// <summary>
         /// Item scores from the balance study (mean rounds gained, keyed "fertilizer:Id" / "sprout:Id"). When set, the shop is played by the
         /// ranking: the best-scored fertilizers and sprouts are bought first, duds are skipped, and pack choices take the best-scored option.
@@ -105,6 +108,7 @@ namespace Contigu.RunSim
         public RunResult PlayRun(int seed)
         {
             var run = new RunManager(new SystemRandomProvider(seed), _challenge);
+            run.EventsEnabled = WithEvents;
             if (Calibrating) { run.AttachUnlocks(new UnlockState(everythingAvailable: true)); LastTracker = run.Unlocks; }
             else if (Unlocks != null) { run.AttachUnlocks(Unlocks); }
             if (Setup != null) { Setup(run); }
@@ -376,6 +380,14 @@ namespace Contigu.RunSim
         private bool ShopPhase(RunManager run, RunResult result)
         {
             _workshopBought.Clear();
+            // "Something happens" (--events): the bot answers the card with a random option it can afford (random: no clever play).
+            if (run.PendingEvent != null)
+            {
+                var open = new List<int>();
+                for (int o = 0; o < run.PendingEvent.Options.Length; o++) { if (run.IsEventOptionAvailable(o)) { open.Add(o); } }
+                run.ResolveEvent(open[_rng.Next(open.Count)]);
+            }
+
             for (int guard = 0; guard < 40; guard++)
             {
                 if (!TryBuyOne(run, result))

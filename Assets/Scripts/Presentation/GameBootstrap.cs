@@ -87,6 +87,7 @@ namespace Contigu.Presentation
         private ModifierPanelView _modifierPanelView;
         private TooltipView _tooltipView;
         private DeckView _deckView;
+        private EventView _eventView;
         private EndScreenView _endScreenView;
         private TutorialView _tutorialView;
         private CollectionView _collectionView;
@@ -616,6 +617,8 @@ namespace Contigu.Presentation
             _collectionView.Build(mainRoot, _tooltipView);
             _deckView = gameObject.AddComponent<DeckView>();
             _deckView.Build(mainRoot, _run, _tooltipView);
+            _eventView = gameObject.AddComponent<EventView>();
+            _eventView.Build(mainRoot);
 
             _roundSummaryView = gameObject.AddComponent<RoundSummaryView>();
             _roundSummaryView.Build(mainRoot, _tooltipView);

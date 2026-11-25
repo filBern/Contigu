@@ -40,6 +40,13 @@ namespace Contigu.Core
         public int GradientBonus;
         public int EpuisementValue = ScoringConstants.EpuisementStartingBonus;
         public ModifierId? LastPurchasedModifier;
+        // "Something happens" (see RunManager.Events): the event waiting in the shop, the ones already seen, and the effects pending on a coming round.
+        public int PendingEventId = -1;
+        public List<int> SeenEvents = new List<int>();
+        public int EventSeedsRound = -1;
+        public int EventSeedsDelta;
+        public int EventHpRound = -1;
+        public int EventHpPercent = 100;
         public List<WeatherId> Weather = new List<WeatherId>();
         public List<PieceColor> WeatherColors = new List<PieceColor>();
         public bool WeatherDisabled;
@@ -95,6 +102,10 @@ namespace Contigu.Core
             Line(sb, "weatheroff", WeatherDisabled ? 1 : 0);
             Line(sb, "roster", Join(Roster, r => r.ToString(CultureInfo.InvariantCulture)));
             Line(sb, "permanent", Join(PermanentBonusCells, p => p.x.ToString(CultureInfo.InvariantCulture) + ":" + p.y.ToString(CultureInfo.InvariantCulture)));
+            Line(sb, "pendingevent", PendingEventId);
+            Line(sb, "seenevents", Join(SeenEvents, id => id.ToString(CultureInfo.InvariantCulture)));
+            Line(sb, "eventseeds", EventSeedsRound.ToString(CultureInfo.InvariantCulture) + ":" + EventSeedsDelta.ToString(CultureInfo.InvariantCulture));
+            Line(sb, "eventhp", EventHpRound.ToString(CultureInfo.InvariantCulture) + ":" + EventHpPercent.ToString(CultureInfo.InvariantCulture));
             Line(sb, "inshop", InShop ? 1 : 0);
             Line(sb, "blister", Join(ShopBlister, SlotToText, ";"));
             Line(sb, "workshop", Join(ShopWorkshop, SlotToText, ";"));
@@ -179,6 +190,18 @@ namespace Contigu.Core
                 {
                     var xy = v.Split(':');
                     s.PermanentBonusCells.Add(new Vector2Int(ParseInt(xy[0]), ParseInt(xy[1])));
+                }
+                s.PendingEventId = values.ContainsKey("pendingevent") ? Int(values, "pendingevent") : -1;
+                foreach (var v in Split(values, "seenevents", ',')) { s.SeenEvents.Add(ParseInt(v)); }
+                if (values.ContainsKey("eventseeds"))
+                {
+                    var es = values["eventseeds"].Split(':');
+                    if (es.Length == 2) { s.EventSeedsRound = ParseInt(es[0]); s.EventSeedsDelta = ParseInt(es[1]); }
+                }
+                if (values.ContainsKey("eventhp"))
+                {
+                    var eh = values["eventhp"].Split(':');
+                    if (eh.Length == 2) { s.EventHpRound = ParseInt(eh[0]); s.EventHpPercent = ParseInt(eh[1]); }
                 }
                 s.InShop = values.ContainsKey("inshop") && Int(values, "inshop") == 1;
                 foreach (var v in Split(values, "blister", ';')) { s.ShopBlister.Add(SlotFromText(v)); }

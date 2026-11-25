@@ -97,6 +97,12 @@ namespace Contigu.Core
         }
 
         /// <summary>Debug-only helper: neighbors stop affecting each other (sap and resonance), so a test can read one fertilizer's own numbers.</summary>
+        /// <summary>Puts a specific event on the shop's table (tests, the sandbox), as if it had been rolled.</summary>
+        public void DebugSetPendingEvent(int eventId)
+        {
+            PendingEvent = EventCatalog.Get(eventId);
+        }
+
         public void DebugDisableRoots()
         {
             _rootsDisabled = true;

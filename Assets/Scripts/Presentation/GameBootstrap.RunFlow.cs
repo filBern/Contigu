@@ -325,7 +325,23 @@ namespace Contigu.Presentation
                 {
                     _shopView.Show(_run);
                     if (_harvestsToPlay.Count > 0) { StartCoroutine(PlayShopHarvest()); }
+                    ShowPendingEvent();
                 });
+            });
+        }
+
+        /// <summary>"Something happens": when the shop opens on an event, the card comes first; the shop is usable once the player has chosen.</summary>
+        private void ShowPendingEvent()
+        {
+            if (_run == null || _run.PendingEvent == null)
+            {
+                return;
+            }
+            _eventView.Show(_run, () =>
+            {
+                RefreshAll();
+                _shopView.Refresh(_run);
+                _modifierPanelView.Refresh(_run.ActiveModifiers);
             });
         }
 
@@ -666,6 +682,7 @@ namespace Contigu.Presentation
         {
             _isPlayingPlacementSequence = false;
             _run = run;
+            _run.EventsEnabled = true;   // "something happens" every third round
             _run.AttachUnlocks(_unlockState);
             _runUnlocks.Clear();
             CollectNewUnlocks();
@@ -677,6 +694,8 @@ namespace Contigu.Presentation
             _handView.Rebind(_run);
             _tileChoiceView.Rebind(_run.Deck);
             _deckView.Rebind(_run);
+            _eventView.Rebind(_run);
+            _eventView.Hide();
             _deckView.Hide();
 
             RefreshAll();

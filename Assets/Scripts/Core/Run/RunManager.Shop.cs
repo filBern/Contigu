@@ -24,6 +24,7 @@ namespace Contigu.Core
                 _blisterSlots[i] = RollBlisterSlot();
             }
             RollWorkshopSlots(keepCompost: false);
+            RollEventForShop();
             CaptureShopCheckpoint();
         }
 
@@ -314,7 +315,7 @@ namespace Contigu.Core
         /// </summary>
         public bool BuyBlisterSlot(int index)
         {
-            if (State != RunState.AwaitingShop || PendingUpgrade != null)
+            if (State != RunState.AwaitingShop || PendingUpgrade != null || PendingEvent != null)
             {
                 return false;
             }
@@ -392,7 +393,7 @@ namespace Contigu.Core
         /// </summary>
         public bool BuyUpgradeSlot(int index)
         {
-            if (State != RunState.AwaitingShop || PendingUpgrade != null)
+            if (State != RunState.AwaitingShop || PendingUpgrade != null || PendingEvent != null)
             {
                 return false;
             }
@@ -710,7 +711,7 @@ namespace Contigu.Core
         /// </summary>
         public bool RerollShop()
         {
-            if (State != RunState.AwaitingShop || PendingUpgrade != null)
+            if (State != RunState.AwaitingShop || PendingUpgrade != null || PendingEvent != null)
             {
                 return false;
             }
@@ -734,7 +735,7 @@ namespace Contigu.Core
         /// <summary>Closes the shop and starts the next round. Only valid while the shop is open and nothing is pending a follow-up.</summary>
         public bool LeaveShop()
         {
-            if (State != RunState.AwaitingShop || PendingUpgrade != null)
+            if (State != RunState.AwaitingShop || PendingUpgrade != null || PendingEvent != null)
             {
                 return false;
             }

@@ -38,6 +38,7 @@ namespace Contigu.RunSim
                 else if (args[i] == "--study") { studyMode = true; }
                 else if (args[i] == "--late" && i + 1 < args.Length) { lateHp = float.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture); }
                 else if (args[i] == "--no-order") { Bot.OrderFertilizers = false; }
+                else if (args[i] == "--events") { Bot.WithEvents = true; }
                 else if (args[i] == "--calibration-out" && i + 1 < args.Length) { calibrationOut = args[++i]; }
                 else if (args[i] == "--calibrate") { Bot.Calibrating = true; UnlockTracker.CalibrationMode = true; }
                 else if (args[i] == "--coverage") { Bot.Unlocks = new UnlockState(everythingAvailable: true); }

@@ -81,6 +81,12 @@ namespace Contigu.Core
             s.GradientBonus = Grid.GradientPermanentBonus;
             s.EpuisementValue = Grid.EpuisementCurrentBonus;
             s.LastPurchasedModifier = _lastPurchasedModifierId;
+            s.PendingEventId = PendingEvent != null ? PendingEvent.Id : -1;
+            s.SeenEvents.AddRange(_seenEvents);
+            s.EventSeedsRound = _eventSeedsRound;
+            s.EventSeedsDelta = _eventSeedsDelta;
+            s.EventHpRound = _eventHpRound;
+            s.EventHpPercent = Mathf.RoundToInt(_eventHpFactor * 100f);
             s.Weather.AddRange(_weatherByRound);
             s.WeatherColors.AddRange(_weatherColorByRound);
             s.WeatherDisabled = _weatherDisabled;
@@ -163,6 +169,12 @@ namespace Contigu.Core
             _perennialScores = s.PerennialScores;
             Grid.RestoreRunCounters(s.GradientBonus, s.EpuisementValue);
             _lastPurchasedModifierId = s.LastPurchasedModifier;
+            _seenEvents.Clear();
+            _seenEvents.AddRange(s.SeenEvents);
+            _eventSeedsRound = s.EventSeedsRound;
+            _eventSeedsDelta = s.EventSeedsDelta;
+            _eventHpRound = s.EventHpRound;
+            _eventHpFactor = s.EventHpPercent / 100f;
             Lueur = s.Lueur;
             TotalScore = s.TotalScore;
             IsEndless = s.IsEndless;
@@ -208,6 +220,8 @@ namespace Contigu.Core
                 {
                     _upgradeSlots[i] = i < s.ShopWorkshop.Count ? FromSlotData(s.ShopWorkshop[i]) : null;
                 }
+                PendingEvent = s.PendingEventId >= 0 ? EventCatalog.Get(s.PendingEventId) : null;
+                LastEventResult = new List<string>();
                 CaptureShopCheckpoint();
             }
         }

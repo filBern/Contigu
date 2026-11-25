@@ -7,6 +7,8 @@ namespace Contigu.Core
         public const int RoundCount = 12;
         public const int BossRoundIndex = RoundCount - 1; // final scheduled boss, round 12 (0-based index 11)
         public const int BossRoundInterval = 4;
+        /// <summary>An event ("something happens") opens the shop after every this-many-th cleared round (3, 6, 9...).</summary>
+        public const int EventRoundInterval = 3;
 
         /// <summary>
         /// Boss round mechanic: every <see cref="BossLockPiecesInterval"/>
