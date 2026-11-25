@@ -14,20 +14,20 @@ def emit(name, d, w, h, png, bg=None):
 PASTEL = {'Green': '#7fcf6a', 'Gold': '#ffd95a', 'Blue': '#9ec3ee', 'Red': '#e8908a', 'Wood': '#d7c38e'}
 TINT = {'Green': '#d4ebb8', 'Gold': '#f8ebb0', 'Blue': '#d3e4f7', 'Red': '#f2cfc8', 'Wood': '#e8d8b0'}
 for i, n in enumerate(PASTEL):
-    d = D(100 + i); d.box(6, 6, 372, 148, PASTEL[n], 5, 1.6, 24, 40); emit('Plot' + n, d, 384, 160, 'Buttons/Plot/Plot%s.png' % n)
-    d = D(120 + i); d.box(6, 6, 372, 148, PASTEL[n], 5, 1.6, 24, 40); d.box(26, 26, 332, 108, TINT[n], 3, 1.2, 14, 40)
+    d = D(100 + i, hatch=False); d.box(6, 6, 372, 148, PASTEL[n], 5, 1.6, 24, 40); emit('Plot' + n, d, 384, 160, 'Buttons/Plot/Plot%s.png' % n)
+    d = D(120 + i, hatch=False); d.box(6, 6, 372, 148, PASTEL[n], 5, 1.6, 24, 40); d.box(26, 26, 332, 108, TINT[n], 3, 1.2, 14, 40)
     emit('Plot%sLight' % n, d, 384, 160, 'Buttons/Plot/Plot%sLight.png' % n)
-d = D(140); d.blob(64, 64, 52, 52, 14, w=5, fill='#ffd95a', a=1.4); emit('SlotBadge', d, 128, 128, 'Buttons/Plot/SlotBadge.png')
+d = D(140, hatch=False); d.blob(64, 64, 52, 52, 14, w=5, fill='#ffd95a', a=1.4); emit('SlotBadge', d, 128, 128, 'Buttons/Plot/SlotBadge.png')
 
 # --- panels
-d = D(150); d.box(8, 8, 240, 240, '#e5d3a8', 5, 1.8, 40, 40); emit('Card', d, 256, 256, 'UI/Garden/Card.png')
-d = D(151); d.box(6, 6, 480, 96, '#fff8e6', 5, 1.6, 44, 40); emit('BarTrack', d, 492, 108, 'UI/Garden/BarTrack.png')
+d = D(150, hatch=False); d.box(8, 8, 240, 240, '#e5d3a8', 5, 1.8, 40, 40); emit('Card', d, 256, 256, 'UI/Garden/Card.png')
+d = D(151, hatch=False); d.box(6, 6, 480, 96, '#fff8e6', 5, 1.6, 44, 40); emit('BarTrack', d, 492, 108, 'UI/Garden/BarTrack.png')
 for i, (n, c) in enumerate((('Gold', '#ffd95a'), ('Blue', '#9ec3ee'), ('Green', '#7fcf6a'))):
-    d = D(160 + i); d.box(5, 5, 466, 70, c, 4, 1.4, 30, 40); emit('Fill' + n, d, 476, 80, 'UI/Garden/Fill%s.png' % n)
-d = D(170); d.blob(50, 50, 40, 40, 14, w=5, fill='#ffd95a', a=1.3); emit('CountBadge', d, 100, 100, 'UI/Garden/CountBadge.png')
-d = D(171); d.blob(50, 50, 40, 40, 14, w=5, fill='#fff8e6', a=1.3); d.blob(50, 50, 16, 16, 10, w=3, fill='#9ec3ee', a=.8); emit('SliderHandle', d, 100, 100, 'UI/Garden/SliderHandle.png')
-d = D(172); d.box(6, 6, 332, 130, '#d7c38e', 5, 1.6, 26, 40); emit('SlotGroup', d, 344, 142, 'Buttons/SlotGroup.png')
-d = D(173); d.box(8, 8, 519, 282, '#e5d3a8', 5, 1.8, 34, 40); emit('BackgroundCombo', d, 535, 298, 'Buttons/BackgroundCombo.png')
+    d = D(160 + i, hatch=False); d.box(5, 5, 466, 70, c, 4, 1.4, 30, 40); emit('Fill' + n, d, 476, 80, 'UI/Garden/Fill%s.png' % n)
+d = D(170, hatch=False); d.blob(50, 50, 40, 40, 14, w=5, fill='#ffd95a', a=1.3); emit('CountBadge', d, 100, 100, 'UI/Garden/CountBadge.png')
+d = D(171, hatch=False); d.blob(50, 50, 40, 40, 14, w=5, fill='#fff8e6', a=1.3); d.blob(50, 50, 16, 16, 10, w=3, fill='#9ec3ee', a=.8); emit('SliderHandle', d, 100, 100, 'UI/Garden/SliderHandle.png')
+d = D(172, hatch=False); d.box(6, 6, 332, 130, '#d7c38e', 5, 1.6, 26, 40); emit('SlotGroup', d, 344, 142, 'Buttons/SlotGroup.png')
+d = D(173, hatch=False); d.box(8, 8, 519, 282, '#e5d3a8', 5, 1.8, 34, 40); emit('BackgroundCombo', d, 535, 298, 'Buttons/BackgroundCombo.png')
 d = D(174); d.box(5, 5, 118, 118, '#e0cd9e', 4, 1.6, 16, 40); d.hatch(86, 16, 112, 42, 3); emit('Empty', d, 128, 128, 'Tiles/Empty.png')
 
 # --- challenge sceneries: tinted ruled paper + a few themed doodles in the margins

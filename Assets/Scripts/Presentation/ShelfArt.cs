@@ -15,6 +15,27 @@ namespace Contigu.Presentation
         /// <summary>Dresses a shelf board (an Image with its pivot at the top edge) as a 3D plank; the items stand on the top surface.</summary>
         public static void Decorate(RectTransform board)
         {
+            // Notebook style: two hand-drawn, scratchy sprites (Icons/ShelfFront for the board itself, Icons/ShelfTop for the surface the items stand on);
+            // the flat bars below are the fallback when the art is missing.
+            var front = Resources.Load<Sprite>("Icons/ShelfFront");
+            var top = Resources.Load<Sprite>("Icons/ShelfTop");
+            var boardImage = board.GetComponent<Image>();
+            if (front != null && top != null && boardImage != null)
+            {
+                boardImage.sprite = front;
+                boardImage.type = Image.Type.Simple;
+                boardImage.color = Color.white;
+                var surfaceImage = UIFactory.CreatePanel(board, "Surface", Color.white);
+                surfaceImage.sprite = top;
+                surfaceImage.raycastTarget = false;
+                surfaceImage.rectTransform.anchorMin = new Vector2(0f, 1f);
+                surfaceImage.rectTransform.anchorMax = new Vector2(1f, 1f);
+                surfaceImage.rectTransform.pivot = new Vector2(0.5f, 0f);
+                surfaceImage.rectTransform.anchoredPosition = new Vector2(0f, -2f);
+                surfaceImage.rectTransform.sizeDelta = new Vector2(0f, SurfaceDepth + 6f);
+                surfaceImage.transform.SetAsFirstSibling();
+                return;
+            }
             // The top surface, running back from the board's front edge (behind the items standing on it).
             var surface = Bar(board, "Surface", Surface, 1f, 1f, SurfaceDepth, 0f, 0f);
             surface.rectTransform.pivot = new Vector2(0.5f, 0f);

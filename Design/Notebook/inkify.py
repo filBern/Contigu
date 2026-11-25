@@ -25,9 +25,21 @@ def inkify(svg, px, variant=0, thick=False):
     out, wob = 2.6 * px / 256 * 1.0, 3.2 * px / 256
     if thick:   # small badges (sprout icons on tiles): a heavy outline so they read on any tile color
         out = 6.0 * px / 128
-    f = ('<defs><filter id="nb" x="-12%%" y="-12%%" width="124%%" height="124%%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="1" seed="%d" result="n"/>'
-         '<feDisplacementMap in="SourceGraphic" in2="n" scale="%.2f" result="w"/><feMorphology in="w" operator="dilate" radius="%.2f" result="d"/>'
-         '<feFlood flood-color="%s"/><feComposite in2="d" operator="in" result="o"/><feMerge><feMergeNode in="o"/><feMergeNode in="w"/></feMerge></filter></defs>') % (4 + 7 * variant, wob * u * 2, out * u, INK)
+    # Scratchy sketch: three displaced ink outlines of decreasing weight, plus a streaky pencil texture inside the shapes.
+    sd = 4 + 7 * variant
+    f = ('<defs><filter id="nb" x="-14%%" y="-14%%" width="128%%" height="128%%">'
+         '<feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="1" seed="{s}" result="n1"/><feDisplacementMap in="SourceGraphic" in2="n1" scale="{w1}" result="w1"/>'
+         '<feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="1" seed="{s2}" result="n2"/><feDisplacementMap in="SourceGraphic" in2="n2" scale="{w2}" result="w2"/>'
+         '<feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="1" seed="{s3}" result="n3"/><feDisplacementMap in="SourceGraphic" in2="n3" scale="{w3}" result="w3"/>'
+         '<feMorphology in="w1" operator="dilate" radius="{r1}" result="d1"/><feFlood flood-color="{ink}"/><feComposite in2="d1" operator="in" result="o1"/>'
+         '<feMorphology in="w2" operator="dilate" radius="{r2}" result="d2"/><feFlood flood-color="{ink}" flood-opacity="0.85"/><feComposite in2="d2" operator="in" result="o2"/>'
+         '<feMorphology in="w3" operator="dilate" radius="{r3}" result="d3"/><feFlood flood-color="{ink}" flood-opacity="0.7"/><feComposite in2="d3" operator="in" result="o3"/>'
+         '<feTurbulence type="fractalNoise" baseFrequency="0.03 0.5" numOctaves="1" seed="{s4}" result="tx"/>'
+         '<feColorMatrix in="tx" type="matrix" values="0 0 0 0 0.165  0 0 0 0 0.141  0 0 0 0 0.125  0 0 0 -9 3.7" result="streak"/>'
+         '<feComponentTransfer in="streak" result="streak2"><feFuncA type="linear" slope="0.4"/></feComponentTransfer>'
+         '<feComposite in="streak2" in2="w1" operator="in" result="tex"/>'
+         '<feMerge><feMergeNode in="o3"/><feMergeNode in="o2"/><feMergeNode in="o1"/><feMergeNode in="w1"/><feMergeNode in="tex"/></feMerge></filter></defs>'
+         ).format(s=sd, s2=sd + 3, s3=sd + 5, s4=sd + 9, w1=wob * u * 2.2, w2=wob * u * 2.8, w3=wob * u * 3.4, r1=out * u, r2=out * u * 0.8, r3=out * u * 0.55, ink=INK)
     svg = re.sub(r'(width|height)="[\d.]+"', lambda k: '%s="%d"' % (k.group(1), px), svg, count=2)
     i = svg.index('>') + 1
     j = svg.rindex('</svg>')

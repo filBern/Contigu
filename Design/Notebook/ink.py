@@ -7,7 +7,7 @@ DEFS = '''<defs>
 </defs>'''
 
 class D:
-    def __init__(s, seed, scratch=False): s.r = random.Random(seed); s.o = []; s.scratch = scratch; s._clip = 0
+    def __init__(s, seed, scratch=True, hatch=True): s.r = random.Random(seed); s.o = []; s.scratch = scratch; s.hatch_fill = hatch; s._clip = 0
     def j(s, v, a): return v + s.r.uniform(-a, a)
     def path(s, pts, closed, a, step=18):
         P = []; m = len(pts) - (0 if closed else 1)
@@ -28,7 +28,7 @@ class D:
         if fill:
             off = (s.r.uniform(-2.5, 2.5) * (1.8 if s.scratch else 1), s.r.uniform(-2.5, 2.5) * (1.8 if s.scratch else 1))
             s.o.append('<path d="%s" fill="%s" stroke="none" opacity="0.92" transform="translate(%.1f %.1f)" filter="url(#crayon)"/>' % (s.path(pts, True, a * 1.2, step), fill, *off))
-            if s.scratch:
+            if s.scratch and s.hatch_fill:
                 s._scribble(pts)
         strokes = 3 if s.scratch else (2 if w > 2 else 1)
         for k in range(strokes):

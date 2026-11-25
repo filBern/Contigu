@@ -385,6 +385,20 @@ namespace Contigu.Presentation
         private void BuildStallBackdrop()
         {
             // Notebook style: the paper is the wall; no plank stripes.
+            // Notebook style: one hand-drawn awning (Icons/ShopAwning, scalloped edge); the plain stripes below are the fallback.
+            var awningSprite = Resources.Load<Sprite>("Icons/ShopAwning");
+            if (awningSprite != null)
+            {
+                var awning = UIFactory.CreatePanel(_root, "Awning", Color.white);
+                awning.sprite = awningSprite;
+                awning.raycastTarget = false;
+                awning.rectTransform.anchorMin = new Vector2(0f, 1f);
+                awning.rectTransform.anchorMax = new Vector2(1f, 1f);
+                awning.rectTransform.pivot = new Vector2(0.5f, 1f);
+                awning.rectTransform.anchoredPosition = Vector2.zero;
+                awning.rectTransform.sizeDelta = new Vector2(0f, 52f);
+                return;
+            }
             for (int i = 0; i < 16; i++)
             {
                 var stripe = UIFactory.CreatePanel(_root, "Awning_" + i, i % 2 == 0 ? new Color(0.93f, 0.60f, 0.54f, 1f) : new Color(0.99f, 0.95f, 0.84f, 1f));
