@@ -1216,6 +1216,7 @@ namespace Contigu.Presentation
             {
                 var icon = UIFactory.CreatePanel(tag, "PriceIcon", Color.white);
                 icon.sprite = VisualDefaults.PollenSprite;
+                SpriteFlipbook.Attach(icon, "Icons");
                 icon.preserveAspect = true;
                 icon.raycastTarget = false;
                 // Not color alone: an unaffordable price also has a faded Pollen icon (and the tooltip says how much is missing).

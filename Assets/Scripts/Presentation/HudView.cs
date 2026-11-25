@@ -125,6 +125,7 @@ namespace Contigu.Presentation
             {
                 lueurIcon.sprite = VisualDefaults.PollenSprite;
                 lueurIcon.color = Color.white;
+                SpriteFlipbook.Attach(lueurIcon, "Icons");   // the scribbled ball is redrawn three ways, over and over
                 lueurIcon.preserveAspect = true;
             }
             else
