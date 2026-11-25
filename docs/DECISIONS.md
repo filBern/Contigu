@@ -9968,3 +9968,8 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 ## 2026-11-25 — Premières manches trop longues : outils de mesure (valeurs à venir)
 - Constat de l'auteur : les premières manches sont trop longues. Une manche finit quand les ennemis sont battus (pas au quota). Mesure du planner (Spring, 150 parties) : manche 1 = 16,9 poses en moyenne (5-23), manche 2 = 20,1, manche 3 = 16,9 (budget 24-28).
 - Outils : le simulateur affiche « Placements in a cleared round » (moyenne, min-max par manche) ; `ScoringConstants.EarlyRoundHpFactors` (facteur de PV des manches 1-3, pour l'instant 1/1/1 : aucun changement de jeu) appliqué dans `EnemyHpScaleFor` ; option `--early a,b,c` pour essayer des valeurs. `dotnet test` : 670 réussis.
+
+## 2026-11-25 — Manche 1 raccourcie (PV des ennemis ×0,5)
+- Mesure (planner, Spring, 400 parties, graine 1), poses moyennes dans une manche franchie, manche 1 / 2 / 3 : réglage actuel 16,7 / 19,7 / 17,1 (victoires 12,8 %) ; PV ×0,5/0,7/0,85 → 9,6 / 18,4 / 16,3 (8,0 %) ; ×0,4/0,6/0,8 → 7,9 / 17,8 / 16,2 (10,3 %) ; ×0,5/0,85/1 → 9,6 / 19,2 / 17,4 (9,5 %) ; ×0,5/1/1 → 9,6 / 19,9 / 17,1 (9,0 %).
+- Constat : réduire les PV ne raccourcit que la manche 1 (−43 %) ; les manches 2 et 4 restent longues parce que le Locker (verrous qui gênent la pose) les rallonge, pas les PV (31 % des parties y meurent déjà). Choix : `EarlyRoundHpFactors = { 0.5, 1, 1 }`, le plus simple et le plus efficace. Les victoires baissent d'environ 4 points (dans le bruit, mais à surveiller) : les parties arrivent plus nombreuses à la manche 4 sans avoir eu le temps de s'équiper.
+- À décider avec l'auteur : le mur du Locker en manches 2 et 4 (longueur et mortalité). `dotnet test` : 670 réussis.
