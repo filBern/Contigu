@@ -39,6 +39,11 @@ namespace Contigu.RunSim
                 else if (args[i] == "--late" && i + 1 < args.Length) { lateHp = float.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture); }
                 else if (args[i] == "--no-order") { Bot.OrderFertilizers = false; }
                 else if (args[i] == "--events") { Bot.WithEvents = true; }
+                else if (args[i] == "--early" && i + 1 < args.Length)
+                {
+                    var parts = args[++i].Split(',');
+                    for (int k = 0; k < parts.Length && k < ScoringConstants.EarlyRoundHpFactors.Length; k++) { ScoringConstants.EarlyRoundHpFactors[k] = float.Parse(parts[k], System.Globalization.CultureInfo.InvariantCulture); }
+                }
                 else if (args[i] == "--calibration-out" && i + 1 < args.Length) { calibrationOut = args[++i]; }
                 else if (args[i] == "--calibrate") { Bot.Calibrating = true; UnlockTracker.CalibrationMode = true; }
                 else if (args[i] == "--coverage") { Bot.Unlocks = new UnlockState(everythingAvailable: true); }
@@ -207,6 +212,15 @@ namespace Contigu.RunSim
                 int cleared = results.Count(r => r.RoundsCleared >= round && !r.Stuck);
                 if (reached == 0) { break; }
                 Console.WriteLine("  round " + round.ToString().PadLeft(2) + ": " + (100.0 * cleared / reached).ToString("0").PadLeft(3) + "%  (" + cleared + "/" + reached + ")");
+            }
+
+            // How many seeds a CLEARED round takes (the budget is the ceiling): the length of a round, in placements, per round index.
+            Console.WriteLine("\nPlacements in a cleared round (average, min-max; the budget is the cap):");
+            for (int round = 1; round <= 6; round++)
+            {
+                var counts = results.Where(r => !r.Stuck && r.RoundsCleared >= round && r.PlacementsPerRound.Count >= round).Select(r => r.PlacementsPerRound[round - 1]).ToList();
+                if (counts.Count == 0) { break; }
+                Console.WriteLine("  round " + round + ": " + counts.Average().ToString("0.0") + "  (" + counts.Min() + "-" + counts.Max() + ", n=" + counts.Count + ")");
             }
 
             var modWins = new Dictionary<ModifierId, (int Held, int Won, double Rounds)>();

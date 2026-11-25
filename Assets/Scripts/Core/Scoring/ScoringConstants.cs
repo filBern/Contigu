@@ -279,6 +279,12 @@ namespace Contigu.Core
         /// <summary>Zero-based index of the first round whose enemies get the HP growth (8 = round 9, the start of Act 2).</summary>
         public const int EnemyHpGrowthFirstRoundIndex = 8;
 
+        /// <summary>
+        /// HP factor of every enemy in the first rounds (rounds 1, 2, 3): the opening rounds were too long — the player has almost no fertilizer yet, so
+        /// the same HP took ~17 placements. The factors shorten them; round 4 and later are unchanged. (Array so the simulator can try other values.)
+        /// </summary>
+        public static readonly float[] EarlyRoundHpFactors = { 1f, 1f, 1f };
+
         /// <summary>The first round (0-based index) <see cref="ChallengeDefinition.LateHpMultiplier"/> applies to (the 4th round).</summary>
         public const int LateHpFirstRoundIndex = 3;
 

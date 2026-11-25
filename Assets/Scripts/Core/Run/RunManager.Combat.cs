@@ -282,7 +282,8 @@ namespace Contigu.Core
         {
             float actOne = roundIndex < ScoringConstants.EnemyHpGrowthFirstRoundIndex ? _challenge.ActOneHpMultiplier : 1f;
             float late = roundIndex >= ScoringConstants.LateHpFirstRoundIndex ? _challenge.LateHpMultiplier : 1f;
-            return EncounterCatalog.GetHpScale(roundIndex) * _challenge.EnemyHpMultiplier * actOne * late * EventHpFactorFor(roundIndex);
+            float early = roundIndex < ScoringConstants.EarlyRoundHpFactors.Length ? ScoringConstants.EarlyRoundHpFactors[roundIndex] : 1f;
+            return EncounterCatalog.GetHpScale(roundIndex) * _challenge.EnemyHpMultiplier * actOne * late * early * EventHpFactorFor(roundIndex);
         }
 
         private IReadOnlyList<EnemyInstance> BuildEncounter(int roundIndex)

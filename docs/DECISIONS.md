@@ -9964,3 +9964,7 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-25 — Mode « gribouillis » (scratch) de la bibliothèque d'encre ; cartes de fertilizers dedans
 - Demande de l'auteur : un style encore plus gribouillé, « scratch ». `Design/Notebook/ink.py` : `D(seed, scratch=True)` triple le contour (trois passes de largeurs décroissantes et de tremblé croissant), augmente le décalage du crayon et ajoute des **hachures de crayon** (traits courts en diagonale, découpés à la forme, à 22 % d'opacité) dans chaque aplat. Option, désactivée par défaut : les autres ressources ne changent pas. `generate_cards.py` l'utilise (et l'ondulation du motif passe de 2,5 à 4) : les 137 cartes de fertilizers sont régénérées en gribouillis. Non vérifié dans Unity. Étendre le mode au reste (cadres, tuiles, icônes) demanderait de régénérer ces jeux d'images.
+
+## 2026-11-25 — Premières manches trop longues : outils de mesure (valeurs à venir)
+- Constat de l'auteur : les premières manches sont trop longues. Une manche finit quand les ennemis sont battus (pas au quota). Mesure du planner (Spring, 150 parties) : manche 1 = 16,9 poses en moyenne (5-23), manche 2 = 20,1, manche 3 = 16,9 (budget 24-28).
+- Outils : le simulateur affiche « Placements in a cleared round » (moyenne, min-max par manche) ; `ScoringConstants.EarlyRoundHpFactors` (facteur de PV des manches 1-3, pour l'instant 1/1/1 : aucun changement de jeu) appliqué dans `EnemyHpScaleFor` ; option `--early a,b,c` pour essayer des valeurs. `dotnet test` : 670 réussis.
