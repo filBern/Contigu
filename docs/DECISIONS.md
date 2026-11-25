@@ -10011,3 +10011,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-25 — Reprise dans la boutique : plus de résumé vide
 - Bug (capture de l'auteur) : « Continue » sur une partie sauvegardée en boutique ouvrait d'abord un résumé « Round 0 cleared » avec des 0 partout, puis la boutique. Cause : la reprise passait par `HandleStateTransition(AwaitingShop)`, qui affiche le résumé de la manche, absent d'une partie reprise. `ResumeSavedRun` ouvre maintenant directement la boutique (et son événement en attente, s'il y en a un). Non vérifié dans Unity.
+
+## 2026-11-25 — « Continue » depuis le menu : la boutique s'ouvrait décalée
+- Bug (capture de l'auteur) : en reprenant une partie sauvegardée en boutique depuis le menu, la boutique s'ouvrait mal dimensionnée (panneaux latéraux coupés, contenu décalé) : elle était ouverte pendant la toute première image de la scène, avant la première mise en page du canvas. `GameBootstrap` affiche maintenant le sélecteur tout de suite (il couvre l'écran), puis `ResumeSavedRunAfterLayout` attend deux images et force la mise à jour des canvas avant de reprendre la partie. Non vérifié dans Unity.

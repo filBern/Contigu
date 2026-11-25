@@ -158,16 +158,25 @@ namespace Contigu.Presentation
             // OnChallengeChosen) fires right after.
             //
             // The picker shows straight away: the menu no longer plays a tile sweep (the page turn plays once a challenge is chosen, see OnChallengeChosen).
+            // The picker covers the screen at once; a "Continue" from the menu then resumes behind it after the canvas has had its first layout
+            // (opening the shop on the very first frame laid it out at the wrong size and cut its side panels).
+            _challengeSelectView.Show(_metaStats, instant: true);
             if (ContinueFromMenu)
             {
                 ContinueFromMenu = false;
                 if (RunSaveStore.Exists)
                 {
-                    ResumeSavedRun(animate: false);
-                    return;
+                    StartCoroutine(ResumeSavedRunAfterLayout());
                 }
             }
-            _challengeSelectView.Show(_metaStats, instant: true);
+        }
+
+        private System.Collections.IEnumerator ResumeSavedRunAfterLayout()
+        {
+            yield return null;
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            ResumeSavedRun(animate: false);
         }
 
         /// <summary>Scales every AudioSource in the scene (see AudioListener.volume) by VolumeSettings.MasterVolume — real, immediate effect even with zero clips loaded yet, unlike Music/SFX which have no bus of their own to attenuate without an AudioMixer.</summary>
