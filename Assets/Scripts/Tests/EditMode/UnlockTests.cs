@@ -194,5 +194,29 @@ namespace Contigu.Tests
             Assert.IsTrue(newly.Exists(e => e.Kind == UnlockKind.Sprout && e.Id == (int)UpgradeId.GamblerTile));
             Assert.AreEqual(0, run.Unlocks.DrainNewlyUnlocked().Count, "drained once");
         }
+
+        [Test]
+        public void NextGoals_ListsTheClosestCumulativeUnlocksFirst_AndSkipsEarnedOnes()
+        {
+            var state = new UnlockState();
+            var baseline = state.NextGoals(3);
+            Assert.LessOrEqual(baseline.Count, 3);
+            foreach (var g in baseline)
+            {
+                Assert.Less(g.Value, g.Threshold);
+                Assert.AreEqual(UnlockScope.Total, g.Entry.Condition.Scope);
+            }
+            // Push the first goal's metric closer: it must then come first, and an earned one must disappear.
+            var first = baseline[0];
+            var other = baseline.Count > 1 ? baseline[1] : first;
+            state.AddTotal(other.Entry.Condition.Metric, other.Threshold - 1);
+            var next = state.NextGoals(3);
+            Assert.GreaterOrEqual((float)next[0].Value / next[0].Threshold, (float)(other.Threshold - 1) / other.Threshold - 0.0001f, "the most advanced goal comes first");
+            state.Unlock(next[0].Entry.Key);
+            foreach (var g in state.NextGoals(50))
+            {
+                Assert.AreNotEqual(next[0].Entry.Key, g.Entry.Key, "an earned unlock is no longer a goal");
+            }
+        }
     }
 }

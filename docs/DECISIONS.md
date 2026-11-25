@@ -9940,3 +9940,10 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-24 — Onglets du Seed bag : « Nom - nombre »
 - Demande de l'auteur : un tiret entre le nom de la couleur et le nombre (« Poppy - 8 »). Non vérifié dans Unity.
+
+## 2026-11-25 — Plan « rendre le jeu plus rejouable » : ce qui est fait
+- **Pourquoi j'ai marqué** : après le calcul du Mult d'une pose, un récapitulatif flotte au-dessus du total : « Mason +2.6 · Dew x2 » (chaque fertilizer qui s'est déclenché et ce qu'il a ajouté), via `FeedbackLayer.SpawnPopup` pour ne pas toucher à la mise en page de la colonne (la ligne d'état est masquée). `GameBootstrap.Placement`.
+- **Un but après la victoire** : `UnlockState.NextGoals(n)` (Core, testé) liste les déblocages cumulatifs les plus avancés ; l'écran de fin (victoire et défaite) ajoute « Next: X - condition (valeur/seuil) | Y - … » à côté de « New in your collection ». 662 tests réussis.
+- Déjà en place (inchangé) : montée de pitch et accélération de la séquence de score (`PlayComboTick`, `ComboSpeedupFactor`) ; catégories colorées sur les sacs (bande), l'infobulle et la Collection.
+- **Non fait** : Undo d'une pose (décision de conception encore ouverte, voir CLAUDE.md) et un pari par manche (nouvelle règle de jeu : à décider avec l'auteur).
+- **Constat du simulateur** (planner, 400 parties, Spring) : 31 % des parties meurent en manche 2 et 31 % en manche 4 (Basic + Locker), alors que le taux de réussite des manches 5 à 12 est de 83-100 %. Ce n'est pas un manque de diversité : les fertilizers des victoires sont variés (GrandFormat, Multitude, Tourbillon, Matinal, Jardinier, Diagonale…, aucun ne domine), mais le Locker crée un mur très net. À arbitrer avec l'auteur.

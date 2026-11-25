@@ -362,13 +362,28 @@ namespace Contigu.Presentation
         private string UnlockedSummary()
         {
             CollectNewUnlocks();
-            if (_runUnlocks.Count == 0)
+            string text = string.Empty;
+            if (_runUnlocks.Count > 0)
             {
-                return string.Empty;
+                var names = new List<string>();
+                foreach (var entry in _runUnlocks) { names.Add(UnlockName(entry)); }
+                text = "New in your collection (" + names.Count + "): " + string.Join(", ", names);
             }
-            var names = new List<string>();
-            foreach (var entry in _runUnlocks) { names.Add(UnlockName(entry)); }
-            return "New in your collection (" + names.Count + "): " + string.Join(", ", names);
+            // What to work toward next: the two closest cumulative unlocks (a reason to start another run).
+            if (_unlockState != null)
+            {
+                var goals = _unlockState.NextGoals(2);
+                if (goals.Count > 0)
+                {
+                    var parts = new List<string>();
+                    foreach (var goal in goals)
+                    {
+                        parts.Add(UnlockName(goal.Entry) + " - " + goal.Entry.Condition.Text + " (" + goal.Value + "/" + goal.Threshold + ")");
+                    }
+                    text += (text.Length > 0 ? "\n" : "") + "Next: " + string.Join("   |   ", parts);
+                }
+            }
+            return text;
         }
 
         /// <summary>Folds this run's outcome into the persisted MetaStats and saves immediately — there's no guaranteed exit hook in a WebGL/browser build. Returns whether this run's score is a new all-time best, for the end screen's "new record" callout.</summary>

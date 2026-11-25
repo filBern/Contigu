@@ -87,6 +87,43 @@ namespace Contigu.Core
             _totals[metric] = Total(metric) + amount;
         }
 
+        /// <summary>One cumulative goal on the way: what it unlocks, what is asked, and how far along the player is.</summary>
+        public struct Goal
+        {
+            public UnlockEntry Entry;
+            public int Value;
+            public int Threshold;
+        }
+
+        /// <summary>
+        /// The closest cumulative ("in total") unlocks not yet earned, most advanced first: what the player is working toward across runs. Only
+        /// "at least" conditions counted over every run qualify (one-run feats have no progress to show).
+        /// </summary>
+        public List<Goal> NextGoals(int max)
+        {
+            var goals = new List<Goal>();
+            foreach (var entry in UnlockCatalog.All)
+            {
+                var c = entry.Condition;
+                if (_unlocked.Contains(entry.Key) || c.Scope != UnlockScope.Total || c.AtMost || c.Threshold <= 0)
+                {
+                    continue;
+                }
+                int value = Total(c.Metric);
+                if (value >= c.Threshold)
+                {
+                    continue;
+                }
+                goals.Add(new Goal { Entry = entry, Value = value, Threshold = c.Threshold });
+            }
+            goals.Sort((x, y) => ((float)y.Value / y.Threshold).CompareTo((float)x.Value / x.Threshold));
+            if (goals.Count > max)
+            {
+                goals.RemoveRange(max, goals.Count - max);
+            }
+            return goals;
+        }
+
         /// <summary>Unlocks every challenge, sprout and fertilizer for good (the dev shortcut).</summary>
         public void UnlockEverything()
         {

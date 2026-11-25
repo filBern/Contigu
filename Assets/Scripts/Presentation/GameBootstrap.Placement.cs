@@ -727,6 +727,7 @@ namespace Contigu.Presentation
             }
             multEvents.Sort((a, b) => a.TriggeringModifierIndex.CompareTo(b.TriggeringModifierIndex));
 
+            var multExplanation = new List<string>();   // "Mason +2.6 · Dew x2": why this score, shown once the Mult has been counted
             for (int i = 0; i < multEvents.Count; i++)
             {
                 var scoreEvent = multEvents[i];
@@ -750,6 +751,7 @@ namespace Contigu.Presentation
                         : "+" + FormatMultAmount(amount);
                     _feedbackLayer.SpawnPopup(badgeAnchor, label, UITheme.ScoreMult);
                     _modifierPanelView.Pulse(scoreEvent.TriggeringModifier.Value);
+                    multExplanation.Add(ModifierCatalog.Get(scoreEvent.TriggeringModifier.Value).Name + " " + label);
                 }
                 else if (scoreEvent.Type == ScoreEventType.MultBonus)
                 {
@@ -773,6 +775,12 @@ namespace Contigu.Presentation
 
                 yield return new WaitForSeconds(Mathf.Max(MinStaggerSeconds, ScoreEventStaggerSeconds * staggerSpeed));
                 staggerSpeed *= ComboSpeedupFactor;
+            }
+
+            if (multExplanation.Count > 0)
+            {
+                // The recap of where the Mult came from, over the total (no layout to disturb): each fertilizer that fired, with what it added.
+                _feedbackLayer.SpawnPopup(_comboView.TotalTransform, string.Join("  ·  ", multExplanation), UITheme.ScoreMult, fontSize: 22);
             }
 
             // "Combo" (see PlacementResult.ComboMultiplier) is just another
