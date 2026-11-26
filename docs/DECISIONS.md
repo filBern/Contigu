@@ -10039,3 +10039,6 @@ Les cases d'arrivée n'étaient vidées qu'une fois (`ShowCellsAsEmpty`) : le mo
 
 ## 2026-11-26 — Sprig sans bras ni jambes
 Nouveau dessin (`Design/Notebook/generate_sprig.py`) : une graine dodue avec une pousse à deux feuilles, posée dans un petit monticule de terre ; l'expression passe par le visage, les feuilles (tombantes quand il est triste) et un saut avec écrasement/étirement (Cheer). Mêmes noms de fichiers (`Characters/Sprig_*`, Happy et Cheer en 3 dessins pour le flipbook). Non vérifié dans Unity (cadrage dans le menu, les bulles et le chargement à juger).
+
+## 2026-11-26 — Sprig en pot de fleur
+Le Sprig « graine » est remplacé par un pot de fleur en terre cuite (corps évasé, rebord, terre visible) avec la pousse à deux feuilles qui en sort et le visage sur le pot ; toujours sans bras ni jambes. Saut avec étirement pour Cheer, feuilles tombantes pour Sad. Mêmes fichiers `Characters/Sprig_*`. Non vérifié dans Unity.
