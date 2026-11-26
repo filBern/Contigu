@@ -176,6 +176,7 @@ namespace Contigu.Presentation
                 icon.raycastTarget = false;
                 icon.preserveAspect = true;
                 icon.sprite = _sprite;
+                SpriteFlipbook.Attach(icon, "Icons"); // the scribbled Pollen ball boils like everywhere else (Pollen, Pollen_1, Pollen_2)
                 _icons.Add(icon);
             }
             _icons[index].sprite = _sprite;

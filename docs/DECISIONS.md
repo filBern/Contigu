@@ -10023,3 +10023,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-26 — Icône de Pollen en ligne : jamais plus large que son vide
 Le bouton « Reroll 5 » montrait l'icône qui chevauchait le chiffre (taille = 1,35 × la ligne, avec le texte agrandi de 25 %). Le vide laissé au texte passe à 5 espaces insécables et l'icône est plafonnée à la largeur de ce vide et à 1,1 × la hauteur de ligne. Non vérifié dans Unity.
+
+## 2026-11-26 — Icône de Pollen animée dans le texte
+Les icônes de Pollen intégrées au texte (bouton Reroll, tooltips, météo, cartes) reçoivent un `SpriteFlipbook` (dossier « Icons »), comme le compteur de Pollen. Mouvement réduit respecté. Non vérifié dans Unity.
