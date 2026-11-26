@@ -10036,3 +10036,6 @@ Les cases d'arrivée n'étaient vidées qu'une fois (`ShowCellsAsEmpty`) : le mo
 - Retenu : `RunConfig.PieceBudgets` manche 2 : 28 → 32, manche 4 : 26 → 30. Réussite 74 % (manche 2) et 64 % (manche 4). Les verrous, PV et textes sont inchangés.
 - Victoires du planner (400 parties) : Spring 15 %, Winter 12,5 %, Summer 7 %, Autumn 16 %, Orchard 8 %, Greenhouse 6,75 %. Spring et Summer montent un peu (bruit ±4 points) ; à surveiller, `LateHpMultiplier` reste le levier si on veut redescendre.
 - `dotnet test` : 670 réussis.
+
+## 2026-11-26 — Sprig sans bras ni jambes
+Nouveau dessin (`Design/Notebook/generate_sprig.py`) : une graine dodue avec une pousse à deux feuilles, posée dans un petit monticule de terre ; l'expression passe par le visage, les feuilles (tombantes quand il est triste) et un saut avec écrasement/étirement (Cheer). Mêmes noms de fichiers (`Characters/Sprig_*`, Happy et Cheer en 3 dessins pour le flipbook). Non vérifié dans Unity (cadrage dans le menu, les bulles et le chargement à juger).

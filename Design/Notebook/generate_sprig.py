@@ -6,47 +6,49 @@ from ink import D
 R = '../../Assets/Resources/Characters/'
 JOBS = []
 def sprig(seed, p):
-    d = D(seed); dy = p.get('dy', 0)
-    d.line([(150, 404), (240, 410), (330, 404)], w=2, a=1.5, op=.5)
-    for sx in (-1, 1):
-        lx = 240 + sx * 30; fx = lx + p.get('leg', 8) * sx
-        d.line([(lx, 330 + dy), (fx, 372)], w=3, a=.8)
-        d.line([(fx - 18, 372), (fx + 18, 372), (fx + 26, 396), (fx - 24, 396)], w=2.6, closed=True, fill='#a06a38', a=1)
-    for sx, (ax, ay) in ((-1, p['armL']), (1, p['armR'])):
-        d.line([(240 + sx * 84, 262 + dy), (ax + 30, ay + dy)], w=3.4, a=.8); d.blob(ax + 30, ay + dy, 10, 10, 9, w=2.4, fill='#f1d598', a=.7)
-    d.blob(240, 240 + dy, 88, 100, 20, w=3, fill='#ebca8a', a=1.8)
-    d.hatch(280, 200 + dy, 320, 290 + dy, 5)
-    d.line([(180, 292 + dy), (192, 276 + dy), (288, 276 + dy), (300, 292 + dy), (292, 328 + dy), (188, 328 + dy)], w=3, closed=True, fill='#4fae70', a=1.2)
-    for a in range(0, 360, 72): d.blob(240 + 13 * math.cos(math.radians(a)), 302 + dy + 13 * math.sin(math.radians(a)), 7, 7, 7, w=2, fill='#fff6e6', a=.5)
-    d.blob(240, 302 + dy, 5, 5, 7, w=2, fill='#ffc83a', a=.4)
-    ey = 226 + dy; kind = p['face']
-    for ex in (208, 272):
+    """No arms, no legs: a plump seed with a sprout on top, sitting in a little mound of soil. Expression = face + leaves + a hop (dy) with a squash."""
+    d = D(seed); dy = p.get('dy', 0); sq = p.get('squash', 1.0); kind = p['face']; sad = kind == 'sad'
+    # ground shadow (smaller when hopping) and the mound of soil
+    d.line([(150, 408), (240, 414), (330, 408)], w=2, a=1.5, op=.5)
+    d.blob(240, 392, 96, 22, 14, w=3, fill='#a06a38', a=1.4)
+    for fx, fy in ((200, 388), (240, 396), (282, 386)): d.dot(fx, fy, 3.2)
+    # body: a plump seed (squashed when it lands, stretched when it hops)
+    bw = 92 * (1 / sq) ** .5; bh = 104 * sq
+    cy = 290 + dy - (sq - 1) * 60
+    d.blob(240, cy, bw, bh, 22, w=3, fill='#ebca8a', a=1.8)
+    d.hatch(250, cy - 40, 320, cy + 70, 5)
+    d.line([(196, cy + 40), (214, cy + 58)], w=2.2, a=.6, op=.6); d.line([(262, cy + 62), (284, cy + 46)], w=2.2, a=.6, op=.6)
+    # face
+    ey = cy - 24
+    for ex in (206, 274):
         if kind in ('cheer', 'happy_blink'): d.line([(ex - 14, ey + 4), (ex, ey - 6), (ex + 14, ey + 4)], w=3, a=.6)
-        else: d.blob(ex, ey, 13, 16, 10, w=2.8, fill='#fffdf5', a=.7); d.dot(ex + p.get('look', 3), ey + 2 + (4 if kind == 'sad' else 0), 5.5)
-    if kind == 'sad': d.line([(190, 214 + dy), (220, 200 + dy)], w=3, a=.6); d.line([(260, 200 + dy), (290, 214 + dy)], w=3, a=.6)
-    else: d.line([(190, 206 + dy), (220, 199 + dy)], w=3, a=.6); d.line([(260, 199 + dy), (290, 206 + dy)], w=3, a=.6)
-    if kind in ('cheer', 'happy'): d.line([(214, 252 + dy), (240, 284 + dy), (266, 252 + dy)], w=2.8, closed=True, fill='#8a3a3a', a=.8)
-    elif kind == 'sad':
-        d.line([(222, 270 + dy), (240, 258 + dy), (258, 270 + dy)], w=3, a=.7)
-        d.line([(284, 244 + dy), (278, 262 + dy), (290, 262 + dy)], w=2.2, closed=True, fill='#8fd6f5', a=.4)
-    else: d.line([(224, 258 + dy), (240, 266 + dy), (256, 258 + dy)], w=3, a=.6)
-    for cx in (184, 296): d.blob(cx, 246 + dy, 12, 8, 8, w=1.2, fill='#ff8fa3', a=.8, op=.5)
-    sy = p.get('sprout', 0) + (-12 if kind == 'sad' else 0)
-    d.line([(240, 140 + dy), (242, 118 + dy), (240 + sy * .4, 96 + dy)], w=4, a=.7)
-    d.line([(240 + sy * .4, 102 + dy), (280 + sy, 60 + dy + (18 if kind == 'sad' else 0)), (324 + sy, 70 + dy + (30 if kind == 'sad' else 0)), (314 + sy, 106 + dy + (24 if kind == 'sad' else 0)), (270 + sy * .5, 112 + dy)], w=2.8, closed=True, fill='#5bb04a', a=1)
-    d.line([(238 + sy * .4, 112 + dy), (200 - sy * .6, 80 + dy + (18 if kind == 'sad' else 0)), (158 - sy * .6, 90 + dy + (30 if kind == 'sad' else 0)), (176 - sy * .6, 126 + dy), (214, 130 + dy)], w=2.8, closed=True, fill='#3f8f3a', a=1)
-    return d.svg(256, 256).replace('viewBox="0 0 256 256"', 'viewBox="55 40 370 370"')
+        else: d.blob(ex, ey, 14, 17, 10, w=2.8, fill='#fffdf5', a=.7); d.dot(ex + p.get('look', 3), ey + 2 + (4 if sad else 0), 6)
+    if sad: d.line([(186, ey - 16), (222, ey - 30)], w=3, a=.6); d.line([(258, ey - 30), (294, ey - 16)], w=3, a=.6)
+    else: d.line([(188, ey - 26), (222, ey - 33)], w=3, a=.6); d.line([(258, ey - 33), (292, ey - 26)], w=3, a=.6)
+    if kind in ('cheer', 'happy'): d.line([(212, cy + 14), (240, cy + 48), (268, cy + 14)], w=2.8, closed=True, fill='#8a3a3a', a=.8)
+    elif sad:
+        d.line([(222, cy + 40), (240, cy + 26), (258, cy + 40)], w=3, a=.7)
+        d.line([(288, ey + 14), (282, ey + 36), (294, ey + 36)], w=2.2, closed=True, fill='#8fd6f5', a=.4)
+    else: d.line([(224, cy + 26), (240, cy + 34), (256, cy + 26)], w=3, a=.6)
+    for cx in (176, 304): d.blob(cx, cy + 6, 13, 8, 8, w=1.2, fill='#ff8fa3', a=.8, op=.5)
+    # sprout: stem and two leaves (droop when sad, perk up when cheering)
+    sy = p.get('sprout', 0); top = cy - bh + 6; droop = 1 if sad else 0
+    d.line([(240, top + 6), (242, top - 20), (240 + sy * .4, top - 44)], w=4, a=.7)
+    bx = 240 + sy * .4; by = top - 38
+    d.line([(bx, by), (bx + 40 + sy, by - 42 + droop * 22), (bx + 86 + sy, by - 30 + droop * 38), (bx + 76 + sy, by + 6 + droop * 30), (bx + 30 + sy * .5, by + 6)], w=2.8, closed=True, fill='#5bb04a', a=1)
+    d.line([(bx - 2, by + 6), (bx - 40 - sy * .6, by - 30 + droop * 22), (bx - 84 - sy * .6, by - 18 + droop * 38), (bx - 66 - sy * .6, by + 18 + droop * 30), (bx - 22, by + 20)], w=2.8, closed=True, fill='#3f8f3a', a=1)
+    d.line([(bx + 8, by - 4), (bx + 56 + sy, by - 14 + droop * 24)], w=1.6, a=.5, op=.6); d.line([(bx - 8, by + 4), (bx - 54 - sy * .6, by - 4 + droop * 24)], w=1.6, a=.5, op=.6)
+    return d.svg(256, 256).replace('viewBox="0 0 256 256"', 'viewBox="55 20 370 400"')
 POSES = {
-    'Neutral': dict(face='neutral', armL=(130, 300), armR=(350, 300)),
-    'Happy': dict(face='happy', armL=(120, 270), armR=(360, 270), sprout=8),
-    'Sad': dict(face='sad', armL=(140, 320), armR=(340, 320), leg=4, dy=4),
-    'Cheer': dict(face='cheer', armL=(112, 200), armR=(368, 200), dy=-10, leg=14, sprout=14),
+    'Neutral': dict(face='neutral'),
+    'Happy': dict(face='happy', sprout=8, squash=1.03),
+    'Sad': dict(face='sad', dy=6, squash=.94),
+    'Cheer': dict(face='cheer', dy=-26, squash=1.1, sprout=16),
 }
 import random
 def vary(p, k):
     r = random.Random(500 + k); q = dict(p)
-    q['armL'] = (p['armL'][0] + r.uniform(-7, 7), p['armL'][1] + r.uniform(-9, 9)); q['armR'] = (p['armR'][0] + r.uniform(-7, 7), p['armR'][1] + r.uniform(-9, 9))
-    q['sprout'] = p.get('sprout', 0) + r.uniform(-6, 6); q['dy'] = p.get('dy', 0) + r.uniform(-3, 3); q['leg'] = p.get('leg', 8) + r.uniform(-3, 3)
+    q['sprout'] = p.get('sprout', 0) + r.uniform(-8, 8); q['dy'] = p.get('dy', 0) + r.uniform(-5, 5); q['squash'] = p.get('squash', 1.0) + r.uniform(-.04, .04)
     return q
 k = 0
 for i, (n, p) in enumerate(POSES.items()):
