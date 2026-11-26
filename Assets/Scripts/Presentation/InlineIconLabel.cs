@@ -13,7 +13,7 @@ namespace Contigu.Presentation
     /// </summary>
     public sealed class InlineIconLabel : MonoBehaviour
     {
-        private const string Blanks = "    "; // non-breaking: the run never splits across lines
+        private const string Blanks = "     "; // non-breaking: the run never splits across lines
         private static readonly Regex PollenWord = new Regex("<color=#[0-9A-Fa-f]{6}>Pollen</color>|\\bPollen\\b", RegexOptions.IgnoreCase);
         private static readonly Regex Tags = new Regex("<[^>]+>");
 
@@ -146,7 +146,8 @@ namespace Contigu.Presentation
                 float left = chars[start].cursorPos.x;
                 float centerX = (left + width * 0.5f) * unit;
                 float centerY = (lines[line].topY - lines[line].height * 0.5f) * unit;
-                float size = lines[line].height * unit * 1.35f; // 0.9 of the line, plus half again
+                // The icon never wider than the blanks it replaces (else it overlaps the previous character), nor much taller than the line.
+                float size = Mathf.Min(lines[line].height * unit * 1.1f, width * unit * 0.95f);
                 var icon = IconAt(n);
                 icon.gameObject.SetActive(true);
                 icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = rect.pivot;

@@ -10020,3 +10020,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-26 — SpriteFlipbook : IndexOutOfRangeException
 - Erreur de l'auteur (`SpriteFlipbook.Update`, ligne 75 : `_frames[step]`). La cause exacte n'a pas pu être reproduite (le code ne produit un indice invalide que si le tableau de dessins n'a pas 3 éléments ou si l'horloge est négative) ; correction défensive : l'indice est calculé avec un modulo toujours positif, ramené à 0 s'il dépasse le tableau, et un dessin manquant (détruit) laisse l'image telle quelle. Un flipbook ne fait que décorer : au pire, il reste sur son premier dessin. Non vérifié dans Unity.
+
+## 2026-11-26 — Icône de Pollen en ligne : jamais plus large que son vide
+Le bouton « Reroll 5 » montrait l'icône qui chevauchait le chiffre (taille = 1,35 × la ligne, avec le texte agrandi de 25 %). Le vide laissé au texte passe à 5 espaces insécables et l'icône est plafonnée à la largeur de ce vide et à 1,1 × la hauteur de ligne. Non vérifié dans Unity.
