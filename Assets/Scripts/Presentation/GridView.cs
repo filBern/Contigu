@@ -904,6 +904,7 @@ namespace Contigu.Presentation
             yield return new WaitForSeconds(lead + duration);
             for (int i = 0; i < moves.Count; i++)
             {
+                _worldHiddenCells.Remove(moves[i].To); // the destination was kept empty through every redraw until the tile lands
                 RefreshCell(moves[i].To.x, moves[i].To.y);
                 _cells[moves[i].To.x, moves[i].To.y].Pulse(true);
             }

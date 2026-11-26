@@ -209,6 +209,7 @@ namespace Contigu.Presentation
                 sownPositions.Add(outcome.Placement.SownTiles[i].Position);
             }
             _gridView.HoldHiddenCells(sownPositions);
+            _gridView.HoldHiddenCells(weatherHiddenCells); // Hurricane destinations stay empty through every redraw of the sequence, until the tile lands
             _gridView.SetFrozenHold(heldFrozenCells, true);
             // Ice the placement melted without a line (Hoarfrost dying, Locksmith/Warden) keeps showing until its own reveal step.
             _thawedHeldCells = ThawedFrozenCells(frozenBefore, outcome.Placement);

@@ -10026,3 +10026,6 @@ Le bouton « Reroll 5 » montrait l'icône qui chevauchait le chiffre (taille = 
 
 ## 2026-11-26 — Icône de Pollen animée dans le texte
 Les icônes de Pollen intégrées au texte (bouton Reroll, tooltips, météo, cartes) reçoivent un `SpriteFlipbook` (dossier « Icons »), comme le compteur de Pollen. Mouvement réduit respecté. Non vérifié dans Unity.
+
+## 2026-11-26 — Hurricane : la case d'arrivée reste vide jusqu'à l'atterrissage
+Les cases d'arrivée n'étaient vidées qu'une fois (`ShowCellsAsEmpty`) : le moindre redessin pendant la séquence (score, lignes, etc.) les remontrait avant le vol. Elles passent par `HoldHiddenCells` (maintien à travers tous les redessins), levé case par case à l'atterrissage dans `PlayTileFlights`. Non vérifié dans Unity.
