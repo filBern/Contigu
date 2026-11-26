@@ -10029,3 +10029,10 @@ Les icônes de Pollen intégrées au texte (bouton Reroll, tooltips, météo, ca
 
 ## 2026-11-26 — Hurricane : la case d'arrivée reste vide jusqu'à l'atterrissage
 Les cases d'arrivée n'étaient vidées qu'une fois (`ShowCellsAsEmpty`) : le moindre redessin pendant la séquence (score, lignes, etc.) les remontrait avant le vol. Elles passent par `HoldHiddenCells` (maintien à travers tous les redessins), levé case par case à l'atterrissage dans `PlayTileFlights`. Non vérifié dans Unity.
+
+## 2026-11-26 — Mur du Locker (Bramble) : plus de graines aux manches 2 et 4
+- Constat (planner, profondeur 2, 400 parties, graine 1, Spring) : réussite de la manche 2 = 66 %, de la manche 4 = 56 % (Basic + Locker, puis + Poisoner).
+- Essais : minuterie du second verrou 6 → 9 graines (`EnemyTickInterval`) : 68 % / 55 %, aucun effet. PV de Bramble 600 → 450 : 71 % / 57 %, peu d'effet. Le goulot est le nombre de graines (les verrous empêchent les lignes), pas les PV.
+- Retenu : `RunConfig.PieceBudgets` manche 2 : 28 → 32, manche 4 : 26 → 30. Réussite 74 % (manche 2) et 64 % (manche 4). Les verrous, PV et textes sont inchangés.
+- Victoires du planner (400 parties) : Spring 15 %, Winter 12,5 %, Summer 7 %, Autumn 16 %, Orchard 8 %, Greenhouse 6,75 %. Spring et Summer montent un peu (bruit ±4 points) ; à surveiller, `LateHpMultiplier` reste le levier si on veut redescendre.
+- `dotnet test` : 670 réussis.

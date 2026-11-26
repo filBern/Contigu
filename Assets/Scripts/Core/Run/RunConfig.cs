@@ -66,7 +66,7 @@ namespace Contigu.Core
 
         public static readonly int[] PieceBudgets =
         {
-            24, 28, 26, 26, 28, 28, 28, 28,
+            24, 32, 26, 30, 28, 28, 28, 28,
             28, 28, 28, 30, 30, 32, 34
         };
     }
