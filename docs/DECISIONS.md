@@ -10017,3 +10017,6 @@ Ceci couvre l'intégralité des retours de playtest de cette liste.
 
 ## 2026-11-25 — Icône de Pollen : une boule de gribouillis animée
 - Retour de l'auteur : l'icône (fleur à six bosses) ressemblait à un virus ; elle doit être une boule de gribouillis animée. `Design/Notebook/generate_pollen.py` dessine `Icons/Pollen.png` + `Pollen_1/_2` : une boule de crayon jaune remplie de boucles gribouillées (jaune foncé, clair), cernée d'encre repassée trois fois, un reflet. `SpriteFlipbook` (dossier `Icons`) alterne les trois dessins sur l'icône du compteur (`HudView`) et celle des étiquettes de prix (`ShopView`) ; les autres emplacements (texte, envolées de pollen) montrent le premier dessin. Non vérifié dans Unity.
+
+## 2026-11-26 — SpriteFlipbook : IndexOutOfRangeException
+- Erreur de l'auteur (`SpriteFlipbook.Update`, ligne 75 : `_frames[step]`). La cause exacte n'a pas pu être reproduite (le code ne produit un indice invalide que si le tableau de dessins n'a pas 3 éléments ou si l'horloge est négative) ; correction défensive : l'indice est calculé avec un modulo toujours positif, ramené à 0 s'il dépasse le tableau, et un dessin manquant (détruit) laisse l'image telle quelle. Un flipbook ne fait que décorer : au pire, il reste sur son premier dessin. Non vérifié dans Unity.

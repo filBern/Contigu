@@ -71,8 +71,18 @@ namespace Contigu.Presentation
             {
                 return;
             }
-            int step = MotionSettings.Reduced ? 0 : Order[(int)((Time.unscaledTime + _phase) / FrameSeconds) % Order.Length];
+            // Never index out of range, whatever the clock or the frame count (a flipbook only ever decorates: worst case it stays on its first drawing).
+            int tick = Mathf.FloorToInt((Time.unscaledTime + _phase) / FrameSeconds);
+            int step = MotionSettings.Reduced ? 0 : Order[((tick % Order.Length) + Order.Length) % Order.Length];
+            if (step < 0 || step >= _frames.Length)
+            {
+                step = 0;
+            }
             var wanted = _frames[step];
+            if (wanted == null)
+            {
+                return;
+            }
             if (_image.sprite != wanted)
             {
                 _image.sprite = wanted;
