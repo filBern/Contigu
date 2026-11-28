@@ -248,4 +248,4 @@ Les identifiants de code sont en français (historique) ; les noms affichés son
 | `Orchard` | Orchard |
 | `Greenhouse` | Greenhouse |
 
-Stars: 1 per round cleared, +2 for a victory; they unlock the other challenges.
+Les Stars n'existent plus : les challenges et objets se débloquent par conditions (voir `PROGRESSION.md`).

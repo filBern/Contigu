@@ -10,7 +10,7 @@ Garde ce fichier court : seulement ce qui change la façon de travailler. L'éta
 - Le jeu est testé sur iPad via des builds itch.io : le tactile prime (pas de survol, cibles ≥ 56, un doigt).
 
 ## Commandes
-- Tests Core : `cd Tools/Headless/Tests && dotnet test` (≈ 642 tests). Ne pas enchaîner `dotnet test | grep && git commit` : le code de sortie est celui de grep, il faut lire le résultat avant de committer.
+- Tests Core : `cd Tools/Headless/Tests && dotnet test` (≈ 678 tests). Ne pas enchaîner `dotnet test | grep && git commit` : le code de sortie est celui de grep, il faut lire le résultat avant de committer.
 - Audits : `python3 Tools/qa/content_audit.py`, `python3 Tools/qa/glyph_audit.py`, `python3 Tools/check_icon_tags.py` (ce dernier est dans le CI).
 - Simulateur : `cd Tools/Headless/RunSim && dotnet run -- --check --runs N --policy random|planner --seed S` (`PLAN_DEPTH=2`, `--challenge`, `--endless`, `--each`). Progression : `--locked` (rythme de déblocage d'un nouveau joueur), `--coverage`, `--calibrate --calibration-out f.csv` (voir `docs/PROGRESSION.md`).
 - Art : SVG générés par les scripts de `Design/` ; PNG rendus avec Chromium/Playwright (`NODE_PATH=$(npm root -g) node …`). Tout nouvel asset ou `.cs` a besoin d'un `.meta` avec un nouveau guid.
@@ -25,4 +25,4 @@ Garde ce fichier court : seulement ce qui change la façon de travailler. L'éta
 - Undo d'une pose : **refusé par l'auteur** (2026-11-28), ne pas le proposer.
 - Bug mobile du bouton Seed bag jamais élucidé (soupçon : le bouton Sell le recouvre).
 - Build WebGL `QaBuild/` à régénérer pour rejouer `Tools/qa/web/flows.js`, puis une passe QA sur les nouveautés (résumé de manche, pledges, Transplant, sons, bulles de Sprig).
-- Équilibre : victoires du planner (profondeur 2, 400 parties, graine 1) ≈ Spring 15 %, Winter 12,5 %, Summer 7 %, Autumn 16 %, Orchard 8 %, Greenhouse 6,75 % (mesurées le 2026-11-26, après 32 graines en manche 2 et 30 en manche 4 contre le mur du Locker) (réglées avec `LateHpMultiplier`, voir `docs/DECISIONS.md`). Le bruit à 100 parties est de ±4 points : mesurer avec 400 parties.
+- Équilibre : victoires du planner (profondeur 2, 400 parties, graine 1) ≈ Spring 15 %, Winter 12,5 %, Summer 7 %, Autumn 16 %, Orchard 8 %, Greenhouse 6,75 % (mesurées le 2026-11-26, après réglage des budgets des manches 2 et 4 contre le mur du Locker : base 32 et 30, +6 en Spring = 38 et 36) (réglées avec `LateHpMultiplier`, voir `docs/DECISIONS.md`). Le bruit à 100 parties est de ±4 points : mesurer avec 400 parties.

@@ -4,7 +4,8 @@
 
 | Quoi | Fichier |
 |---|---|
-| Graines par round (budget), quotas de score (Classic : affichage seulement, les rounds se gagnent en tuant les ennemis) | `Core/Run/RunConfig.cs` (`PieceBudgets`, `Quotas`) ; variantes dans `Core/Run/ChallengeCatalog.cs` |
+| Graines par round (budget), quotas de score (Classic : affichage seulement, les rounds se gagnent en tuant les ennemis) | `Core/Run/RunConfig.cs` (`PieceBudgets`, `Quotas`) ; variantes dans `Core/Run/ChallengeCatalog.cs`. **Le round 1 vaut toujours `RunConfig.FirstRoundBudget` (20)** : `PieceBudgets[0]` (24) et `PieceBudgetBonus` n'y comptent pas (le niveau 4 ne lui retire pas de graine non plus) ; prime de fin de round 1 : `FirstRoundPollenBonus` (30 Pollen) |
+| PV des ennemis | `ChallengeDefinition.EnemyHpMultiplier` (tout le run), `LateHpMultiplier` (à partir du round 4, `ScoringConstants.LateHpFirstRoundIndex` = 3), `ScoringConstants.EarlyRoundHpFactors` (0,5 / 1 / 1 : round 1 à moitié PV), croissance de l'Acte 2 ; produit dans `RunManager.EnemyHpScaleFor` |
 | Ennemis par round | `Core/Enemies/EncounterCatalog.cs` |
 | PV, rôle et texte de chaque ennemi | `Core/Enemies/EnemyCatalog.cs` |
 | Constantes de score (ligne récoltée 3/6/9, ×2 grille vidée, fraction Siphon et plafond, bonus dorés…) | `Core/Scoring/ScoringConstants.cs` |
@@ -45,33 +46,37 @@ estimer le niveau d'un bon joueur. Relancer avec la même graine (`--seed`) pour
 L'étiquette dans le coin d'une icône de fertilizer est écrite dans `Design/Icons/generate_icons.py`. `python3 Tools/check_icon_tags.py`
 (lancé aussi par le CI headless) échoue si une étiquette n'est plus dans la description du fertilizer ; corriger alors la table du générateur,
 relancer `generate_icons.py` et re-rendre le PNG dans `Assets/Resources/Icons/Fertilizers/`.
-- **PV des ennemis (Acte 2)** : jusqu'au round 8 les PV sont ceux du catalogue ; à partir du round 9 ils sont multipliés par `EnemyHpGrowthPerRound` (1,12) cumulé à chaque round (×1,12 au round 9 … ×2,2 au round 15, voir `EncounterCatalog.GetHpScale`). Raison : les multiplicateurs de fertilizers se composent entre eux, des PV plats rendaient la fin de run triviale (≈70 % de victoires pour le bot glouton une fois le round 8 passé). Avec 1,12 : ≈31 % ; 1,08 ≈ 38 % ; 1,17 ≈ 23 % ; 1,25 ≈ 6 % (simulateur glouton, 6 000 runs, graine 77). Le bot est bien plus faible qu'un humain : viser plus bas que la cible réelle.
+- **PV des ennemis (Acte 2)** : jusqu'au round 8 les PV sont ceux du catalogue ; à partir du round 9 ils sont multipliés par `EnemyHpGrowthPerRound` (1,12) cumulé à chaque round (×1,12 au round 9 … ×1,12^4 ≈ ×1,57 au round 12, voir `EncounterCatalog.GetHpScale`). Raison : les multiplicateurs de fertilizers se composent entre eux, des PV plats rendaient la fin de run triviale (≈70 % de victoires pour le bot glouton une fois le round 8 passé). Avec 1,12 : ≈31 % ; 1,08 ≈ 38 % ; 1,17 ≈ 23 % ; 1,25 ≈ 6 % (simulateur glouton, 6 000 runs, graine 77). Le bot est bien plus faible qu'un humain : viser plus bas que la cible réelle.
 
 ## Challenges (Spring, Winter, Summer, Autumn, Orchard, Greenhouse) et Endless
 
 - **Spring** (Classic) et **Winter** (Marathon : sac réduit, budgets serrés, rounds à quota sans ennemis) existaient déjà. Wildgrowth a été retiré.
 - **Summer** : météo réelle à chaque round (jamais « Clear skies » après le round 1, poids des météos dures relevés, voir `WeatherCatalog.GetWeight(id, profile)`), effets ×1,5 (`WeatherIntensity`, arrondi au plus proche, jamais sous 1).
 - **Autumn** : un fertilizer se flétrit après 4 rounds terminés (`FertilizerLifespanRounds`, âge suivi en parallèle de `_activeModifiers`), +10 Pollen à la fin de chaque round, ennemis ×0,85 PV. Le bot glouton y est mauvais (il ne rachète pas intelligemment) : à ajuster aux tests humains.
-- **Orchard** : 2 couleurs tirées au hasard au début du run (`PieceColorUtility.BaseColors` est donc dynamique), sac de 32 graines (copies doublées), ennemis ×1,7 PV, et la boutique n'offre plus les fertilizers qui ne pourraient jamais se déclencher (Prism, Triad Bloom, couleurs absentes, Companion Bloom sans paire).
+- **Orchard** : 2 couleurs tirées au hasard au début du run (`PieceColorUtility.BaseColors` est donc dynamique), sac de la taille de `InitialDeckFactory` (32 graines, copies doublées), ennemis ×1,7 PV, et la boutique n'offre plus les fertilizers qui ne pourraient jamais se déclencher (Prism, Triad Bloom, couleurs absentes, Companion Bloom sans paire).
 - **Greenhouse** : grille 5×5 (`GridManager.Size` est dynamique, fixé par le `RunManager`), cases agrandies pour garder la même empreinte à l'écran, ennemis ×0,9 PV.
-- **Endless** (tous les challenges) : après la victoire au round 15, « Keep Growing » enchaîne sur la boutique puis les rounds 16+. Les rosters de l'Acte 2 (rounds 9 à 15) tournent en boucle, PV ×1,2 par round en plus de la croissance de l'Acte 2 (`EnemyHpGrowthPerRoundEndless`) ; Winter (sans ennemis) voit ses quotas ×1,75 par round. La victoire est comptée une seule fois ; chaque round supplémentaire rapporte 1 Star à la fin (`RecordEndlessEnd`).
+- **Endless** (tous les challenges) : après la victoire au round 12, « Keep Growing » enchaîne sur la boutique puis les rounds 13+. Les rosters de l'Acte 2 (rounds 9 à 12) tournent en boucle, PV ×1,2 par round en plus de la croissance de l'Acte 2 (`EnemyHpGrowthPerRoundEndless`) ; Winter (sans ennemis) voit ses quotas ×1,75 par round. La victoire est comptée une seule fois ; les Stars n'existent plus.
 - Simulateur : `--challenge Summer|Autumn|Orchard|Greenhouse|Winter` et `--endless`. Résultats du bot glouton (1 500 runs) : Classic 2,0 % de victoires, Summer 2,0 %, Orchard 1,7 %, Greenhouse 0,7 %, Autumn ≈ 0 % (voir plus haut).
 
 ### Passe d'équilibrage « ≥ 5 % de victoires » (bot glouton, 3 000 runs, graine 4001)
 
 Chaque challenge a ses propres leviers dans `ChallengeCatalog` : `EnemyHpMultiplier`, `PieceBudgetBonus` (graines en plus à chaque round) et `QuotaMultiplier` (inutilisé : tous les challenges combattent des ennemis).
 
-| Challenge | PV ennemis | Graines en plus | Autre | Victoires du bot |
-|---|---|---|---|---|
-| Spring | ×0,72 | +6 | | 7,6 % |
-| Winter | ×0,8 | +10 | sac réduit (13 graines), budgets serrés | 6,5 % |
-| Summer | ×0,72 | +6 | météo ×1,5 | 7,0 % |
-| Autumn | ×0,3 | +12 | fane après 4 rounds, +10 Pollen, un fertilizer aléatoire repousse | ≈ 8 % |
-| Orchard | ×1,4 | +6 | 2 couleurs | 6,4 % |
-| Greenhouse | ×0,5 | +10 | grille 5×5 | 6,1 % |
+Valeurs actuelles (`ChallengeCatalog`) ; les victoires sont celles du planner profondeur 2, 400 parties, graine 1 (ligne « Équilibre » de `CLAUDE.md`). Les glouton des passes plus bas sont historiques.
+
+| Challenge | `EnemyHpMultiplier` | `LateHpMultiplier` (dès le round 4) | Graines en plus | Autre | Victoires du planner |
+|---|---|---|---|---|---|
+| Spring | ×1,62 | ×1,5 | +6 | | 15 % |
+| Winter | ×2,6 | ×1,7 | +10 | sac réduit (13 graines), budgets serrés | 12,5 % |
+| Summer | ×1,4 | ×1,9 | +6 | météo ×1,5 | 7 % |
+| Autumn | ×1,7 | ×1,65 | +12 | fane après 4 rounds, +10 Pollen | 16 % |
+| Orchard | ×4,8 | ×1,7 | +6 | 2 couleurs | 8 % |
+| Greenhouse | ×1,25 | ×1,45 | +10 | grille 5×5 | 6,75 % |
+
+PV d'un ennemi au round r = PV du catalogue × croissance de l'Acte 2 × `EnemyHpMultiplier` × `LateHpMultiplier` (r ≥ 4) × `EarlyRoundHpFactors[r-1]` (round 1 : ×0,5). Budget de graines au round r ≥ 2 = `PieceBudgets[r-1]` + graines en plus (ex. Spring : 38 au round 2, 36 au round 4 ; base 32 et 30). Le round 1 est toujours à 20 graines.
 
 Attention : le bot est bien plus faible qu'un humain (il perd surtout faute de graines, pas de PV), donc ces réglages rendent les challenges nettement plus faciles pour un joueur réel. Autumn est le cas extrême : le bot ne sait pas reconstruire ses fertilizers, il faut un PV ×0,3 pour qu'il gagne 5 % ; à resserrer dès qu'on a des parties humaines.
-- Tous les challenges affrontent les mêmes 15 rounds d'ennemis (`ChallengeDefinition.UsesEncounters`, vrai partout). Winter (ex-Marathon, rounds à quota sans ennemis) a été converti ; les tests qui ont besoin d'un round sans ennemi utilisent `TestChallenges.QuotaOnlyMarathon`.
+- Tous les challenges affrontent les mêmes 12 rounds d'ennemis (`ChallengeDefinition.UsesEncounters`, vrai partout). Winter (ex-Marathon, rounds à quota sans ennemis) a été converti ; les tests qui ont besoin d'un round sans ennemi utilisent `TestChallenges.QuotaOnlyMarathon`.
 
 ### Courbe de difficulté entre challenges (Spring = didacticiel)
 
@@ -85,7 +90,7 @@ Les réglages ont été resserrés pour que la difficulté monte d'un challenge 
 
 ## Un monde par challenge (ennemis résidents)
 
-Chaque challenge hors Spring a son propre ennemi (`ChallengeDefinition.WorldEnemy`), qui rejoint la composition **une manche sur trois** (manches 3, 6, 9, 12, 15… Endless inclus), juste derrière le Basic de tête ; une composition pleine (6) perd son dernier ennemi pour lui faire de la place. Tous agissent à chaque Shuffle (manuel ou refill automatique) :
+Chaque challenge hors Spring a son propre ennemi (`ChallengeDefinition.WorldEnemy`), qui rejoint la composition **une manche sur trois** (manches 3, 6, 9, 12… Endless inclus), juste derrière le Basic de tête ; une composition pleine (6) perd son dernier ennemi pour lui faire de la place. Tous agissent à chaque Shuffle (manuel ou refill automatique) :
 
 | Monde | Ennemi (PV de base) | Effet |
 |---|---|---|

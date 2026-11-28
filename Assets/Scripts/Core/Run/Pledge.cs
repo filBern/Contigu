@@ -3,7 +3,7 @@ using System;
 namespace Contigu.Core
 {
     /// <summary>
-    /// Optional self-imposed rules chosen before a run: each one still kept when the run is won pays one extra Star.
+    /// Optional self-imposed rules chosen before a run: each one still kept when the run is won is listed on the end screen (no reward).
     /// They change nothing else about the run.
     /// </summary>
     [Flags]

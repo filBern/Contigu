@@ -13,7 +13,7 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 1. **Run** : 12 manches (Act 1 : manches 1 à 8, Act 2 : 9 à 12 ; un boss aux manches 4, 8 et 12). Les ennemis de chaque manche sont tirés au hasard à chaque run parmi des rosters de difficulté voisine (les boss dans des listes de boss), sans jamais répéter un roster ; les PV et le budget de chaque manche restent ceux de la courbe. Victoire après la manche 12 ; « Keep Growing » prolonge en mode Endless.
 2. **Manche** : on dispose d'un nombre limité de graines (budget). On pose des graines de la main sur la grille. Chaque pose marque des points et inflige des dégâts à l'ennemi de devant. La manche est gagnée quand tous les ennemis sont vaincus, perdue quand le budget ou les coups possibles sont épuisés.
 3. **Boutique** entre les manches (voir §6), puis manche suivante.
-4. **Fin de run** : écran de victoire ou de défaite ; les Stars gagnées débloquent les autres challenges.
+4. **Fin de run** : écran de victoire ou de défaite ; les déblocages (objets, challenges, niveaux de difficulté) sont décrits dans `PROGRESSION.md`.
 
 ## 3. Plateau et pièces
 
@@ -22,7 +22,7 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 - **Seed Bag** (le deck) : 10 graines au minimum ; on en pioche une **main de 3** (4 avec un fertilizer). Un *Shuffle* limité renouvelle la main. Si aucune graine de la main ne peut être posée et plus de Shuffle, le run se termine.
 - **Harvest** : une ligne ou colonne pleine est récoltée (les tuiles disparaissent). Plusieurs lignes d'une même pose valent de plus en plus (3, 6, 9 points par case). Vider toute la grille double le score de la pose.
 - **Plots spéciales** : dorées (bonus fixe), zones de multiplicateur, teintées, verrouillées, gelées, empoisonnées (effets des ennemis et de la météo).
-- **Tile upgrades (sprouts enchantés)** : une tuile d'une graine peut porter une amélioration (plus de 70 : bonus de points, de Mult, de Pollen, effets de voisinage, de ligne, de combat…). Une graine peut en porter une par tuile.
+- **Tile upgrades (sprouts enchantés)** : une tuile d'une graine peut porter une amélioration (89 : bonus de points, de Mult, de Pollen, effets de voisinage, de ligne, de combat…). Une graine peut en porter une par tuile.
 
 ## 4. Score et dégâts
 
@@ -35,12 +35,12 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
 - **Ennemis** (16) : Withered Stalk (base), Bramble, Blightmoth, Rotbloom, Crow, Creeping Root, Root Leech, Inkcap, … chacun avec un rôle (Baseline, Creator, Reactor, Boss) et un effet sur le plateau ou la main (verrous, poison, vol de Pollen, soin à chaque ligne, couleur ou forme détestée…). Les PV augmentent à partir du round 9.
 - **Météo** (10 météos de base et 13 variantes thématiques qui jouent comme une base) : tirée par manche, jamais deux fois la même d'affilée, manche 1 toujours dégagée. Pluie et Soleil visent une couleur ; les autres changent les scores, le Pollen, la grille ou la main. Les challenges thématiques ont leurs variantes (neige, lampes de serre, chat…).
 - **Challenges** : Spring (didacticiel, par défaut), Winter (sac réduit, budgets serrés), Summer (météo dure ×1,5, Locust Swarm), Autumn (les fertilizers fanent après 4 manches, plus de Pollen, Rotgrub), Orchard (2 couleurs seulement, Fruitworm), Greenhouse (grille 5×5, Whitefly, météo de serre). Chacun a un ennemi résident, une signature et **ses propres ennemis** : Winter (verrous, voleurs et glace, jamais de blight), Summer (blight et ennemis des fertilizers, jamais de verrou), Autumn (verrous et blight plus doux, ennemis qui rongent les fertilizers, pas de voleur), Orchard (pas de Color Hater, plus de boucliers et de verrous), Greenhouse (blight plutôt que verrous, qui étoufferaient une grille 5×5).
-- **Stars** : +1 par manche réussie, +2 pour une victoire ; elles débloquent les challenges suivants. Une fois Spring gagné au moins une fois, quatre **pledges** facultatifs (No Shuffle, No Reroll, Lean Bag : 14 graines maximum, Minimalist : 2 fertilizers maximum) se cochent avant la run : chacun encore tenu à la victoire rapporte +1 Star.
+- **Pledges** : une fois Spring gagné au moins une fois, quatre engagements facultatifs (No Shuffle, No Reroll, Lean Bag : 14 graines maximum, Minimalist : 2 fertilizers maximum) se cochent avant la run. L'écran de fin dit lesquels ont été tenus ; le Core ne leur attache aucune récompense chiffrée. Un événement peut briser Minimalist ou Lean Bag.
 
 ## 6. Économie et boutique
 
 - **Pollen** : la monnaie. Gagné par les groupes de couleur, les lignes récoltées, les graines inutilisées, certaines météos et la fin de manche en Autumn. Plus aucun fertilizer n'en produit : ceux qui le faisaient ont été retirés (voir DECISIONS).
-- **Fertilizers** (modificateurs, 132) : jusqu'à **4 actifs**, rangés dans le panneau Fertilizers ; chacun a un prix, une catégorie (Couleurs, Voisinage, Connexions, Formes, Destruction, Weather, Enemies, Tempo, Upgrades, Seed Bag, Wild, Flat, Synergy ; l'ancienne catégorie fourre-tout « Roguelike / Run » a été découpée) et une rareté (Common, Uncommon, Rare, Legendary, d'après le prix) et un niveau améliorable. On peut les vendre ou les réordonner.
+- **Fertilizers** (modificateurs, 133) : jusqu'à **4 actifs**, rangés dans le panneau Fertilizers ; chacun a un prix, une catégorie (Couleurs, Voisinage, Connexions, Formes, Destruction, Weather, Enemies, Tempo, Upgrades, Seed Bag, Wild, Flat, Synergy ; l'ancienne catégorie fourre-tout « Roguelike / Run » a été découpée) et une rareté (Common, Uncommon, Rare, Legendary, d'après le prix) et un niveau améliorable. On peut les vendre ou les réordonner.
 - **La boutique** montre deux étagères :
   - **Blister** (3 emplacements) : fertilizers et tile upgrades à l'achat direct. Seul le Blister se re-tire contre du Pollen (Reroll).
   - **Workshop** (4 emplacements) : deux packs ou services tirés parmi cinq (Seed, Sprout, Fertilizer, Mastery, Transplant), le Compost et la Forge.
@@ -53,6 +53,8 @@ Plateformes : iPad / tablette (cible principale, tactile), navigateur WebGL, des
     - *Compost* : retire une graine du sac pour l'alléger (prix qui remonte dans la visite, remis à zéro à chaque manche).
     - *Forge* : 3 tile upgrades au choix, puis 3 graines à enchanter parmi 8.
 - Chaque achat de la visite renchérit les autres de 50 %. Les objets du Workshop restent achetables mais plus chers à chaque fois. Les choix (packs, Forge, Compost) se font sur les mêmes étagères que la boutique, avec leurs animations (vol vers l'enclume, effritement du Compost, vol du fertilizer vers son emplacement, célébration d'une mastery).
+- **Première manche raccourcie** : toujours 20 graines (`FirstRoundBudget`, quel que soit le challenge ou le niveau), ennemis à moitié PV, et une prime de 30 Pollen à la fin (« First round bonus », `FirstRoundPollenBonus`) en plus de 1 Pollen par graine inutilisée.
+- **Événements « Something happens »** : après chaque 3e manche réussie (3, 6, 9…), jamais après la dernière manche hors Endless, la boutique s'ouvre sur une carte d'événement (8 cartes, 3 options chacune, issues parfois tirées au sort : Pollen, fertilizer gagné, perdu ou amélioré, graines du sac, Joker, effet sur la manche suivante). La boutique reste verrouillée tant que la carte n'est pas résolue ; une option inabordable est grisée.
 - **Skip** : abandonner un achat en cours fait perdre le Pollen dépensé.
 
 ## 7. Méta et sauvegarde

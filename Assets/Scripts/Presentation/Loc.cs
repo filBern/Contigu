@@ -16,7 +16,8 @@ namespace Contigu.Presentation
             { "shop.workshop", "Workshop" },
             { "shop.reroll", "Reroll {0} Pollen" }, // "Pollen" is drawn as the Pollen icon (see InlineIconLabel)
             { "shop.nextRound", "Next round" },
-            { "shop.seedBag", MobileSetup.IsTouchDevice ? "Show seed bag" : "Show seed bag (Tab)" },
+            { "shop.seedBag", "Show seed bag (Tab)" },
+            { "shop.seedBag.touch", "Show seed bag" },
             { "shop.sold", "Sold" },
             { "shop.full", "Full ({0})" },
             { "shop.minBag", "Min bag" },
@@ -39,7 +40,8 @@ namespace Contigu.Presentation
             { "choice.fertilizerPackHint", "Pick one fertilizer to keep" },
             { "choice.skipPack", "Skip (no refund)" },
             { "choice.abandon", "Skip (no refund)" },
-            { "choice.abandonConfirm", MobileSetup.IsTouchDevice ? "Sure? Tap again (no refund)" : "Sure? Click again (no refund)" },
+            { "choice.abandonConfirm", "Sure? Click again (no refund)" },
+            { "choice.abandonConfirm.touch", "Sure? Tap again (no refund)" },
             { "choice.sproutTag", "Sprout · {0}" },
             { "choice.fertilizerTag", "Fertilizer · {0}" },
             { "choice.pickSeed", "Choose 1 seed to add" },
@@ -62,6 +64,8 @@ namespace Contigu.Presentation
         public static string T(string key, params object[] args)
         {
             string text;
+            // A ".touch" variant of a key wins on a touch screen (read at each call: the input mode is not known when this table is built).
+            if (MobileSetup.IsTouchDevice && English.ContainsKey(key + ".touch")) { key = key + ".touch"; }
             if ((_override == null || !_override.TryGetValue(key, out text)) && !English.TryGetValue(key, out text))
             {
                 text = key;
