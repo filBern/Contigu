@@ -4,7 +4,7 @@
 
 | Quoi | Fichier |
 |---|---|
-| Graines par round (budget), quotas de score (Classic : affichage seulement, les rounds se gagnent en tuant les ennemis) | `Core/Run/RunConfig.cs` (`PieceBudgets`, `Quotas`) ; variantes dans `Core/Run/ChallengeCatalog.cs`. **Le round 1 vaut toujours `RunConfig.FirstRoundBudget` (20)** : `PieceBudgets[0]` (24) et `PieceBudgetBonus` n'y comptent pas (le niveau 4 ne lui retire pas de graine non plus) ; prime de fin de round 1 : `FirstRoundPollenBonus` (30 Pollen) |
+| Graines par round (budget), quotas de score (Classic : affichage seulement, les rounds se gagnent en tuant les ennemis) | `Core/Run/RunConfig.cs` (`PieceBudgets`, `Quotas`) ; variantes dans `Core/Run/ChallengeCatalog.cs`. **Le round 1 vaut toujours `RunConfig.FirstRoundBudget` (20)** : `PieceBudgets[0]` (24) et `PieceBudgetBonus` n'y comptent pas (seul le niveau 4 lui retire 1 graine : 19) ; prime de fin de round 1 : `FirstRoundPollenBonus` (30 Pollen) |
 | PV des ennemis | `ChallengeDefinition.EnemyHpMultiplier` (tout le run), `LateHpMultiplier` (à partir du round 4, `ScoringConstants.LateHpFirstRoundIndex` = 3), `ScoringConstants.EarlyRoundHpFactors` (0,5 / 1 / 1 : round 1 à moitié PV), croissance de l'Acte 2 ; produit dans `RunManager.EnemyHpScaleFor` |
 | Ennemis par round | `Core/Enemies/EncounterCatalog.cs` |
 | PV, rôle et texte de chaque ennemi | `Core/Enemies/EnemyCatalog.cs` |
@@ -62,7 +62,7 @@ relancer `generate_icons.py` et re-rendre le PNG dans `Assets/Resources/Icons/Fe
 
 Chaque challenge a ses propres leviers dans `ChallengeCatalog` : `EnemyHpMultiplier`, `PieceBudgetBonus` (graines en plus à chaque round) et `QuotaMultiplier` (inutilisé : tous les challenges combattent des ennemis).
 
-Valeurs actuelles (`ChallengeCatalog`) ; les victoires sont celles du planner profondeur 2, 400 parties, graine 1 (ligne « Équilibre » de `CLAUDE.md`). Les glouton des passes plus bas sont historiques.
+Valeurs actuelles (`ChallengeCatalog`) ; les victoires sont celles du planner profondeur 2, 400 parties, graine 1 (ligne « Équilibre » de `CLAUDE.md`). Les chiffres des passes qui suivent (bot glouton, PV d'alors) sont historiques : seul le tableau ci-dessus est l'état actuel.
 
 | Challenge | `EnemyHpMultiplier` | `LateHpMultiplier` (dès le round 4) | Graines en plus | Autre | Victoires du planner |
 |---|---|---|---|---|---|
@@ -73,12 +73,12 @@ Valeurs actuelles (`ChallengeCatalog`) ; les victoires sont celles du planner pr
 | Orchard | ×4,8 | ×1,7 | +6 | 2 couleurs | 8 % |
 | Greenhouse | ×1,25 | ×1,45 | +10 | grille 5×5 | 6,75 % |
 
-PV d'un ennemi au round r = PV du catalogue × croissance de l'Acte 2 × `EnemyHpMultiplier` × `LateHpMultiplier` (r ≥ 4) × `EarlyRoundHpFactors[r-1]` (round 1 : ×0,5). Budget de graines au round r ≥ 2 = `PieceBudgets[r-1]` + graines en plus (ex. Spring : 38 au round 2, 36 au round 4 ; base 32 et 30). Le round 1 est toujours à 20 graines.
+PV d'un ennemi au round r = PV du catalogue × croissance de l'Acte 2 × `EnemyHpMultiplier` × `LateHpMultiplier` (r ≥ 4) × `EarlyRoundHpFactors[r-1]` (round 1 : ×0,5). Budget de graines au round r ≥ 2 = `PieceBudgets[r-1]` + graines en plus (ex. Spring : 38 au round 2, 36 au round 4 ; base 32 et 30). Le round 1 est toujours à 20 graines (19 au niveau 4).
 
-Attention : le bot est bien plus faible qu'un humain (il perd surtout faute de graines, pas de PV), donc ces réglages rendent les challenges nettement plus faciles pour un joueur réel. Autumn est le cas extrême : le bot ne sait pas reconstruire ses fertilizers, il faut un PV ×0,3 pour qu'il gagne 5 % ; à resserrer dès qu'on a des parties humaines.
+(Historique) Attention : le bot est bien plus faible qu'un humain (il perd surtout faute de graines, pas de PV), donc ces réglages rendent les challenges nettement plus faciles pour un joueur réel. Autumn est le cas extrême : le bot ne sait pas reconstruire ses fertilizers, il faut un PV ×0,3 pour qu'il gagne 5 % ; à resserrer dès qu'on a des parties humaines.
 - Tous les challenges affrontent les mêmes 12 rounds d'ennemis (`ChallengeDefinition.UsesEncounters`, vrai partout). Winter (ex-Marathon, rounds à quota sans ennemis) a été converti ; les tests qui ont besoin d'un round sans ennemi utilisent `TestChallenges.QuotaOnlyMarathon`.
 
-### Courbe de difficulté entre challenges (Spring = didacticiel)
+### Courbe de difficulté entre challenges (Spring = didacticiel) — historique
 
 Les réglages ont été resserrés pour que la difficulté monte d'un challenge à l'autre (victoires du bot glouton, 3 000 runs, graine 31337) : **Spring ≈ 12,5 %** (PV ×0,5, +6 graines), **Winter ≈ 7,4 %** (PV ×0,8), **Summer ≈ 6,8 %** (PV ×0,72), **Orchard ≈ 6,1 %** (PV ×1,4), **Greenhouse ≈ 5,9 %** (PV ×0,55, +10 graines), **Autumn ≈ 5,4 %** (PV ×0,35, +12 graines). Tous restent au-dessus de 5 %, le plus facile (Spring) fait environ le double du plus dur. Le bot reste bien plus faible qu'un humain.
 
@@ -100,9 +100,11 @@ Chaque challenge hors Spring a son propre ennemi (`ChallengeDefinition.WorldEnem
 | Orchard | Fruitworm (1400) | change une tuile plantée en l'autre couleur |
 | Greenhouse | Whitefly Cloud (1450) | échange deux tuiles plantées |
 
-Rééquilibrage après leur arrivée (victoires du bot, graines 31337 / 4001) : Spring ≈ 13-14 %, Winter 6,1-6,8 %, Summer 6,5-7,0 %, Autumn 6,1-7,9 % (PV ×0,36), Orchard 5,9-6,6 % (PV ×1,2), Greenhouse 5,2-6,3 % (PV ×0,5).
+Rééquilibrage après leur arrivée (valeurs d'alors ; victoires du bot, graines 31337 / 4001) : Spring ≈ 13-14 %, Winter 6,1-6,8 %, Summer 6,5-7,0 %, Autumn 6,1-7,9 % (PV ×0,36), Orchard 5,9-6,6 % (PV ×1,2), Greenhouse 5,2-6,3 % (PV ×0,5).
 
 ## Lot de 40 fertilizers (Hedgerow … Granary)
+
+État d'avant le retrait du 2026-11-04 (voir la fin du fichier) : Pollinator, Honey, Nectar, Tithe, Rain Barrel et Granary, cités ci-dessous comme payant du Pollen, sont retirés du jeu (`ModifierCatalog.IsRetired`).
 
 - **Grille, avant les lignes** (`GridManager.NewModifiers.cs`) : Hedgerow, Heartwood, Trellis, Furrow, Beanstalk, Patchwork, Taproot, Snug Fit, Mosaic, Crowd, Wildflower Meadow, Wreath, plus les trois qui rapportent du Pollen (Pollinator, Honey, Nectar).
 - **Grille, après les lignes** : Cross Harvest, Reaper, Clean Slate, Tithe (Pollen), Row Crop, Column Crop, Bounty, Frostbreaker. Clean Slate se cumule avec le ×2 intégré quand la grille est vidée.
