@@ -132,7 +132,7 @@ namespace Contigu.Presentation
             speakerRoot.anchoredPosition = new Vector2(40f, 40f);
             _speakerRoot = speakerRoot;
 
-            _guideHint = UIFactory.CreateText(speakerRoot, "Hint", "Click to continue", 15, UITheme.TextMutedOnBackground, TextAnchor.MiddleLeft);
+            _guideHint = UIFactory.CreateText(speakerRoot, "Hint", (MobileSetup.IsTouchDevice ? "Tap to continue" : "Click to continue"), 15, UITheme.TextMutedOnBackground, TextAnchor.MiddleLeft);
             _guideHint.raycastTarget = false;
             _guideHint.rectTransform.anchorMin = _guideHint.rectTransform.anchorMax = new Vector2(0f, 0f);
             _guideHint.rectTransform.pivot = new Vector2(0f, 0f);
@@ -218,7 +218,7 @@ namespace Contigu.Presentation
                 _ring.gameObject.SetActive(haveTarget);
                 PlaceSpeakerAwayFromRing(haveTarget);
                 _guidePortrait.sprite = Portrait(step.Mood);
-                _guideHint.text = i == steps.Count - 1 ? "Click to start" : "Click to continue";
+                _guideHint.text = i == steps.Count - 1 ? (MobileSetup.IsTouchDevice ? "Tap to start" : "Click to start") : (MobileSetup.IsTouchDevice ? "Tap to continue" : "Click to continue");
                 _guideClicked = false;
 
                 // Typewriter; a click mid-way completes the line, the next click advances.

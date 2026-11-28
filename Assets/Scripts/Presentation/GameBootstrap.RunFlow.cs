@@ -329,8 +329,19 @@ namespace Contigu.Presentation
                     _shopView.Show(_run);
                     if (_harvestsToPlay.Count > 0) { StartCoroutine(PlayShopHarvest()); }
                     ShowPendingEvent();
+                    // The very first shop: Sprig says what it is for (never again after that; skipped when an event card opens first).
+                    if (_run.PendingEvent == null && GamePrefs.ConsumeFirstTime(ShopTipPrefsKey))
+                    {
+                        StartCoroutine(ShopTipAfterDelay());
+                    }
                 });
             });
+        }
+
+        private System.Collections.IEnumerator ShopTipAfterDelay()
+        {
+            yield return new WaitForSecondsRealtime(1.2f);
+            _sprigView.Say("Welcome to the shop! Spend your Pollen on fertilizers (they boost every placement, and you can hold 4) and on sprout upgrades. Whatever you keep carries over. Leave when you are ready.", SprigMood.Cheer, 9f);
         }
 
         /// <summary>"Something happens": when the shop opens on an event, the card comes first; the shop is usable once the player has chosen.</summary>
@@ -437,7 +448,7 @@ namespace Contigu.Presentation
                     status = VisualDefaults.GetColorName(_run.BossCursedColor.Value) + " seeds score 0 points this round.";
                     break;
                 default:
-                    status = "New round: select a seed, then click the grid.";
+                    status = MobileSetup.IsTouchDevice ? "New round: select a seed, then tap the grid." : "New round: select a seed, then click the grid.";
                     break;
             }
             return status;

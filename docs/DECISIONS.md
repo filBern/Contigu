@@ -10042,3 +10042,8 @@ Nouveau dessin (`Design/Notebook/generate_sprig.py`) : une graine dodue avec une
 
 ## 2026-11-26 — Sprig en pot de fleur
 Le Sprig « graine » est remplacé par un pot de fleur en terre cuite (corps évasé, rebord, terre visible) avec la pousse à deux feuilles qui en sort et le visage sur le pot ; toujours sans bras ni jambes. Saut avec étirement pour Cheer, feuilles tombantes pour Sad. Mêmes fichiers `Characters/Sprig_*`. Non vérifié dans Unity.
+
+## 2026-11-28 — Premières minutes : relecture du guide de Sprig et de la première boutique
+- Relecture du guide de première partie (`BuildSprigGuide`) avec l'œil d'un joueur d'iPad : « Hover a pest » (pas de survol au tactile), « click » partout, aucune mention du budget de graines (alors qu'une manche se perd quand il tombe à zéro) ni de la formule points × Mult, et rien à l'arrivée dans la première boutique.
+- Corrections : les textes passent par `MobileSetup.IsTouchDevice` (tap / click, « Tap a pest » / « Hover a pest », « Tap to continue » dans la bulle de Sprig, message de début de manche, message de sélection d'une graine) ; deux étapes ajoutées au guide (points × Mult, graines restantes) ; première boutique : une bulle de Sprig, une seule fois (`ShopTipPrefsKey`), sautée quand un événement ouvre la boutique. Non vérifié dans Unity (cibles des flèches du guide et durée des bulles à juger).
+- Mesure (Spring, 400 parties, graine 1) : planner : manche 1 réussie à 100 %, manche 2 à 74 %. Joueur au hasard (proxy d'un débutant très faible) : manche 1 à 100 %, **manche 2 à 45 %**, manche 3 à 52 %, manche 4 à 22 %. Le premier mur d'un débutant est la manche 2 (Bramble). Pas de changement d'équilibre fait : à arbitrer avec l'auteur (Spring est le didacticiel).

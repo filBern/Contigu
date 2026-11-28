@@ -30,7 +30,7 @@ namespace Contigu.Presentation
             var shape = PieceShapeCatalog.GetRotated(token.Shape, rotation);
             _gridView.SetSelectedShape(shape, token.Color, token.Traits);
             _handView.SetShufflePulsing(false);
-            SetStatusText("Drag onto the grid, or click a sprout, to place: " + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")");
+            SetStatusText((MobileSetup.IsTouchDevice ? "Drag onto the grid, or tap a sprout, to place: " : "Drag onto the grid, or click a sprout, to place: ") + VisualDefaults.GetShapeName(token.Shape) + " (" + VisualDefaults.GetColorName(token.Color) + ")");
         }
 
         /// <summary>HandView refused to pick up this slot's piece because it has no valid placement anywhere (the slot itself already played its shake, see HandView.ShakeSlot). Shows an emphasized status message and pulses Shuffle.</summary>

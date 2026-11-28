@@ -44,6 +44,7 @@ namespace Contigu.Presentation
         private const string TutorialSeenPrefsKey = "TutorialSeen";
         private const string BoardEffectTipPrefsKey = "SprigBoardEffectTip";
         private const string NegativeScoreTipPrefsKey = "SprigNegativeScoreTip";
+        private const string ShopTipPrefsKey = "SprigShopTip";
         // Juice: a big Combo (at least two stacked Combo modifiers) or a Boss-tier kill shakes the grid —
         // see the "COMBO xN" callout below and DrainComboIntoDamage/DrainSecondaryEnemyHits.
         private const int BigComboShakeThreshold = 4;
@@ -672,7 +673,9 @@ namespace Contigu.Presentation
                 new SprigGuideStep { Mood = SprigMood.Cheer, Text = "Hi, I'm Sprig, your head gardener! Let me show you around. It only takes a moment." },
                 new SprigGuideStep
                 {
-                    Text = "These are your seeds. Drag one onto the grid, or click it and then click a plot.",
+                    Text = MobileSetup.IsTouchDevice
+                        ? "These are your seeds. Drag one onto the grid, or tap it and then tap a plot."
+                        : "These are your seeds. Drag one onto the grid, or click it and then click a plot.",
                     Targets = () => new[] { _handView.GetSlotPreviewTransform(0), _handView.GetSlotPreviewTransform(Mathf.Max(0, _run.Deck.Hand.Count - 1)) }
                 },
                 new SprigGuideStep
@@ -684,8 +687,20 @@ namespace Contigu.Presentation
                 new SprigGuideStep
                 {
                     Mood = SprigMood.Neutral,
-                    Text = "Pests guard each round. Your score becomes damage on the leftmost one. Hover a pest to read its tricks!",
+                    Text = "Every placement scores points x Mult. Fertilizers, bought between rounds, raise the Mult.",
+                    Targets = () => new[] { _comboView.TotalTransform }
+                },
+                new SprigGuideStep
+                {
+                    Mood = SprigMood.Neutral,
+                    Text = "Pests guard each round. Your score becomes damage on the leftmost one. " + (MobileSetup.IsTouchDevice ? "Tap a pest" : "Hover a pest") + " to read its tricks!",
                     Targets = () => new[] { _hudView.GetEnemyIconTransform(0) }
+                },
+                new SprigGuideStep
+                {
+                    Mood = SprigMood.Sad,
+                    Text = "Watch your seeds left! The round is lost if they run out while a pest is still standing. Unused seeds turn into Pollen when you win early.",
+                    Targets = () => new[] { _handView.SeedsLeftBox }
                 },
                 new SprigGuideStep
                 {
