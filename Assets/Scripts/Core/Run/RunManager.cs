@@ -732,6 +732,8 @@ namespace Contigu.Core
 
         /// <summary>How much Lueur the round that just ended converted its unused piece budget into (see EvaluateRoundEnd) - 0 until the first round ends, read once by GameBootstrap right after transitioning to AwaitingShop.</summary>
         public int LastRoundEndLueurBonus { get; private set; }
+        /// <summary>The Pollen the fertilizers harvested (Fruit stage) at the end of the last cleared round; already in <see cref="Lueur"/> but not in <see cref="LastRoundEndLueurBonus"/>.</summary>
+        public int LastRoundGrowthPollen { get; private set; }
 
         public RunState State { get; private set; }
 

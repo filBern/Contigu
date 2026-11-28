@@ -536,7 +536,7 @@ namespace Contigu.Core
             var available = new List<ModifierDefinition>(ModifierCatalog.All.Length);
             for (int i = 0; i < ModifierCatalog.All.Length; i++)
             {
-                if (!_activeModifiers.Contains(ModifierCatalog.All[i].Id) && ModifierCatalog.All[i].Id != ModifierId.Copieur && IsModifierUsableThisRun(ModifierCatalog.All[i].Id))
+                if (!_activeModifiers.Contains(ModifierCatalog.All[i].Id) && !_eventLostModifiers.Contains(ModifierCatalog.All[i].Id) && ModifierCatalog.All[i].Id != ModifierId.Copieur && IsModifierUsableThisRun(ModifierCatalog.All[i].Id))
                 {
                     available.Add(ModifierCatalog.All[i]);
                 }

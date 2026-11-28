@@ -1,3 +1,4 @@
+using Contigu.Core;
 using UnityEngine;
 
 namespace Contigu.Presentation
@@ -81,9 +82,9 @@ namespace Contigu.Presentation
             (string Header, string Body)[] sections =
             {
                 ("GOAL", "Clear each round by defeating its pests before you run out of seeds: your score is the damage you deal them. Clear all 12 rounds to win the run."),
-                ("PLACING SEEDS", "Drag or click a seed from your hand onto the grid. Cells of the same color that end up touching score together as one group: 1st tile 1 pt, 2nd tile 2 pts, 3rd tile 3 pts, and so on."),
+                ("PLACING SEEDS", (MobileSetup.IsTouchDevice ? "Drag or tap a seed from your hand onto the grid." : "Drag or click a seed from your hand onto the grid.") + " Cells of the same color that end up touching score together as one group: 1st tile 1 pt, 2nd tile 2 pts, 3rd tile 3 pts, and so on."),
                 ("HARVESTS", "Fill an entire row or column and it's harvested: +3 pts per tile for the first line, +6 per tile for a second line harvested by the same move, +9 for a third, and so on. A tile shared by two lines counts for both. Emptying the whole grid with one move doubles your Mult. Harvesting a line containing several distinct colors also earns Pollen (+2 Pollen per distinct color in it)."),
-                ("POLLEN AND THE SHOP", "Between rounds, spend Pollen in the shop on fertilizers and upgrades. Fertilizers apply to every placement, in the order you arrange them (drag or tap two to swap) - some add flat bonuses, some multiply."),
+                ("POLLEN AND THE SHOP", "Between rounds, spend Pollen in the shop on fertilizers and upgrades. Fertilizers apply to every placement, in the order you arrange them (drag or tap two to swap) - some add flat bonuses, some multiply. The short first round pays a " + RunConfig.FirstRoundPollenBonus + " Pollen bonus. Every " + RunConfig.EventRoundInterval + " rounds the shop opens on a card from the garden: pick a choice (the odds are written on it, and Walk on is always safe) before the shop opens."),
                 ("PESTS FIGHT ON YOUR GARDEN", "Your score is damage against the pests, but they strike back on the board itself: they lock plots, blight tiles (points scored there turn negative and the blight spreads), steal seeds from your hand, even blight a fertilizer so it does nothing. Read each pest's tooltip and plan around it."),
                 ("BOSS ROUNDS", "Every 4th round a boss pest shows up, with tricks of its own. Read its tooltip before you plant."),
                 ("DEFEAT", "The run ends if your seeds run out while pests are still alive, or if none of the seeds in your hand can be placed and you have no Shuffle left.")

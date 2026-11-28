@@ -165,7 +165,7 @@ namespace Contigu.Presentation
                 {
                     armed = true;
                     armedAt = Time.unscaledTime;
-                    label.text = "Sure? Click again";
+                    label.text = MobileSetup.IsTouchDevice ? "Sure? Tap again" : "Sure? Click again";
                     return;
                 }
                 armed = false;
@@ -202,7 +202,7 @@ namespace Contigu.Presentation
                 {
                     armed = true;
                     armedAt = Time.unscaledTime;
-                    label.text = "Sure? Click again";
+                    label.text = MobileSetup.IsTouchDevice ? "Sure? Tap again" : "Sure? Click again";
                     return;
                 }
                 new MetaStatsFileStore().Delete();

@@ -155,5 +155,152 @@ namespace Contigu.Tests
             }
             Assert.AreEqual(EventCatalog.All.Length, picked.Count);
         }
+
+        [Test]
+        public void ThePercentagesAlwaysAddUpTo100()
+        {
+            var option = new EventOption("T", 0,
+                new EventOutcome(1, new EventEffect(EventEffectKind.Pollen, 1)),
+                new EventOutcome(1, new EventEffect(EventEffectKind.Pollen, 2)),
+                new EventOutcome(1, new EventEffect(EventEffectKind.Pollen, 3)));
+            Assert.AreEqual("34%: gain 1 Pollen   |   33%: gain 2 Pollen   |   33%: gain 3 Pollen", option.Describe());
+        }
+
+        [Test]
+        public void AnOutcomeThatCannotHappen_IsNeitherShownNorDrawn()
+        {
+            var run = NewRun();
+            run.DebugForceRoundComplete();
+            run.DebugSetLueur(50);
+            for (int i = 0; run.ActiveModifiers.Count < EconomyConstants.MaxActiveModifiers; i++) { run.DebugGrantModifier(ModifierCatalog.All[i].Id); }
+            foreach (var e in EventCatalog.All)
+            {
+                run.DebugSetPendingEvent(e.Id);
+                for (int o = 0; o < e.Options.Length; o++)
+                {
+                    if (e.Options[o].Outcomes.Length < 2) { continue; }
+                    foreach (var outcome in run.EventOptionOutcomes(o))
+                    {
+                        bool grants = false, loses = false;
+                        foreach (var fx in outcome.Effects) { grants |= fx.Kind == EventEffectKind.GrantFertilizer; loses |= fx.Kind == EventEffectKind.LoseFertilizer; }
+                        Assert.IsFalse(grants && !loses, e.Title + "/" + e.Options[o].Label + ": cannot gain a fertilizer with every slot full");
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void WithoutAnyFertilizer_NoOutcomeLevelsOneUpOrTakesOneAway()
+        {
+            var run = NewRun();
+            run.DebugForceRoundComplete();
+            foreach (var e in EventCatalog.All)
+            {
+                run.DebugSetPendingEvent(e.Id);
+                for (int o = 0; o < e.Options.Length; o++)
+                {
+                    foreach (var outcome in run.EventOptionOutcomes(o))
+                    {
+                        foreach (var fx in outcome.Effects)
+                        {
+                            Assert.AreNotEqual(EventEffectKind.LevelUpFertilizer, fx.Kind, e.Title + "/" + e.Options[o].Label);
+                            Assert.AreNotEqual(EventEffectKind.LoseFertilizer, fx.Kind, e.Title + "/" + e.Options[o].Label);
+                        }
+                    }
+                }
+            }
+        }
+
+        [Test]
+        public void ASwapNeverHandsBackTheFertilizerJustLost()
+        {
+            int swapEvent = -1, swapOption = -1;
+            foreach (var e in EventCatalog.All)
+            {
+                for (int o = 0; o < e.Options.Length; o++)
+                {
+                    foreach (var outcome in e.Options[o].Outcomes)
+                    {
+                        bool grants = false, loses = false;
+                        foreach (var fx in outcome.Effects) { grants |= fx.Kind == EventEffectKind.GrantFertilizer; loses |= fx.Kind == EventEffectKind.LoseFertilizer; }
+                        if (grants && loses) { swapEvent = e.Id; swapOption = o; }
+                    }
+                }
+            }
+            Assert.GreaterOrEqual(swapEvent, 0, "a swap event exists");
+            for (int seed = 1; seed <= 300; seed++)
+            {
+                var run = NewRun(seed);
+                run.DebugForceRoundComplete();
+                for (int i = 0; run.ActiveModifiers.Count < EconomyConstants.MaxActiveModifiers; i++) { run.DebugGrantModifier(ModifierCatalog.All[i].Id); }
+                run.DebugSetPendingEvent(swapEvent);
+                Assert.IsTrue(run.ResolveEvent(swapOption));
+                string lost = null, gained = null;
+                foreach (var line in run.LastEventResult)
+                {
+                    if (line.StartsWith("You lose ") && !line.Contains("Pollen") && !line.Contains("seed")) { lost = line.Substring(9).TrimEnd('.'); }
+                    if (line.StartsWith("You gain ") && !line.Contains("Pollen")) { gained = line.Substring(9).TrimEnd('.'); }
+                }
+                if (lost != null && gained != null) { Assert.AreNotEqual(lost, gained, "seed " + seed); }
+            }
+        }
+
+        [Test]
+        public void LosingNothing_IsNotReportedAsLosingZero()
+        {
+            var run = NewRun();
+            run.DebugForceRoundComplete();
+            run.DebugSetLueur(0);
+            run.DebugSetPendingEvent(2);               // A Strange Bloom
+            for (int o = 0; o < 3; o++)
+            {
+                var fresh = NewRun();
+                fresh.DebugForceRoundComplete();
+                fresh.DebugSetLueur(0);
+                fresh.DebugSetPendingEvent(2);
+                if (!fresh.IsEventOptionAvailable(o)) { continue; }
+                fresh.ResolveEvent(o);
+                foreach (var line in fresh.LastEventResult) { Assert.AreNotEqual("You lose 0 Pollen.", line); }
+            }
+        }
+
+        [Test]
+        public void ATilesPlusMult_CountsBeforeEveryFertilizer_WhateverTheirSlot()
+        {
+            foreach (bool tileFirst in new[] { true, false })
+            {
+                var placement = new PlacementResult();
+                var tile = new ScoreEvent(ScoreEventType.MultBonus, new UnityEngine.Vector2Int(0, 0), 5);
+                tile.TriggeringModifierIndex = -1;
+                var fert = new ScoreEvent(ScoreEventType.ModifierMultiplier, new UnityEngine.Vector2Int(0, 0), 2);
+                fert.TriggeringModifierIndex = 0;
+                placement.ScoreEvents = tileFirst ? new List<ScoreEvent> { tile, fert } : new List<ScoreEvent> { fert, tile };
+                Assert.AreEqual(12f, placement.Mult, 0.001f, "(1 + 5) x 2, emitted " + (tileFirst ? "tile first" : "fertilizer first"));
+            }
+        }
+
+        [Test]
+        public void LevelFour_AlsoTakesOneSeedOffTheShortFirstRound()
+        {
+            var normal = ChallengeCatalog.Classic;
+            Assert.AreEqual(RunConfig.FirstRoundBudget, normal.BudgetFor(0));
+            Assert.AreEqual(RunConfig.FirstRoundBudget - 1, normal.AtLevel(4).BudgetFor(0));
+            Assert.AreEqual(normal.BudgetFor(1) - 1, normal.AtLevel(4).BudgetFor(1));
+        }
+
+        [Test]
+        public void ASavedShopOfferingARemovedUpgrade_StillLoads()
+        {
+            var run = NewRun();
+            run.DebugForceRoundComplete();
+            string text = run.CheckpointSnapshot.ToText();
+            var snapshot = RunSnapshot.FromText(text);
+            Assert.IsNotNull(snapshot);
+            snapshot.ShopWorkshop.Clear();
+            snapshot.ShopWorkshop.Add(new RunSnapshot.ShopSlotData { IsModifier = false, Id = (int)UpgradeId.TintedCells });
+            RunManager resumed = null;
+            Assert.DoesNotThrow(() => resumed = RunManager.Restore(RunSnapshot.FromText(snapshot.ToText()), new SystemRandomProvider(2)));
+            Assert.IsNotNull(resumed);
+        }
     }
 }

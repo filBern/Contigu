@@ -743,7 +743,10 @@ namespace Contigu.Core
         {
             placement.AdditiveMultBonus += mult;
             var events = new List<ScoreEvent>(placement.ScoreEvents);
-            events.Add(new ScoreEvent(ScoreEventType.MultBonus, pos, mult));
+            var multEvent = new ScoreEvent(ScoreEventType.MultBonus, pos, mult);
+            // A tile's +Mult counts before every fertilizer (index -1), whatever slot the fertilizers are in: like a card's own bonus before the jokers.
+            multEvent.TriggeringModifierIndex = -1;
+            events.Add(multEvent);
             placement.ScoreEvents = events;
         }
 

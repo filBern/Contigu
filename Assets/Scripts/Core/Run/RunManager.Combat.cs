@@ -213,7 +213,8 @@ namespace Contigu.Core
             // convention as every other scoring event in PlacePiece.
             LastRoundEndLueurBonus = PiecesRemainingThisRound + _challenge.RoundEndPollenBonus + (CurrentRoundIndex == 0 ? RunConfig.FirstRoundPollenBonus : 0);
             Lueur += LastRoundEndLueurBonus;
-            Lueur += GrowModifiers();
+            LastRoundGrowthPollen = GrowModifiers();
+            Lueur += LastRoundGrowthPollen;
             LastRoundSummary = new RoundSummary
             {
                 RoundNumber = CurrentRoundIndex + 1,

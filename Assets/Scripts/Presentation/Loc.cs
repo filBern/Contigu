@@ -16,7 +16,7 @@ namespace Contigu.Presentation
             { "shop.workshop", "Workshop" },
             { "shop.reroll", "Reroll {0} Pollen" }, // "Pollen" is drawn as the Pollen icon (see InlineIconLabel)
             { "shop.nextRound", "Next round" },
-            { "shop.seedBag", "Show seed bag (Tab)" },
+            { "shop.seedBag", MobileSetup.IsTouchDevice ? "Show seed bag" : "Show seed bag (Tab)" },
             { "shop.sold", "Sold" },
             { "shop.full", "Full ({0})" },
             { "shop.minBag", "Min bag" },
@@ -39,7 +39,7 @@ namespace Contigu.Presentation
             { "choice.fertilizerPackHint", "Pick one fertilizer to keep" },
             { "choice.skipPack", "Skip (no refund)" },
             { "choice.abandon", "Skip (no refund)" },
-            { "choice.abandonConfirm", "Sure? Click again (no refund)" },
+            { "choice.abandonConfirm", MobileSetup.IsTouchDevice ? "Sure? Tap again (no refund)" : "Sure? Click again (no refund)" },
             { "choice.sproutTag", "Sprout · {0}" },
             { "choice.fertilizerTag", "Fertilizer · {0}" },
             { "choice.pickSeed", "Choose 1 seed to add" },

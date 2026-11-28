@@ -38,8 +38,8 @@ namespace Contigu.Core
                 case EventEffectKind.GrantFertilizer: return "gain a random fertilizer";
                 case EventEffectKind.LoseFertilizer: return "lose a random fertilizer";
                 case EventEffectKind.LevelUpFertilizer: return "a random fertilizer gains a level";
-                case EventEffectKind.AddJoker: return "a Joker seed joins your bag";
-                case EventEffectKind.RemoveSeeds: return "lose " + Amount + (Amount == 1 ? " seed" : " seeds") + " from your bag";
+                case EventEffectKind.AddJoker: return "a random Joker seed joins your bag";
+                case EventEffectKind.RemoveSeeds: return "lose " + Amount + " random" + (Amount == 1 ? " seed" : " seeds") + " from your bag";
                 case EventEffectKind.NextRoundSeeds: return Amount >= 0 ? "next round: +" + Amount + (Amount == 1 ? " seed" : " seeds") : "next round: " + Amount + (Amount == -1 ? " seed" : " seeds");
                 default: return Amount >= 0 ? "next round: enemies have " + Amount + "% more HP" : "next round: enemies have " + (-Amount) + "% less HP";
             }
@@ -87,21 +87,53 @@ namespace Contigu.Core
         /// <summary>"gain 14 Pollen, lose a random fertilizer" or "50%: a random fertilizer gains a level   |   50%: lose 6 Pollen".</summary>
         public string Describe()
         {
+            return Describe(Outcomes);
+        }
+
+        /// <summary>The same card text for only the <paramref name="outcomes"/> that can really happen right now (the percentages are those among them).</summary>
+        public string Describe(IList<EventOutcome> outcomes)
+        {
             var parts = new List<string>();
-            int total = TotalWeight;
-            foreach (var outcome in Outcomes)
+            int total = 0;
+            foreach (var o in outcomes) { total += o.Weight; }
+            var percents = Percentages(outcomes, total);
+            for (int i = 0; i < outcomes.Count; i++)
             {
                 var effects = new List<string>();
-                foreach (var e in outcome.Effects) { effects.Add(e.Describe()); }
+                foreach (var e in outcomes[i].Effects) { effects.Add(e.Describe()); }
                 string text = effects.Count == 0 ? "nothing happens" : string.Join(", ", effects.ToArray());
-                if (Outcomes.Length > 1)
+                if (outcomes.Count > 1)
                 {
-                    text = (100 * outcome.Weight / total).ToString(CultureInfo.InvariantCulture) + "%: " + text;
+                    text = percents[i].ToString(CultureInfo.InvariantCulture) + "%: " + text;
                 }
                 parts.Add(text);
             }
             string joined = string.Join("   |   ", parts.ToArray());
             return joined.Length > 0 ? char.ToUpperInvariant(joined[0]) + joined.Substring(1) : joined;
+        }
+
+        /// <summary>Whole percentages that add up to exactly 100 (largest remainder), so three equal outcomes read 34, 33, 33 and not 33, 33, 33.</summary>
+        public static int[] Percentages(IList<EventOutcome> outcomes, int total)
+        {
+            var result = new int[outcomes.Count];
+            if (total <= 0) { return result; }
+            var remainder = new int[outcomes.Count];
+            int sum = 0;
+            for (int i = 0; i < outcomes.Count; i++)
+            {
+                result[i] = 100 * outcomes[i].Weight / total;
+                remainder[i] = 100 * outcomes[i].Weight % total;
+                sum += result[i];
+            }
+            while (sum < 100)
+            {
+                int best = 0;
+                for (int i = 1; i < outcomes.Count; i++) { if (remainder[i] > remainder[best]) { best = i; } }
+                result[best]++;
+                remainder[best] = -1;
+                sum++;
+            }
+            return result;
         }
     }
 

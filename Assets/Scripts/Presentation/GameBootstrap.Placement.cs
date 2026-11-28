@@ -726,7 +726,7 @@ namespace Contigu.Presentation
                     multEvents.Add(e);
                 }
             }
-            multEvents.Sort((a, b) => a.TriggeringModifierIndex.CompareTo(b.TriggeringModifierIndex));
+            multEvents = new List<ScoreEvent>(System.Linq.Enumerable.OrderBy(multEvents, ev => ev.TriggeringModifierIndex)); // stable, same order as PlacementResult.Mult
 
             var multExplanation = new List<string>();   // "Mason +2.6 · Dew x2": why this score, shown once the Mult has been counted
             for (int i = 0; i < multEvents.Count; i++)

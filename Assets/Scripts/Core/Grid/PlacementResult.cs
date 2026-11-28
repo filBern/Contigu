@@ -294,9 +294,15 @@ namespace Contigu.Core
                         multEvents.Add(e);
                     }
                 }
-                // Two events sharing the same index are always the same
-                // modifier's own multiple firings, so an unstable sort is safe.
-                multEvents.Sort((a, b) => a.TriggeringModifierIndex.CompareTo(b.TriggeringModifierIndex));
+                // Index -1 is a tile upgrade's +Mult (before every fertilizer) and int.MaxValue the garden-clear x2 (after them all); events sharing
+                // an index keep the order they were emitted in (a stable sort: List.Sort is not, so the position breaks ties).
+                var order = new Dictionary<ScoreEvent, int>();
+                for (int k = 0; k < multEvents.Count; k++) { order[multEvents[k]] = k; }
+                multEvents.Sort((a, b) =>
+                {
+                    int c = a.TriggeringModifierIndex.CompareTo(b.TriggeringModifierIndex);
+                    return c != 0 ? c : order[a].CompareTo(order[b]);
+                });
 
                 float mult = 1f;
                 for (int i = 0; i < multEvents.Count; i++)

@@ -45,6 +45,8 @@ namespace Contigu.Presentation
         private const string BoardEffectTipPrefsKey = "SprigBoardEffectTip";
         private const string NegativeScoreTipPrefsKey = "SprigNegativeScoreTip";
         private const string ShopTipPrefsKey = "SprigShopTip";
+        private const string EventTipPrefsKey = "SprigEventTip";
+        private Pledge _pledgesNotedBroken;
         // Juice: a big Combo (at least two stacked Combo modifiers) or a Boss-tier kill shakes the grid —
         // see the "COMBO xN" callout below and DrainComboIntoDamage/DrainSecondaryEnemyHits.
         private const int BigComboShakeThreshold = 4;
@@ -665,7 +667,7 @@ namespace Contigu.Presentation
             _roundBannerView.Build(mainRoot);
         }
 
-        /// <summary>The short first-run guide Sprig gives in speech bubbles (frames the hand, grid and first enemy). Press H any time for the full rules.</summary>
+        /// <summary>The short first-run guide Sprig gives in speech bubbles (frames the hand, grid and first enemy). Press H (Menu, Rules on touch screens) any time for the full rules.</summary>
         private List<SprigGuideStep> BuildSprigGuide()
         {
             return new List<SprigGuideStep>
@@ -708,7 +710,7 @@ namespace Contigu.Presentation
                     Text = "Careful: pests fight on your garden itself! They lock plots, blight tiles so they score negative, and steal seeds. Plan your planting around them.",
                     Targets = () => new[] { _gridView.GetCellTransform(0, 0), _gridView.GetCellTransform(GridManager.Size - 1, GridManager.Size - 1) }
                 },
-                new SprigGuideStep { Text = "Stuck? Shuffle swaps your hand. Between rounds, spend Pollen on fertilizers and upgrades. Press H for the full rules." },
+                new SprigGuideStep { Text = "Stuck? Shuffle swaps your hand. Between rounds, spend Pollen on fertilizers and upgrades. Every few rounds the garden also offers you a choice: read the odds first. " + (MobileSetup.IsTouchDevice ? "Open Menu, then Rules, for the full rules." : "Press H for the full rules.") },
                 new SprigGuideStep { Mood = SprigMood.Cheer, Text = "Now go make it bloom. Happy planting!" },
             };
         }

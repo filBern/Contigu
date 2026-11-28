@@ -112,8 +112,12 @@ namespace Contigu.Presentation
                 label.resizeTextMaxSize = UITheme.Scaled(26);
                 label.rectTransform.offsetMin = new Vector2(24f, 10f);
                 label.rectTransform.offsetMax = new Vector2(-24f, -10f);
-                string detail = option.Describe();
-                if (!available && option.RequiredPollen > _run.Lueur) { detail = "Needs " + option.RequiredPollen + " Pollen.   " + detail; }
+                string detail = _run.DescribeEventOption(i);   // only what can really happen now, with the real odds
+                if (!available)
+                {
+                    string why = _run.EventOptionBlockedReason(i);
+                    detail = (string.IsNullOrEmpty(why) ? "" : why + "   ") + option.Describe();
+                }
                 var description = UIFactory.CreateText(button.transform, "Detail", detail, 17, UITheme.Ink, TextAnchor.LowerCenter);
                 description.raycastTarget = false;
                 description.rectTransform.anchorMin = Vector2.zero;

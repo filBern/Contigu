@@ -50,7 +50,8 @@ namespace Contigu.Core
                 return ShopSlot.ForModifier(ModifierCatalog.RetiredReplacement((ModifierId)d.Id) ?? (ModifierId)d.Id);
             }
             var upgrade = UpgradeCatalog.Get((UpgradeId)d.Id);
-            return ShopSlot.ForUpgrade(upgrade);
+            // An upgrade removed from the game (a shop saved by an older version) is simply an empty slot.
+            return upgrade == null ? null : ShopSlot.ForUpgrade(upgrade);
         }
 
         private RunSnapshot CaptureSnapshot()

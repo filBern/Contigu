@@ -122,7 +122,8 @@ namespace Contigu.Core
         {
             if (roundIndex == 0)
             {
-                return RunConfig.FirstRoundBudget;
+                // The short first round ignores the challenge's extra seeds (PieceBudgetBonus) but not level 4's "one seed less each round".
+                return RunConfig.FirstRoundBudget - (Level >= 4 ? 1 : 0);
             }
             return PieceBudgets[System.Math.Min(roundIndex, PieceBudgets.Length - 1)] + PieceBudgetBonus;
         }

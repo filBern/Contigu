@@ -114,7 +114,7 @@ namespace Contigu.Presentation
             // season, fertilizers) is not animated here: it is a line of the round summary that follows.
             int bonus = _run.PiecesRemainingThisRound;
             int displayedPieces = bonus;
-            int displayedLueur = _run.Lueur - _run.LastRoundEndLueurBonus;
+            int displayedLueur = _run.Lueur - _run.LastRoundEndLueurBonus - _run.LastRoundGrowthPollen;   // the fertilizers' harvest is announced by the shop, not counted here early
             var fromAnchor = _hudView.PiecesBarTransform;
 
             for (int i = 0; i < bonus; i++)
@@ -351,8 +351,18 @@ namespace Contigu.Presentation
             {
                 return;
             }
+            if (GamePrefs.ConsumeFirstTime(EventTipPrefsKey))
+            {
+                _sprigView.Say("Something happens! Every few rounds the garden offers a choice. It is free, but chance has a say: read each option's odds, and 'Walk on' is always safe.", SprigMood.Cheer, 8f);
+            }
             _eventView.Show(_run, () =>
             {
+                // An event can hand out a fertilizer: a Minimalist pledge may break here.
+                if (!_run.IsPledgeKept(Pledge.Minimalist) && (_pledgesNotedBroken & Pledge.Minimalist) == Pledge.None)
+                {
+                    _pledgesNotedBroken |= Pledge.Minimalist;
+                    NotePledgeBroken(Pledge.Minimalist, true);
+                }
                 RefreshAll();
                 _shopView.Refresh(_run);
                 _modifierPanelView.Refresh(_run.ActiveModifiers);
