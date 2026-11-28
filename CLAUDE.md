@@ -22,7 +22,7 @@ Garde ce fichier court : seulement ce qui change la façon de travailler. L'éta
 - Toute modification d'un texte ou chiffre de fertilizer : relancer `check_icon_tags.py` (pastille de l'icône).
 
 ## Points ouverts
-- Undo d'une pose : non fait. Le Core n'a pas de copie profonde de l'état d'une manche (le snapshot est celui du début de manche et ne garde pas l'ordre de la pioche), donc un vrai Undo demande une décision de conception (voir le résumé de la session du 2026-11-01).
+- Undo d'une pose : **refusé par l'auteur** (2026-11-28), ne pas le proposer.
 - Bug mobile du bouton Seed bag jamais élucidé (soupçon : le bouton Sell le recouvre).
 - Build WebGL `QaBuild/` à régénérer pour rejouer `Tools/qa/web/flows.js`, puis une passe QA sur les nouveautés (résumé de manche, pledges, Transplant, sons, bulles de Sprig).
 - Équilibre : victoires du planner (profondeur 2, 400 parties, graine 1) ≈ Spring 15 %, Winter 12,5 %, Summer 7 %, Autumn 16 %, Orchard 8 %, Greenhouse 6,75 % (mesurées le 2026-11-26, après 32 graines en manche 2 et 30 en manche 4 contre le mur du Locker) (réglées avec `LateHpMultiplier`, voir `docs/DECISIONS.md`). Le bruit à 100 parties est de ±4 points : mesurer avec 400 parties.
