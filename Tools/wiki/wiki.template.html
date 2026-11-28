@@ -1,0 +1,678 @@
+<title>LASTBLOOM Wiki</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: ruled-paper notebook. Fixed left rail (grouped page list + search), one reading column, infobox floats right. Phone: rail becomes a drawer. */
+/* Tokens come from the game itself (UITheme, VisualDefaults, generate_icons CAT_COLORS, generate_cards FRAME). See the "Guide de style" page. */
+:root{
+  --paper:#ecdfc3; --paper-2:#e2d1ab; --paper-3:#d6c49b; --card:#fff7e8; --rule:#cdbb91; --ink:#2a2420; --ink-soft:#5f5347;
+  --poppy:#c8403f; --iris:#4f7fd0; --sun:#e8a82e; --fern:#5a9e45; --lavender:#8c63b0;
+  --moutarde:#ffc53d; --ciel:#65aed6; --menthe:#a4ebcc; --coquelicot:#ff6b57;
+  --pts:#2f8fe0; --mult:#e84d45; --pollen:#e8a82e;
+  --r-common:#d9cdb0; --r-uncommon:#8fb8ee; --r-rare:#f2a56a; --r-legendary:#f7cf4a;
+  --link:#2a5fb0; --hl:color-mix(in srgb,var(--moutarde) 42%,var(--card)); --shadow:rgba(42,36,32,.2);
+  --poppy-bg:color-mix(in srgb,var(--poppy) 20%,var(--card)); --iris-bg:color-mix(in srgb,var(--iris) 20%,var(--card)); --sun-bg:color-mix(in srgb,var(--sun) 28%,var(--card)); --fern-bg:color-mix(in srgb,var(--fern) 22%,var(--card));
+  --font-head:'Patrick Hand','Comic Sans MS',cursive; --font-body:'Source Sans 3',system-ui,-apple-system,'Segoe UI',sans-serif; --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#1f1a16; --paper-2:#292219; --paper-3:#352c21; --card:#2b241d; --rule:#46392b; --ink:#f1e7d0; --ink-soft:#bbad95;
+  --poppy:#e0675f; --iris:#7aa2e6; --sun:#f0bd4a; --fern:#86c36f; --lavender:#b18bd6; --link:#8fb8ee; --shadow:rgba(0,0,0,.5); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#1f1a16; --paper-2:#292219; --paper-3:#352c21; --card:#2b241d; --rule:#46392b; --ink:#f1e7d0; --ink-soft:#bbad95;
+  --poppy:#e0675f; --iris:#7aa2e6; --sun:#f0bd4a; --fern:#86c36f; --lavender:#b18bd6; --link:#8fb8ee; --shadow:rgba(0,0,0,.5); color-scheme:dark;}
+
+*{box-sizing:border-box}
+html{scroll-padding-top:72px}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--font-body);-webkit-text-size-adjust:100%}
+a{color:var(--link);text-underline-offset:2px}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--iris);outline-offset:2px;border-radius:4px}
+h1,h2,h3,h4{font-family:var(--font-head);font-weight:400;line-height:1.15;text-wrap:balance;margin:0;color:var(--ink)}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+code{background:var(--paper-2);border:1px solid var(--rule);border-radius:4px;padding:0 4px}
+
+.shell{display:grid;grid-template-columns:272px minmax(0,1fr);min-height:100vh}
+.rail{position:sticky;top:env(safe-area-inset-top,0px);height:100vh;overflow-y:auto;background:var(--paper-2);border-right:2px solid var(--ink);padding:18px 14px 28px max(14px,env(safe-area-inset-left,0px))}
+.brand{display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--ink);margin-bottom:14px}.brand img{flex:0 0 auto}
+.brand b{font:400 28px/1 var(--font-head);letter-spacing:.02em;display:block}
+.brand span{font-size:12.5px;color:var(--ink-soft)}
+.search{width:100%;font:inherit;font-size:15px;padding:9px 12px;border:2px solid var(--ink);border-radius:10px 12px 9px 11px;background:var(--card);color:var(--ink)}
+.search::placeholder{color:var(--ink-soft)}
+.navgroup{margin-top:18px}
+.navgroup h4{font:400 13px/1 var(--font-body);text-transform:uppercase;letter-spacing:.1em;color:var(--ink-soft);margin:0 0 6px 6px}
+.rail nav a{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-size:15.5px;min-height:36px}
+.rail nav a:hover{background:var(--paper-3)}
+.rail nav a[aria-current="page"]{background:var(--hl);font-weight:600;box-shadow:inset 3px 0 0 var(--sun)}
+.rail nav a small{font:500 12px var(--font-mono);color:var(--ink-soft)}
+.topbar{display:none}
+
+main{min-width:0;padding:30px max(28px,env(safe-area-inset-right,0px)) 80px 44px;
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,color-mix(in srgb,var(--rule) 55%,transparent) 31px,color-mix(in srgb,var(--rule) 55%,transparent) 32px);background-attachment:local}
+.page{max-width:900px}
+.crumb{font-size:13px;color:var(--ink-soft);margin-bottom:6px}
+.page>h1{font-size:clamp(34px,5vw,50px);margin-bottom:6px}
+.lead{font-size:18px;color:var(--ink-soft);max-width:62ch;margin:0 0 24px}
+.page h2{font-size:30px;margin:38px 0 10px;padding-bottom:4px;border-bottom:2px solid var(--ink)}
+.page h3{font-size:22px;margin:24px 0 6px}
+.page p,.page li{max-width:72ch}
+.page ul,.page ol{padding-left:22px}
+.page li{margin:3px 0}
+.infobox{float:right;width:260px;margin:4px 0 16px 24px;border:2px solid var(--ink);border-radius:12px 10px 13px 9px;background:var(--card);padding:12px 14px;font-size:14.5px;box-shadow:3px 3px 0 var(--shadow)}
+.infobox h4{font-size:18px;margin-bottom:6px}
+.infobox dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:3px 12px}
+.infobox dt{color:var(--ink-soft)}.infobox dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.callout{border:2px solid var(--ink);border-radius:11px 13px 10px 12px;padding:11px 15px;margin:16px 0;background:var(--sun-bg);max-width:72ch}
+.callout.warn{background:var(--poppy-bg)}.callout.tip{background:var(--fern-bg)}.callout.info{background:var(--iris-bg)}
+.callout b.t{font-family:var(--font-head);font-weight:400;font-size:18px;display:block;margin-bottom:2px}
+.tablewrap{overflow-x:auto;margin:12px 0;max-width:100%}
+table{border-collapse:collapse;width:100%;font-size:14.8px}
+th,td{padding:7px 10px;border-bottom:1.5px solid var(--rule);text-align:left;vertical-align:top}
+th{font:400 16px var(--font-head);background:var(--paper-2);border-bottom:2px solid var(--ink);white-space:nowrap;position:sticky;top:0}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:hover td{background:color-mix(in srgb,var(--hl) 40%,transparent)}
+.chip{display:inline-flex;align-items:center;gap:5px;font:500 13px var(--font-body);padding:2px 9px;border:1.5px solid var(--ink);border-radius:999px;background:var(--card);white-space:nowrap}
+.chip.r-Common{background:var(--r-common);color:#2a2420}.chip.r-Uncommon{background:var(--r-uncommon);color:#2a2420}.chip.r-Rare{background:var(--r-rare);color:#2a2420}.chip.r-Legendary{background:var(--r-legendary);color:#2a2420}
+.chip.pts{background:var(--pts);color:#fff;border-color:var(--ink)}.chip.mult{background:var(--mult);color:#fff}.chip.pol{background:var(--pollen);color:#2a2420}
+.chip.poppy{background:var(--poppy-bg)}.chip.iris{background:var(--iris-bg)}.chip.sun{background:var(--sun-bg)}.chip.fern{background:var(--fern-bg)}
+.dot{width:11px;height:11px;border-radius:50%;border:1.5px solid var(--ink);display:inline-block}
+.dot.Poppy{background:var(--poppy)}.dot.Iris{background:var(--iris)}.dot.Sunflower{background:var(--sun)}.dot.Fern{background:var(--fern)}.dot.Joker{background:conic-gradient(var(--poppy) 0 25%,var(--iris) 0 50%,var(--sun) 0 75%,var(--fern) 0)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.tools input[type=search],.tools select{font:inherit;font-size:15px;padding:8px 11px;border:2px solid var(--ink);border-radius:10px;background:var(--card);color:var(--ink);min-height:40px}
+.tools input[type=search]{flex:1 1 220px}
+.fchips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.fchips button{font:inherit;font-size:14px;padding:6px 12px;min-height:36px;border:2px solid var(--ink);border-radius:999px;background:var(--card);color:var(--ink);cursor:pointer}
+.fchips button[aria-pressed="true"]{background:var(--hl);font-weight:600}
+.count{color:var(--ink-soft);font-size:14px;margin:4px 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin:10px 0}
+.card{border:2px solid var(--ink);border-radius:12px 10px 13px 9px;background:var(--card);padding:11px 14px 12px;display:flex;flex-direction:column;gap:6px;min-width:0;box-shadow:2px 2px 0 var(--shadow)}
+.card.hit{background:var(--hl);animation:blink 1.2s 2}
+@keyframes blink{50%{box-shadow:0 0 0 4px var(--sun)}}
+@media (prefers-reduced-motion:reduce){.card.hit{animation:none}}
+.card h3{font-size:21px;margin:0;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.card .meta{display:flex;flex-wrap:wrap;gap:5px}
+.card p{margin:0;font-size:14.8px;max-width:none}
+.card .unl{font-size:13.5px;color:var(--ink-soft);border-top:1.5px dashed var(--rule);padding-top:5px;margin-top:auto}
+.card .id{font:12px var(--font-mono);color:var(--ink-soft)}
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:14px 0}
+.cats a{display:block;border:2px solid var(--ink);border-radius:12px 10px 13px 9px;padding:11px 14px;text-decoration:none;color:var(--ink);background:var(--card);box-shadow:2px 2px 0 var(--shadow);min-height:56px}
+.cats a:hover{background:var(--hl)}
+.cats b{font:400 21px var(--font-head);display:block}.cats span{font-size:14px;color:var(--ink-soft)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:14px 0}
+.stat{border:2px solid var(--ink);border-radius:10px;padding:8px 12px;background:var(--paper-2)}
+.stat b{font:400 32px/1 var(--font-head);display:block}.stat span{font-size:13px;color:var(--ink-soft)}
+.hero{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;margin:0 0 6px}
+.hero img{max-width:100%;height:auto}
+.banner{height:84px;background-size:cover;background-position:center;border-bottom:2px solid var(--ink);position:relative;margin:-11px -14px 4px;border-radius:10px 8px 0 0}
+.banner .pic{position:absolute;left:12px;bottom:-26px;background-color:var(--card);border:2px solid var(--ink);border-radius:12px}
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:10px 0}
+.sw div{border:2px solid var(--ink);border-radius:10px;overflow:hidden;background:var(--card);font-size:13.5px}
+.sw i{display:block;height:54px;border-bottom:2px solid var(--ink)}
+.sw b{display:block;font:400 17px var(--font-head);padding:4px 8px 0}.sw div>code{margin:2px 8px 6px;display:inline-block}
+.btn{font:inherit;font-size:15px;padding:9px 16px;min-height:44px;border:2px solid var(--ink);border-radius:11px 10px 12px 9px;background:var(--card);color:var(--ink);cursor:pointer;box-shadow:2px 2px 0 var(--shadow)}
+.btn.gold{background:var(--moutarde)}.btn.green{background:var(--menthe)}
+.shapes{display:flex;flex-wrap:wrap;gap:14px;margin:12px 0}
+.shape{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:13px;color:var(--ink-soft)}
+.bars{display:grid;gap:7px;margin:12px 0;max-width:620px}
+.bar{display:grid;grid-template-columns:96px 1fr 54px;gap:10px;align-items:center;font-size:14.5px}
+.bar i{display:block;height:20px;border:2px solid var(--ink);border-radius:6px;background:var(--paper-2);position:relative;overflow:hidden}
+.bar i u{position:absolute;inset:0 auto 0 0;background:var(--fern);display:block}
+.bar b{font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.tabs button{font:400 18px var(--font-head);padding:6px 14px;min-height:40px;border:2px solid var(--ink);border-radius:10px 10px 0 0;background:var(--paper-2);color:var(--ink);cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--hl)}
+details{border:2px solid var(--ink);border-radius:10px;padding:8px 12px;margin:8px 0;background:var(--card);max-width:72ch}
+summary{cursor:pointer;font:400 19px var(--font-head);min-height:32px}
+.ev{margin-bottom:18px}
+.ev .story{font-style:italic;color:var(--ink-soft);margin:4px 0 8px}
+.opt{margin:6px 0 6px 0;padding-left:12px;border-left:4px solid var(--sun)}
+.opt .o{display:block;font-size:14.5px;color:var(--ink-soft)}
+.pic{flex:0 0 auto;display:inline-block;vertical-align:middle;background-repeat:no-repeat}
+.ico{flex:0 0 auto;display:inline-grid;place-items:center;width:40px;height:40px;border-radius:9px;border:3px solid var(--ink-soft);font:400 18px/1 var(--font-head);color:var(--ink);background:var(--sun-bg)}
+.ico.poppy{background:var(--poppy-bg)}.ico.iris{background:var(--iris-bg)}.ico.fern{background:var(--fern-bg)}.ico.sun{background:var(--sun-bg)}
+.ico.r-Uncommon{border-color:var(--fern)}.ico.r-Rare{border-color:var(--iris)}.ico.r-Legendary{border-color:var(--sun);box-shadow:0 0 0 2px var(--ink)}
+.ico.big{width:64px;height:64px;font-size:28px;border-radius:13px}
+.ico.sm{width:30px;height:30px;font-size:14px;border-width:2.5px;border-radius:7px}
+.card h3 a,td a.nm{color:var(--ink);text-decoration:none}.card h3 a:hover,td a.nm:hover{text-decoration:underline}
+.card .head{display:flex;gap:10px;align-items:center}
+.card .head h3{flex:1;min-width:0}
+.nm{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+.view{display:inline-flex;border:2px solid var(--ink);border-radius:10px;overflow:hidden}
+.view button{font:inherit;font-size:14px;padding:7px 14px;min-height:40px;border:0;background:var(--card);color:var(--ink);cursor:pointer}
+.view button[aria-pressed="true"]{background:var(--hl);font-weight:600}
+th button{font:inherit;background:none;border:0;color:inherit;cursor:pointer;padding:0;display:inline-flex;gap:4px;align-items:center}
+th button[data-dir="1"]::after{content:"▲";font-size:10px}th button[data-dir="-1"]::after{content:"▼";font-size:10px}
+.toc{border:2px solid var(--ink);border-radius:11px 13px 10px 12px;padding:10px 16px;margin:0 0 22px;background:var(--paper-2);max-width:420px;font-size:15px}
+.toc b{font:400 18px var(--font-head);display:block;margin-bottom:2px}
+.toc ol{margin:0;padding-left:20px}.toc a{text-decoration:none}.toc a:hover{text-decoration:underline}
+.crumb a{color:var(--ink-soft)}
+.pager{display:flex;justify-content:space-between;gap:10px;margin:28px 0 6px;flex-wrap:wrap}
+.pager a{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;min-height:44px;border:2px solid var(--ink);border-radius:10px;background:var(--card);color:var(--ink);text-decoration:none}
+.pager a:hover{background:var(--hl)}
+.see{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.see a{display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 5px;border:2px solid var(--ink);border-radius:999px;text-decoration:none;color:var(--ink);background:var(--card);min-height:40px}
+.see a:hover{background:var(--hl)}
+.desc-big{font-size:19px;line-height:1.5;max-width:60ch;margin:0 0 16px}
+.navbox{margin-top:36px;border:2px solid var(--ink);border-radius:11px;background:var(--paper-2);max-width:none}
+.navbox summary{font:400 18px var(--font-head);padding:2px 0}
+.navbox .nbg{display:grid;grid-template-columns:110px 1fr;gap:6px 14px;align-items:baseline;margin-top:8px;font-size:14.5px}
+.navbox .nbg b{font:400 16px var(--font-head);color:var(--ink-soft)}
+.navbox .nbg div a{margin-right:10px;white-space:nowrap}
+#sres{margin-top:10px}
+#sres a{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px;text-decoration:none;color:var(--ink);min-height:44px}
+#sres a:hover,#sres a.sel{background:var(--hl)}
+#sres a span:not(.ico){flex:1;min-width:0}#sres a small{color:var(--ink-soft);font-size:12.5px}
+#sres .all{font-size:14px;color:var(--link);justify-content:center;border:2px dashed var(--rule)}
+.results h2{border:0;margin-top:20px}
+.results a.r{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;border:2px solid var(--ink);border-radius:10px;margin:6px 0;text-decoration:none;color:var(--ink);background:var(--card);min-height:44px}
+.results a.r:hover{background:var(--hl)}
+.results small{color:var(--ink-soft)}
+footer{margin-top:50px;padding-top:14px;border-top:2px solid var(--ink);font-size:13.5px;color:var(--ink-soft);max-width:72ch}
+.theme{margin-top:20px;font:inherit;font-size:14px;padding:8px 12px;border:2px solid var(--ink);border-radius:10px;background:var(--card);color:var(--ink);cursor:pointer;min-height:40px}
+
+@media (max-width:900px){
+  .shell{display:block}
+  .topbar{display:flex;position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper-2);border-bottom:2px solid var(--ink);align-items:center;gap:10px;padding:8px max(14px,env(safe-area-inset-right,0px)) 8px max(14px,env(safe-area-inset-left,0px))}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--paper-2);z-index:30}
+  .topbar b{font:400 24px var(--font-head)}
+  .topbar button{margin-left:auto;font:inherit;font-weight:600;padding:8px 14px;min-height:44px;border:2px solid var(--ink);border-radius:10px;background:var(--card);color:var(--ink)}
+  .rail{display:none;position:fixed;inset:0;z-index:25;height:auto;width:100%;border-right:0;padding-top:calc(60px + env(safe-area-inset-top,0px))}
+  .rail.open{display:block}
+  main{padding:20px max(16px,env(safe-area-inset-right,0px)) 70px max(16px,env(safe-area-inset-left,0px))}
+  .infobox{float:none;width:auto;margin:0 0 16px}
+  .bar{grid-template-columns:78px 1fr 48px}
+}
+</style>
+
+<div class="topbar"><b>LASTBLOOM</b><button id="menuBtn" aria-expanded="false" aria-controls="rail">Menu</button></div>
+<div class="shell">
+  <aside class="rail" id="rail">
+    <a class="brand" href="#accueil"><img src="img/sprig_n.webp" alt="" width="44" height="44"><span><b>LASTBLOOM</b><span>Wiki de conception · généré depuis le code</span></span></a>
+    <input class="search" id="q" type="search" placeholder="Chercher ( / )  Mason, Bramble…" aria-label="Chercher dans le wiki" autocomplete="off">
+    <div id="sres" hidden></div>
+    <nav id="nav" aria-label="Pages"></nav>
+    <button class="theme" id="themeBtn" type="button">Thème : auto</button>
+  </aside>
+  <main><div class="page" id="page"></div></main>
+</div>
+
+<script id="data" type="application/json">/*DATA*/</script>
+<script>
+(function(){
+"use strict";
+var D=JSON.parse(document.getElementById('data').textContent);
+var C=D.c, E=C.E, S=C.S, R=C.R;
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function pct(x,t){return Math.round(100*x/t)}
+var COLORS=[['Poppy','Coral','poppy'],['Iris','Teal','iris'],['Sunflower','Violet','sun'],['Fern','Lime','fern']];
+var CAT_FR={'Couleurs':'Couleurs','Voisinage':'Voisinage','Connexions':'Connexions','Formes':'Formes','Destruction':'Destruction','Tempo':'Tempo','Upgrades':'Upgrades','Weather':'Weather','Seed Bag':'Seed Bag','Flat':'Flat','Enemies':'Enemies','Wild':'Wild','Synergy':'Synergy'};
+var CAT_NOTE={'Couleurs':'jouer ou éviter certaines couleurs','Voisinage':'ce qui touche la graine posée','Connexions':'taille et forme des groupes','Formes':'la forme des graines','Destruction':'récolte de lignes','Tempo':'rythme de la manche','Upgrades':'tile upgrades possédées','Weather':'la météo du jour','Seed Bag':'composition du sac','Flat':'Mult plat','Enemies':'les nuisibles','Wild':'Jokers','Synergy':'liens entre fertilizers'};
+var RAR_CLASS={'Common':'','Uncommon':'fern','Rare':'iris','Legendary':'sun'};
+function enemyById(id){for(var i=0;i<D.enemies.length;i++)if(D.enemies[i].id===id)return D.enemies[i];return null}
+function enemyName(id){var e=enemyById(id);return e?e.name:id}
+function enemyLink(id){return '<a href="#ennemis-'+id+'">'+esc(enemyName(id))+'</a>'}
+function chip(t,cls){return '<span class="chip '+(cls||'')+'">'+esc(t)+'</span>'}
+function callout(title,html,cls){return '<div class="callout '+(cls||'')+'"><b class="t">'+esc(title)+'</b>'+html+'</div>'}
+function table(head,rows,numCols){
+  var h='<div class="tablewrap"><table><thead><tr>';
+  head.forEach(function(x,i){h+='<th'+(numCols&&numCols.indexOf(i)>=0?' class="n"':'')+'>'+x+'</th>'});
+  h+='</tr></thead><tbody>';
+  rows.forEach(function(r){h+='<tr>';r.forEach(function(c,i){h+='<td'+(numCols&&numCols.indexOf(i)>=0?' class="n"':'')+'>'+c+'</td>'});h+='</tr>'});
+  return h+'</tbody></table></div>';
+}
+function info(title,pairs){var h='<aside class="infobox"><h4>'+esc(title)+'</h4><dl>';pairs.forEach(function(p){h+='<dt>'+esc(p[0])+'</dt><dd>'+p[1]+'</dd>'});return h+'</dl></aside>'}
+function shapeSvg(cells,size){
+  var w=0,h=0;cells.forEach(function(c){w=Math.max(w,c[0]+1);h=Math.max(h,c[1]+1)});
+  var s=size||22,g=3,svg='<svg width="'+(w*s+g)+'" height="'+(h*s+g)+'" viewBox="0 0 '+(w*s+g)+' '+(h*s+g)+'" aria-hidden="true">';
+  cells.forEach(function(c){svg+='<rect x="'+(c[0]*s+g/2)+'" y="'+(c[1]*s+g/2)+'" width="'+(s-g)+'" height="'+(s-g)+'" rx="4" fill="var(--sun)" stroke="var(--ink)" stroke-width="2"/>'});
+  return svg+'</svg>';
+}
+var SHAPE_NAME={Single:'Pion',DomH:'Domino',TriL:'Tromino en L',TriIH:'Tromino droit',Sq2:'Carré',LTetro:'Tétromino L',TTetro:'Tétromino T',STetro:'Tétromino S'};
+
+/* ---------- Pages ---------- */
+var P={};
+var NAV=[
+ ['Découvrir',[['accueil','Accueil'],['boucle','Boucle de jeu'],['plateau','Plateau et graines'],['score','Score et dégâts'],['boutique','Boutique et économie']]],
+ ['Contenu',[['fertilizers','Fertilizers',D.fert.length],['sprouts','Tile upgrades',D.sprouts.length],['upgrades','Autres upgrades et packs'],['ennemis','Ennemis',D.enemies.length],['meteo','Météo',D.weather.length],['evenements','Événements',D.events.length]]],
+ ['Parties',[['manches','Manches et rosters'],['challenges','Challenges et difficulté'],['progression','Progression et déblocages']]],
+ ['Production',[['interface','Interface et direction artistique'],['equilibrage','Équilibrage'],['guide','Guide de style'],['outils','Outils et conventions'],['glossaire','Glossaire']]]
+];
+var TITLES={};NAV.forEach(function(g){g[1].forEach(function(p){TITLES[p[0]]=p[1]})});
+
+P.accueil=function(){
+  var h='<div class="crumb">Wiki</div><div class="hero"><h1 style="margin:0"><img src="img/logo.webp" alt="LASTBLOOM" width="360" height="100"></h1><img src="img/sprig.webp" alt="Sprig, la mascotte" width="120" height="120"></div>';
+  h+='<p class="lead">Un puzzle de pose de pièces façon Block Blast, construit comme un roguelike à synergies façon Balatro, dans un jardin de cahier dessiné à la main. Ce wiki réunit les règles, tout le contenu et les chiffres du jeu tel qu’il est dans le code.</p>';
+  h+='<div class="stats"><div class="stat"><b>'+D.fert.length+'</b><span>fertilizers</span></div><div class="stat"><b>'+D.sprouts.length+'</b><span>tile upgrades</span></div><div class="stat"><b>'+D.enemies.length+'</b><span>ennemis</span></div><div class="stat"><b>'+D.weather.length+'</b><span>météos</span></div><div class="stat"><b>'+D.challenges.length+'</b><span>challenges</span></div><div class="stat"><b>'+D.events.length+'</b><span>événements</span></div></div>';
+  h+='<h2>Le jeu en trente secondes</h2><ul><li>On pose des <b>seeds</b> (graines de 1 à 4 cases) sur un jardin de 6×6 plots. Chaque pose marque des <b>points × Mult</b> et inflige ces dégâts à l’ennemi de devant.</li><li>Une ligne ou colonne pleine est <b>récoltée</b>. Les groupes de même couleur rapportent plus à chaque case.</li><li>Une manche se gagne en vainquant tous ses ennemis avant d’avoir épuisé son budget de graines. Un run compte <b>12 manches</b>, avec un boss aux manches 4, 8 et 12.</li><li>Entre deux manches, la <b>boutique</b> vend des fertilizers (4 actifs au plus), des tile upgrades et des packs, payés en <b>Pollen</b>.</li><li>Six <b>challenges</b> (Spring, Winter, Summer, Autumn, Orchard, Greenhouse) changent les règles du jardin.</li></ul>';
+  h+='<h2>Par où commencer</h2><div class="cats">';
+  [['boucle','Boucle de jeu','Run, manche, boutique, boss'],['plateau','Plateau et graines','Formes, couleurs, récolte'],['score','Score et dégâts','Points, Mult, Maturation'],['boutique','Boutique','Blister, Workshop, prix'],['fertilizers','Fertilizers','Le catalogue complet, filtrable'],['ennemis','Ennemis','Rôles, PV, effets, lore'],['challenges','Challenges','Les six saisons et cinq niveaux'],['progression','Déblocages','Ce qui se débloque, et comment']].forEach(function(c){h+='<a href="#'+c[0]+'"><b>'+c[1]+'</b><span>'+c[2]+'</span></a>'});
+  h+='</div>';
+  h+=callout('Comment lire ce wiki','<p>Les noms de jeu sont en anglais, comme à l’écran ; le texte autour est en français. Les listes (fertilizers, tile upgrades, ennemis, météo, événements, déblocages, challenges) sont <b>extraites directement du code</b> du jeu : elles ne dérivent pas. Les valeurs sont celles du dépôt le 26 novembre 2026.</p>','info');
+  h+='<footer>Sources : <code>docs/GDD.md</code>, <code>docs/BALANCE.md</code>, <code>docs/PROGRESSION.md</code>, <code>docs/GLOSSARY.md</code>, <code>docs/DECISIONS.md</code> (historique daté, environ 10 000 lignes) et les catalogues du Core.</footer>';
+  return h;
+};
+
+P.boucle=function(){
+  var sp=D.challenges[0];
+  var h='<div class="crumb">Découvrir</div><h1>Boucle de jeu</h1><p class="lead">Un run, c’est douze manches séparées par la boutique. Chaque manche est un petit puzzle chronométré par un budget de graines.</p>';
+  h+=info('Un run (Spring)',[['Manches',R.RoundCount],['Boss','manches 4, 8, 12'],['Événement','toutes les '+R.EventRoundInterval+' manches'],['Grille','6 × 6'],['Main','3 seeds'],['Shuffles au départ',R.StartingShuffleCount]]);
+  h+='<h2>Déroulé</h2><ol><li><b>Manche.</b> On dispose d’un nombre limité de graines (le <i>budget</i>). On les pose depuis la main sur la grille. Chaque pose marque des points, inflige des dégâts à l’ennemi de devant, et peut récolter des lignes.</li><li><b>Victoire de manche</b> quand tous les ennemis sont vaincus. <b>Défaite</b> quand le budget est épuisé avec des ennemis encore debout, ou qu’aucune graine de la main ne peut plus être posée et qu’il ne reste plus de Shuffle.</li><li><b>Résumé de manche</b>, avec les lignes de bonus (graines inutilisées, bonus de première manche, Pollen de fin de manche).</li><li><b>Boutique</b> (voir <a href="#boutique">Boutique et économie</a>), puis la manche suivante.</li><li><b>Fin de run</b> : écran de victoire ou de défaite, avec les records de la run et les déblocages gagnés.</li></ol>';
+  h+='<h2>Structure d’un run</h2><ul><li><b>Acte 1</b> : manches 1 à 8. <b>Acte 2</b> : manches 9 à 12. À partir de la manche 9, les PV des ennemis sont multipliés par '+S.EnemyHpGrowthPerRound+' à chaque manche (cumulé).</li><li><b>Boss</b> aux manches 4, 8 et 12 : leur roster est tiré dans une liste de rosters plus lourds. Les autres rosters sont tirés au hasard parmi ceux de difficulté voisine, sans jamais répéter un roster dans un run.</li><li><b>Première manche courte</b> : '+R.FirstRoundBudget+' graines, ennemi à '+Math.round(S.EarlyRoundHpFactors[0]*100)+' % de ses PV, et une prime de '+R.FirstRoundPollenBonus+' Pollen (ligne « First round bonus » du résumé).</li><li><b>Météo</b> : tirée pour chaque manche, jamais deux fois la même d’affilée, la manche 1 toujours dégagée.</li><li><b>Événement « Quelque chose se produit »</b> toutes les '+R.EventRoundInterval+' manches : une carte à trois choix, gratuite mais avec des effets secondaires possibles (voir <a href="#evenements">Événements</a>). La boutique reste fermée tant qu’on n’a pas répondu.</li><li><b>Victoire</b> après la manche 12. « Keep Growing » prolonge en <b>Endless</b> : les rosters de l’Acte 2 tournent en boucle et les PV croissent de ×'+S.EnemyHpGrowthPerRoundEndless+' en plus à chaque manche.</li></ul>';
+  h+=callout('Sauvegarde','<p>« Save &amp; quit » écrit la run telle qu’elle était au début de la manche (ou à l’ouverture de la boutique). « Continue » la reprend. Une nouvelle partie demande confirmation avant d’écraser la sauvegarde.</p>');
+  h+='<h2>La courbe de Spring</h2>'+table(['Manche','Graines','Ennemis'],sp.table.map(function(r){return [r.round+(r.round%4===0?' <span class="chip poppy">boss</span>':''),r.budget,r.enemies.map(enemyLink).join(', ')]}),[0,1]);
+  h+='<p>Le détail par challenge est dans <a href="#manches">Manches et rosters</a>.</p>';
+  return h;
+};
+
+P.plateau=function(){
+  var h='<div class="crumb">Découvrir</div><h1>Plateau et graines</h1><p class="lead">Le jardin est une grille de plots. On y plante des seeds, qui deviennent des sprouts.</p>';
+  h+='<h2>Vocabulaire</h2><ul><li><b>Plot</b> : une case de la grille. <b>Sprout</b> : une tuile posée. <b>Seed</b> : une pièce de la main, de 1 à 4 cases.</li><li><b>Grille</b> : 6×6 (5×5 en Greenhouse).</li><li><b>Seed Bag</b> : le deck. 10 graines au minimum. On en pioche une <b>main de 3</b> (4 avec certains fertilizers).</li><li><b>Shuffle</b> : renouvelle la main, en nombre limité. Les ennemis agissent à chaque Shuffle (manuel ou refill automatique).</li></ul>';
+  h+='<h2>Les huit formes</h2><div class="shapes">';
+  D.shapes.forEach(function(s){h+='<div class="shape">'+shapeSvg(s.cells)+'<span>'+SHAPE_NAME[s.id]+' · '+s.cells.length+'</span></div>'});
+  h+='</div><p>Les graines se tournent avant d’être posées. Le jeu se joue au doigt : on sélectionne la pièce, puis on la glisse sur la grille.</p>';
+  h+='<h2>Les couleurs</h2><div class="swatches"><p>';
+  COLORS.forEach(function(c){h+='<span class="chip '+c[2]+'"><i class="dot '+c[0]+'"></i>'+c[0]+'</span> '});
+  h+='<span class="chip"><i class="dot Joker"></i>Joker</span></p></div><p>Le <b>Joker</b> prend la couleur utile. Il porte des tile upgrades comme n’importe quelle graine, sauf celles qui exigent une vraie couleur ou recolorent la graine (Tinted, Chameleon, Dominant, Heritage). En Orchard, deux couleurs seulement existent.</p>';
+  h+='<h2>Récolte (harvest)</h2><ul><li>Une ligne ou une colonne pleine est <b>récoltée</b> : ses tuiles disparaissent.</li><li>Valeur : <b>'+S.LineClearBonusPerCell+' points par case</b> pour une ligne, 6 par case si deux lignes d’un coup, 9 si trois : plusieurs lignes valent de plus en plus.</li><li>Vider toute la grille <b>double</b> le score de la pose.</li></ul>';
+  h+='<h2>Plots spéciaux et afflictions</h2>'+table(['Plot','Effet','Origine'],[['Doré (golden)','+'+S.GoldenCellBonus+' points fixes quand il est dans le groupe marqué','tile upgrades, météo (Golden Hour)'],['Zone de multiplicateur','double le score','tile upgrades'],['Teinté (tinted)','double si la couleur correspond','tile upgrade Tinted'],['Verrouillé (locked)','impossible à jouer ; une ligne qui le contient ne se complète pas','Bramble, Deadroot, boss'],['Gelé (frozen)','bloque le plot jusqu’à ce que la glace casse','Hoarfrost, Frost, Blizzard'],['Empoisonné (blighted)','les points marqués sur ce plot sont annulés','Poisoner, Plague, Blightmoth']]);
+  h+=callout('Protection','<p>Warden Sprout libère et protège les 4 plots autour de lui, <b>tant que sa tuile est sur la grille</b> : détruite, les plots voisins ne sont plus protégés. Aegis Sprout protège son propre plot pour la manche. Anchor Sprout empêche les ennemis et la météo de recolorer, échanger, déplacer ou brûler sa tuile.</p>','tip');
+  return h;
+};
+
+P.score=function(){
+  var h='<div class="crumb">Découvrir</div><h1>Score et dégâts</h1><p class="lead">Chaque pose produit des points multipliés par un Mult. Ce total est ensuite infligé comme dégâts.</p>';
+  h+='<h2>Points × Mult</h2><ul><li><b>Groupes de même couleur</b> : chaque case du groupe connecté rapporte '+S.GroupBonusPerCell+' point par rang (la n-ième case compte n), donc un grand groupe se renforce lui-même.</li><li><b>Lignes récoltées</b>, <b>plots dorés</b> et <b>tile upgrades</b> ajoutent des points.</li><li><b>Fertilizers</b> : ils ajoutent surtout du <b>Mult</b>, en additif (+2) ou en multiplicatif (×2, ×3). Un effet exprimé en points se convertit en Mult à raison de <b>'+S.PointsPerMult+' points pour 1 Mult</b>.</li><li><b>Le Mult n’est jamais arrondi</b> : un fertilizer à +30 % sur +2 donne +2,6. Les petits nombres de la popup gardent leurs décimales.</li></ul>';
+  h+='<div class="callout info"><b class="t">Formule</b><code>score de la pose = points × (1 + Mult additif) × Mult multiplicatifs</code><p style="margin:6px 0 0">Après chaque pose, une petite popup récapitule l’origine du Mult (par exemple « Mason +2.6 · Dew x2 »).</p></div>';
+  h+='<h2>Dégâts</h2><ul><li>Le score de la pose est infligé comme dégâts à l’<b>ennemi de devant</b> (le Basic qui ouvre chaque roster encaisse d’abord).</li><li>Les surplus passent au suivant selon les effets des ennemis.</li><li>Certains ennemis soignent, volent ou s’opposent au score (voir <a href="#ennemis">Ennemis</a>).</li></ul>';
+  h+='<h2>Mastery</h2><p>Chaque <b>forme</b> et chaque <b>couleur</b> a un niveau qui renforce les graines correspondantes (+1 par niveau et par tuile). Les upgrades et packs de Mastery les font monter.</p>';
+  h+='<h2>Maturation des fertilizers</h2><p>Un fertilizer qui a marqué pendant une manche gagnée gagne un cran :</p>'+table(['Stade','Cran','Effet'],[['Bourgeon','0 à 1','effet de base'],['Fleur','2','+0,25 d’effet'],['Fruit','3','+0,5 d’effet']])+'<p>Un <b>Fruit</b> est récolté à la fin de la manche : <b>+8 Pollen</b>, retour au Bourgeon, et <b>+0,10 d’effet définitif</b> par récolte, sans plafond. Une bande de croissance sous le sac le montre.</p>';
+  h+='<h2>Pollen gagné en jouant</h2><ul><li>'+E.LueurPerColorGroup+' Pollen par groupe de couleur.</li><li>Les lignes récoltées, les graines inutilisées en fin de manche, certaines météos, et la fin de manche en Autumn.</li><li>Plus aucun fertilizer ne produit de Pollen en continu : ceux qui le faisaient ont été retirés.</li></ul>';
+  return h;
+};
+
+P.boutique=function(){
+  var h='<div class="crumb">Découvrir</div><h1>Boutique et économie</h1><p class="lead">Entre deux manches, on dépense son Pollen sur deux étagères.</p>';
+  h+=info('Chiffres clés',[['Fertilizers actifs',E.MaxActiveModifiers],['Blister',E.ShopBlisterSlotCount+' emplacements'],['Workshop',E.ShopUpgradeSlotCount+' emplacements'],['Reroll de base',E.ShopRerollBasePrice+' Pollen'],['Renchérissement',Math.round(E.ShopPriceEscalationPerPurchase*100)+' % / achat']]);
+  h+='<h2>Les deux étagères</h2><ul><li><b>Blister</b> ('+E.ShopBlisterSlotCount+' emplacements) : fertilizers et tile upgrades à l’achat direct. Seul le Blister se re-tire contre du Pollen (<b>Reroll</b>).</li><li><b>Workshop</b> ('+E.ShopUpgradeSlotCount+' emplacements) : deux packs ou services tirés parmi cinq (Seed, Sprout, Fertilizer, Mastery, Transplant), plus le Compost et la Forge.</li></ul>';
+  h+='<p>Chaque achat de la visite renchérit les autres de <b>50 %</b>. Les objets du Workshop restent achetables mais plus chers à chaque fois. Abandonner un achat en cours (<b>Skip</b>) fait perdre le Pollen dépensé.</p>';
+  var price={SeedPack:E.SeedPackPrice,SproutPack:E.SproutPackPrice,FertilizerPack:E.FertilizerPackPrice,MasteryPack:E.MasteryPackPrice,Transplant:E.TransplantPrice,WildPack:E.WildPackPrice,Compost:E.CompostBasePrice,Forge:E.ForgePrice};
+  h+='<h2>Packs et services</h2>'+table(['Nom','Prix','Effet'],D.packs.map(function(p){return [pic(['misc|x:'+p.id,'spr|'+p.id],34)+' '+esc(p.name),price[p.id]!=null?price[p.id]:'?',esc(p.desc)]}),[1]);
+  h+='<ul><li><b>Wild Pack</b> (rare : '+E.WildPackChancePercent+' % des visites, jamais deux) : 3 Wild Seeds, chacune avec son trait de combat, on en garde 1. Prix '+E.WildPackPrice+'.</li><li><b>Seed Pack</b> : chaque graine a '+E.SeedPackWildSeedChancePercent+' % de chances d’être une Wild Seed (un Joker de forme aléatoire avec une tile upgrade ordinaire).</li><li><b>Compost</b> : retire une graine du sac pour l’alléger. Prix de départ '+E.CompostBasePrice+', +'+E.CompostPriceIncreasePerUse+' par usage dans la visite, remis à zéro à chaque manche.</li><li><b>Forge</b> : '+E.ForgeChoiceCount+' tile upgrades au choix, puis '+E.ForgeChoiceCount+' graines à enchanter parmi '+E.ForgeSeedCandidateCount+'. Prix '+E.ForgePrice+'.</li><li><b>Transplant</b> : déplace une tile upgrade d’une graine vers une autre. Proposé seulement si une graine porte une upgrade déplaçable.</li></ul>';
+  h+='<h2>Fertilizers : prix et raretés</h2><p>La rareté suit le prix de base : Common jusqu’à 5 Pollen, Uncommon 6 à 7, Rare 8 à 9, Legendary au-delà. On en tient <b>'+E.MaxActiveModifiers+' au plus</b> à la fois, on peut les vendre et les réordonner.</p>';
+  var cnt={};D.fert.forEach(function(f){cnt[f.rar]=(cnt[f.rar]||0)+1});
+  h+='<p>'+['Common','Uncommon','Rare','Legendary'].map(function(r){return chip(r+' · '+(cnt[r]||0),RAR_CLASS[r])}).join(' ')+'</p>';
+  h+=callout('Déblocages','<p>La boutique ne montre que ce qui est débloqué : 25 sprouts et 30 fertilizers au départ. Voir <a href="#progression">Progression</a>.</p>','info');
+  return h;
+};
+
+/* ---- Real art from the game, packed in atlases (img/*.webp) ---- */
+var ATL=D.atlas, ATL_FILE={fert:'img/fert.webp',spr:'img/spr.webp',misc:'img/misc.webp'};
+function pic(keys,px,fallback){
+  for(var i=0;i<keys.length;i++){
+    var k=keys[i].split('|'),a=ATL[k[0]],p=a&&a.idx[k[1]];
+    if(p)return '<span class="pic" aria-hidden="true" style="width:'+px+'px;height:'+px+'px;background-image:url('+ATL_FILE[k[0]]+');background-size:'+(a.cols*px)+'px '+(a.rows*px)+'px;background-position:'+(-p[0]*px)+'px '+(-p[1]*px)+'px"></span>';
+  }
+  return fallback||'';
+}
+var CAT_HEX={'Couleurs':'#f0b38d','Voisinage':'#65aed6','Connexions':'#a4ebcc','Destruction':'#b56d7f','Formes':'#614363','Weather':'#59cce0','Enemies':'#e36b5c','Tempo':'#edc759','Upgrades':'#8ccc66','Seed Bag':'#b88f61','Wild':'#e68ccc','Flat':'#b3b8c7','Synergy':'#9e73c7'};
+function onColor(hex){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return (0.299*r+0.587*g+0.114*b)>140?'#2a2420':'#fff7e8'}
+function catChip(c){var h=CAT_HEX[c];return h?'<span class="chip" style="background:'+h+';color:'+onColor(h)+'">'+esc(c)+'</span>':chip(c)}
+function rarChip(r){return '<span class="chip r-'+r+'">'+esc(r)+'</span>'}
+/* ---- Icons, lists, item pages ---- */
+var ICON_CAT={Couleurs:'poppy',Voisinage:'iris',Connexions:'fern',Formes:'sun',Destruction:'poppy',Tempo:'iris',Upgrades:'sun',Weather:'iris','Seed Bag':'fern',Flat:'sun',Enemies:'poppy',Wild:'fern',Synergy:'iris'};
+function ico(name,cat,rar,size){
+  var ini=String(name).replace(/[^A-Za-z0-9 +]/g,'').split(/\s+/).filter(Boolean).map(function(w){return w[0]}).join('').slice(0,2).toUpperCase();
+  return '<span class="ico '+(ICON_CAT[cat]||'sun')+' r-'+(rar||'Common')+(size?' '+size:'')+'" aria-hidden="true">'+esc(ini)+'</span>';
+}
+var RAR_ORDER={Common:0,Uncommon:1,Rare:2,Legendary:3};
+var state={fert:{q:'',cat:'',rar:'',key:'name',dir:1,view:'cards'},sprouts:{q:'',rar:'',lock:'',key:'name',dir:1,view:'cards'},manches:{ch:0}};
+function sortBy(list,s){
+  var k=s.key,d=s.dir;
+  list.sort(function(a,b){
+    var x,y;
+    if(k==='price'){x=a.price;y=b.price}else if(k==='rar'){x=RAR_ORDER[a.rar];y=RAR_ORDER[b.rar]}else if(k==='cat'){x=a.cat;y=b.cat}else if(k==='lock'){x=a.unlock?1:0;y=b.unlock?1:0}else{x=a.name;y=b.name}
+    var c=(typeof x==='string')?x.localeCompare(y):x-y;
+    return (c||a.name.localeCompare(b.name))*d;
+  });
+}
+function th(label,key,s,num){return '<th'+(num?' class="n"':'')+'><button type="button" data-key="'+key+'"'+(s.key===key?' data-dir="'+s.dir+'"':'')+'>'+label+'</button></th>'}
+function listHtml(kind){
+  var s=state[kind],isF=kind==='fert',q=s.q.toLowerCase(),src=isF?D.fert:D.sprouts;
+  var list=src.filter(function(f){
+    if(isF&&s.cat&&f.cat!==s.cat)return false;
+    if(s.rar&&f.rar!==s.rar)return false;
+    if(!isF&&s.lock&&(s.lock==='start'?!!f.unlock:!f.unlock))return false;
+    return !q||(f.name+' '+f.desc+' '+(f.unlock||'')+' '+(isF?f.id:'')).toLowerCase().indexOf(q)>=0;
+  });
+  sortBy(list,s);
+  var page=isF?'fertilizers':'sprouts',h='<p class="count">'+list.length+' sur '+src.length+'</p>';
+  if(s.view==='table'){
+    h+='<div class="tablewrap"><table><thead><tr>'+th('Nom','name',s)+(isF?th('Catégorie','cat',s)+th('Rareté','rar',s)+th('Prix','price',s,true):th('Rareté','rar',s))+'<th>Effet</th>'+th('Déblocage','lock',s)+'</tr></thead><tbody>';
+    list.forEach(function(f){
+      h+='<tr><td><a class="nm" href="#'+page+'-'+f.id+'">'+ico(f.name,isF?f.cat:'',f.rar,'sm')+esc(f.name)+'</a></td>'+(isF?'<td>'+catChip(f.cat)+'</td><td>'+rarChip(f.rar)+'</td><td class="n">'+f.price+'</td>':'<td>'+rarChip(f.rar)+'</td>')+'<td>'+esc(f.desc)+'</td><td>'+(f.unlock?esc(f.unlock):'<i>départ</i>')+'</td></tr>';
+    });
+    return h+'</tbody></table></div>';
+  }
+  h+='<div class="cards">';
+  list.forEach(function(f){
+    h+='<article class="card"><div class="head">'+pic([(isF?'fert':'spr')+'|'+f.id],56,ico(f.name,isF?f.cat:'',f.rar))+'<h3><a href="#'+page+'-'+f.id+'">'+esc(f.name)+'</a>'+(isF?'<span class="chip sun">'+f.price+' Pollen</span>':'')+'</h3></div><div class="meta">'+(isF?catChip(f.cat):'')+rarChip(f.rar)+'</div><p>'+esc(f.desc)+'</p><div class="unl">'+(f.unlock?'Déblocage : '+esc(f.unlock):'Disponible dès le départ')+'</div></article>';
+  });
+  return h+'</div>';
+}
+function listTools(kind){
+  var s=state[kind],isF=kind==='fert';
+  var h='<div class="tools"><input type="search" id="lq" placeholder="Filtrer par nom ou texte" aria-label="Filtrer" value="'+esc(s.q)+'"><select id="lrar" aria-label="Rareté"><option value="">Toutes raretés</option>'+(isF?['Common','Uncommon','Rare','Legendary']:['Common','Uncommon','Rare']).map(function(r){return '<option'+(s.rar===r?' selected':'')+'>'+r+'</option>'}).join('')+'</select>';
+  if(!isF)h+='<select id="llock" aria-label="Déblocage"><option value="">Tous</option><option value="start"'+(s.lock==='start'?' selected':'')+'>Dès le départ</option><option value="locked"'+(s.lock==='locked'?' selected':'')+'>À débloquer</option></select>';
+  h+='<span class="view" role="group" aria-label="Affichage"><button type="button" data-view="cards" aria-pressed="'+(s.view==='cards')+'">Cartes</button><button type="button" data-view="table" aria-pressed="'+(s.view==='table')+'">Tableau</button></span></div>';
+  if(isF){
+    var cats={};D.fert.forEach(function(f){cats[f.cat]=(cats[f.cat]||0)+1});
+    h+='<div class="fchips" role="group" aria-label="Catégorie"><button type="button" data-cat="" aria-pressed="'+(!s.cat)+'">Toutes</button>'+Object.keys(cats).sort().map(function(c){return '<button type="button" data-cat="'+esc(c)+'" aria-pressed="'+(s.cat===c)+'" title="'+esc(CAT_NOTE[c]||'')+'">'+esc(c)+' · '+cats[c]+'</button>'}).join('')+'</div>';
+  }
+  return h+'<div id="llist">'+listHtml(kind)+'</div>';
+}
+function listAfter(kind){
+  var s=state[kind];
+  function upd(){document.getElementById('llist').innerHTML=listHtml(kind)}
+  document.getElementById('lq').oninput=function(e){s.q=e.target.value;upd()};
+  document.getElementById('lrar').onchange=function(e){s.rar=e.target.value;upd()};
+  var ll=document.getElementById('llock');if(ll)ll.onchange=function(e){s.lock=e.target.value;upd()};
+  Array.prototype.forEach.call(document.querySelectorAll('.view button'),function(b){b.onclick=function(){s.view=b.getAttribute('data-view');Array.prototype.forEach.call(document.querySelectorAll('.view button'),function(x){x.setAttribute('aria-pressed',String(x===b))});upd()}});
+  Array.prototype.forEach.call(document.querySelectorAll('.fchips button'),function(b){b.onclick=function(){s.cat=b.getAttribute('data-cat');Array.prototype.forEach.call(document.querySelectorAll('.fchips button'),function(x){x.setAttribute('aria-pressed',String(x===b))});upd()}});
+  document.getElementById('llist').onclick=function(e){var b=e.target.closest('th button');if(!b)return;var k=b.getAttribute('data-key');if(s.key===k)s.dir=-s.dir;else{s.key=k;s.dir=1}upd()};
+}
+P.fertilizers=function(){
+  return '<div class="crumb"><a href="#accueil">Wiki</a> › Contenu</div><h1>Fertilizers</h1><p class="lead">Les modificateurs de la run. On en tient 4 au plus. Ils ajoutent surtout du Mult et grandissent par la Maturation. Clique un nom pour sa fiche.</p>'+listTools('fert');
+};
+P.fertilizers.after=function(){listAfter('fert')};
+P.sprouts=function(){
+  return '<div class="crumb"><a href="#accueil">Wiki</a> › Contenu</div><h1>Tile upgrades (sprouts)</h1><p class="lead">Une tuile d’une graine peut porter une amélioration : bonus de points, de Mult, de Pollen, effets de voisinage, de ligne ou de combat. Une graine peut en porter une par tuile.</p><p>Elles s’obtiennent au Blister, au Sprout Pack, à la Forge, au Seed Pack et au Wild Pack. Transplant les déplace. Une tuile améliorée qui fait partie du groupe marqué est recomptée à chaque pose.</p>'+listTools('sprouts');
+};
+P.sprouts.after=function(){listAfter('sprouts')};
+
+/* Item pages (fiche): infobox, big description, see also, previous/next */
+function findBy(list,id){for(var i=0;i<list.length;i++)if(list[i].id===id)return i;return -1}
+function pager(list,i,page){
+  var p=list[(i-1+list.length)%list.length],n=list[(i+1)%list.length];
+  return '<div class="pager"><a href="#'+page+'-'+p.id+'">← '+esc(p.name)+'</a><a href="#'+page+'">Toute la liste</a><a href="#'+page+'-'+n.id+'">'+esc(n.name)+' →</a></div>';
+}
+function seeAlso(items,page){
+  return '<div class="see">'+items.map(function(f){return '<a href="#'+page+'-'+f.id+'">'+pic([(page==='fertilizers'?'fert':'spr')+'|'+f.id],36,ico(f.name,f.cat||'',f.rar,'sm'))+esc(f.name)+'</a>'}).join('')+'</div>';
+}
+function itemFert(f){
+  var i=findBy(D.fert,f.id);
+  var same=D.fert.filter(function(x){return x.cat===f.cat&&x.id!==f.id}).slice(0,14);
+  var h='<div class="crumb"><a href="#accueil">Wiki</a> › <a href="#fertilizers">Fertilizers</a> › '+esc(f.cat)+'</div><h1 style="display:flex;gap:14px;align-items:center">'+pic(['fert|'+f.id],84,ico(f.name,f.cat,f.rar,'big'))+esc(f.name)+'</h1>';
+  h+=info('Fiche',[['Catégorie',catChip(f.cat)],['Rareté',rarChip(f.rar)],['Prix de base',f.price+' Pollen'],['Id de code','<code>'+esc(f.id)+'</code>'],['Déblocage',f.unlock?esc(f.unlock):'dès le départ']]);
+  h+='<p class="desc-big">'+esc(f.desc)+'</p>';
+  h+='<p>Un fertilizer se tient avec trois autres au plus. S’il marque pendant une manche gagnée, il mûrit (Bourgeon, Fleur, Fruit) : voir <a href="#score">Score et dégâts</a>. <b>'+esc(f.cat)+'</b> : '+esc(CAT_NOTE[f.cat]||'')+'.</p>';
+  if(f.unlock)h+=callout('Comment le débloquer','<p>'+esc(f.unlock)+'.</p>','info');
+  h+='<h2>Même catégorie</h2>'+seeAlso(same,'fertilizers');
+  return h+pager(D.fert.slice().sort(function(a,b){return a.name.localeCompare(b.name)}),D.fert.slice().sort(function(a,b){return a.name.localeCompare(b.name)}).findIndex(function(x){return x.id===f.id}),'fertilizers');
+}
+function itemSprout(f){
+  var sorted=D.sprouts.slice().sort(function(a,b){return a.name.localeCompare(b.name)});
+  var same=D.sprouts.filter(function(x){return x.rar===f.rar&&x.id!==f.id}).slice(0,14);
+  var h='<div class="crumb"><a href="#accueil">Wiki</a> › <a href="#sprouts">Tile upgrades</a> › '+esc(f.rar)+'</div><h1 style="display:flex;gap:14px;align-items:center">'+pic(['spr|'+f.id],84,ico(f.name,'',f.rar,'big'))+esc(f.name)+'</h1>';
+  h+=info('Fiche',[['Rareté',rarChip(f.rar)],['Id de code','<code>'+esc(f.id)+'</code>'],['Déblocage',f.unlock?esc(f.unlock):'dès le départ']]);
+  h+='<p class="desc-big">'+esc(f.desc)+'</p><p>Une tile upgrade s’applique à une tuile d’une graine, et agit à chaque pose où cette tuile est dans le groupe marqué. On l’obtient au Blister, au Sprout Pack, à la Forge ou dans un Seed Pack.</p>';
+  if(f.unlock)h+=callout('Comment la débloquer','<p>'+esc(f.unlock)+'.</p>','info');
+  h+='<h2>Même rareté</h2>'+seeAlso(same,'sprouts');
+  return h+pager(sorted,sorted.findIndex(function(x){return x.id===f.id}),'sprouts');
+}
+function itemEnemy(e){
+  var h='<div class="crumb"><a href="#accueil">Wiki</a> › <a href="#ennemis">Ennemis</a> › '+esc(e.role)+'</div><h1 style="display:flex;gap:14px;align-items:center">'+pic(['misc|e:'+e.id],84,ico(e.name,'Enemies',e.role==='Boss'?'Legendary':'Common','big'))+esc(e.name)+'</h1>';
+  var where=[];
+  D.challenges.forEach(function(c){var rs=c.table.filter(function(r){return r.enemies.indexOf(e.id)>=0}).map(function(r){return r.round});if(rs.length)where.push([c.name,rs.join(', ')])});
+  var resident=D.challenges.filter(function(c){return c.world===e.id}).map(function(c){return c.name});
+  h+=info('Fiche',[['Rôle',esc(e.role)],['PV de base',e.hp],['Id de code','<code>'+esc(e.id)+'</code>']].concat(resident.length?[['Ennemi résident de',esc(resident.join(', '))]]:[]));
+  h+='<p class="desc-big">'+esc(e.desc).replace(/\n/g,'<br>')+'</p><p><i>'+esc(e.lore)+'</i></p>';
+  h+='<h2>Où le rencontre-t-on ?</h2>';
+  h+=where.length?table(['Challenge','Manches'],where.map(function(w){return [esc(w[0]),esc(w[1])]})):'<p>Cet ennemi n’apparaît dans aucun roster de challenge (il peut venir d’un remplacement ou d’une liste de boss).</p>';
+  var all=D.enemies;var i=findBy(all,e.id);
+  return h+pager(all,i,'ennemis');
+}
+P.ennemis=function(){
+  var h='<div class="crumb"><a href="#accueil">Wiki</a> › Contenu</div><h1>Ennemis</h1><p class="lead">Seize nuisibles. Chacun a un rôle (Baseline, Creator, Reactor, Boss) et un effet sur le plateau, la main ou le score.</p>';
+  h+='<h2>Règles générales</h2><ul><li>Un roster compte jusqu’à <b>'+S.MaxEnemiesPerRound+'</b> ennemis. Chaque roster s’ouvre par un <b>Withered Stalk</b> (Basic), qui encaisse d’abord les dégâts.</li><li>Les ennemis agissent à chaque <b>Shuffle</b>, manuel ou refill automatique. Bramble agit aussi toutes les '+S.EnemyTickInterval+' graines posées.</li><li>PV : ceux du catalogue jusqu’à la manche 8, puis ×'+S.EnemyHpGrowthPerRound+' par manche. Chaque challenge a son propre multiplicateur de PV (voir <a href="#challenges">Challenges</a>), et la manche 1 est à ×'+S.EarlyRoundHpFactors[0]+'.</li><li>Chaque challenge hors Spring a un <b>ennemi résident</b> qui rejoint le roster une manche sur '+S.WorldEnemyRoundInterval+' (manches 3, 6, 9, 12).</li></ul>';
+  h+='<h2>Le bestiaire</h2><div class="cards">';
+  D.enemies.forEach(function(e){h+='<article class="card"><div class="head">'+pic(['misc|e:'+e.id],56,ico(e.name,'Enemies',e.role==='Boss'?'Legendary':'Common'))+'<h3><a href="#ennemis-'+e.id+'">'+esc(e.name)+'</a><span class="chip">'+e.hp+' PV</span></h3></div><div class="meta">'+chip(e.role,e.role==='Boss'?'poppy':'')+'</div><p>'+esc(e.desc).replace(/\n/g,'<br>')+'</p><div class="unl"><i>'+esc(e.lore)+'</i></div></article>'});
+  return h+'</div>';
+};
+P.upgrades=function(){
+  var h='<div class="crumb">Contenu</div><h1>Autres upgrades et packs</h1><p class="lead">Ce qui n’est ni un fertilizer ni une tile upgrade : transformer le sac, monter une Mastery, obtenir un fertilizer.</p>';
+  var pools={Bank:'Sac de graines',Mastery:'Mastery',Modifier:'Fertilizers'};
+  Object.keys(pools).forEach(function(k){
+    h+='<h2>'+pools[k]+'</h2><div class="cards">';
+    D.other.filter(function(u){return u.pool===k}).forEach(function(u){h+='<article class="card"><div class="head">'+pic(['spr|'+u.id,'misc|x:'+u.id],48)+'<h3><span>'+esc(u.name)+'</span></h3></div><div class="meta">'+rarChip(u.rar)+'</div><p>'+esc(u.desc)+'</p></article>'});
+    h+='</div>';
+  });
+  h+='<h2>Packs et services du Workshop</h2><div class="cards">'+D.packs.map(function(p){return '<article class="card"><div class="head">'+pic(['misc|x:'+p.id,'spr|'+p.id],48)+'<h3><span>'+esc(p.name)+'</span></h3></div><p>'+esc(p.desc)+'</p></article>'}).join('')+'</div>';
+  h+='<p>Les prix et la mécanique des packs sont dans <a href="#boutique">Boutique et économie</a>.</p>';
+  return h;
+};
+
+P.meteo=function(){
+  var h='<div class="crumb">Contenu</div><h1>Météo</h1><p class="lead">Dix météos de base et treize variantes thématiques qui jouent comme une base. Une météo est tirée pour chaque manche.</p>';
+  h+='<ul><li>La manche 1 est toujours dégagée (Clear skies). Jamais deux fois la même météo d’affilée.</li><li>Pluie et Soleil visent une <b>couleur de graine</b> tirée au hasard pour la manche.</li><li>Poids de tirage : commun 3, peu commun 2, rare 1. Summer relève le poids des météos dures et applique ses effets ×1,5.</li><li>Un fertilizer comme <i>Weatherproof</i> annule Frost, Heatwave et Hurricane.</li></ul>';
+  var base=D.weather.filter(function(w){return w.id===w.mech}),vars=D.weather.filter(function(w){return w.id!==w.mech});
+  function rows(l){return l.map(function(w){return [pic(['misc|w:'+w.id],34)+' '+esc(w.name)+(w.harsh?' <span class="chip poppy">dure</span>':''),esc(w.rar),w.weight,esc(w.desc)+(w.color?' <i>(couleur tirée)</i>':'')]})}
+  h+='<h2>Météos de base</h2>'+table(['Météo','Rareté','Poids','Effet'],rows(base),[2]);
+  h+='<h2>Variantes thématiques</h2><p>Elles reprennent l’effet d’une base, avec un autre nom et un autre décor (neige, lampes de serre, chat…).</p>'+table(['Variante','Joue comme','Effet'],vars.map(function(w){return [pic(['misc|w:'+w.id],34)+' '+esc(w.name),esc(w.mech),esc(w.desc)]}));
+  h+='<h2>Valeurs</h2><ul><li>Rain : +'+S.RainPollenPerSeed+' Pollen par graine de la couleur. Sunshine : +'+S.SunshinePointsPerCell+' points par case de la couleur. Dew : +'+S.DewPollenPerLine+' Pollen par ligne.</li><li>Golden Hour : '+S.GoldenHourPlots+' plots dorés. Pollen Shower : +'+S.PollenShowerPollen+' Pollen.</li><li>Frost : '+S.FrostFrozenPlots+' plots gelés. Hurricane : toutes les '+S.HurricaneInterval+' graines, la tempête déplace '+S.HurricaneTilesMoved+' tuiles.</li></ul>';
+  return h;
+};
+P.evenements=function(){
+  var h='<div class="crumb">Contenu</div><h1>Événements</h1><p class="lead">« Quelque chose se produit ». Toutes les '+R.EventRoundInterval+' manches, une carte propose trois choix. C’est gratuit, mais le hasard peut coûter un peu.</p>';
+  h+='<p>Le tirage de chaque choix est pondéré ; les pourcentages ci-dessous sont les chances de chaque issue. Un choix qui coûte du Pollen est grisé si on n’en a pas assez. « Next round » s’applique à la manche suivante.</p>';
+  D.events.forEach(function(ev){
+    h+='<div class="ev" id="ev-'+ev.id+'"><h2>'+esc(ev.title)+'</h2><p class="story">'+esc(ev.story)+'</p>';
+    ev.options.forEach(function(o){
+      var tot=o.outcomes.reduce(function(a,x){return a+x.w},0);
+      h+='<div class="opt"><b>'+esc(o.label)+'</b>'+(o.req?' <span class="chip sun">'+o.req+' Pollen</span>':'');
+      o.outcomes.forEach(function(oc){h+='<span class="o">'+Math.round(100*oc.w/tot)+' % : '+(oc.fx.length?esc(oc.fx.join(', ')):'rien ne se passe')+'</span>'});
+      h+='</div>';
+    });
+    h+='</div>';
+  });
+  return h;
+};
+
+P.manches=function(){
+  var c=D.challenges[state.manches.ch];
+  var h='<div class="crumb">Parties</div><h1>Manches et rosters</h1><p class="lead">Le budget de graines et les ennemis de chaque manche, pour chaque challenge. Les PV exacts dépendent du challenge, de la manche et du multiplicateur de PV.</p>';
+  h+='<div class="tabs" role="group" aria-label="Challenge">'+D.challenges.map(function(x,i){return '<button type="button" data-ch="'+i+'" aria-pressed="'+(i===state.manches.ch)+'">'+esc(x.name)+'</button>'}).join('')+'</div>';
+  h+='<div id="mtable">'+tableManches(c)+'</div>';
+  h+=callout('À savoir','<p>La manche 1 est raccourcie ('+R.FirstRoundBudget+' graines, ennemi à ×'+S.EarlyRoundHpFactors[0]+' de ses PV). Les manches 2 et 4 (Bramble) ont reçu des graines en plus : voir <a href="#equilibrage">Équilibrage</a>. Les rosters ci-dessous sont ceux de la <i>courbe</i> ; en run, l’ordre est tiré au hasard parmi des rosters de difficulté voisine.</p>','info');
+  return h;
+};
+function tableManches(c){
+  return table(['Manche','Graines','Ennemis'],c.table.map(function(r){return [r.round+(r.round%4===0?' <span class="chip poppy">boss</span>':''),r.budget,r.enemies.map(enemyLink).join(', ')]}),[0,1]);
+}
+P.manches.after=function(){
+  Array.prototype.forEach.call(document.querySelectorAll('.tabs button'),function(b){b.onclick=function(){var i=+b.getAttribute('data-ch');state.manches.ch=i;Array.prototype.forEach.call(document.querySelectorAll('.tabs button'),function(x){x.setAttribute('aria-pressed',String(x===b))});document.getElementById('mtable').innerHTML=tableManches(D.challenges[i])}});
+};
+
+P.challenges=function(){
+  var h='<div class="crumb">Parties</div><h1>Challenges et difficulté</h1><p class="lead">Six saisons. Chacune change une règle du jardin, a son ennemi résident et ses propres ennemis.</p>';
+  h+='<div class="cards" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))">';
+  D.challenges.forEach(function(c){
+    var swaps=c.swaps.length?c.swaps.map(function(s){return enemyName(s.From)+' → '+enemyName(s.To)}).join(' ; '):'aucun';
+    h+='<article class="card" id="c-'+c.name+'"><div class="banner" style="background-image:url(img/bg_'+c.name+'.webp)">'+pic(['misc|c:'+c.name],56)+'</div><h3 style="margin-top:22px"><span>'+esc(c.name)+'</span><span class="chip">'+c.rounds+' manches</span></h3><p>'+esc(c.desc)+'</p>'+table(['Réglage','Valeur'],[
+      ['Grille',c.grid+' × '+c.grid],['Couleurs',c.colors],['Ennemi résident',c.world?enemyLink(c.world):'aucun'],['PV des ennemis','×'+c.hp],['Graines en plus par manche','+'+c.bonus],['Intensité météo','×'+c.wint],c.life?['Fertilizers flétrissent après',c.life+' manches']:null,c.pollen?['Pollen de fin de manche','+'+c.pollen]:null,['Remplacements d’ennemis',esc(swaps)]
+    ].filter(Boolean),[])+'<div class="unl">'+(c.unlock?'Déblocage : '+esc(c.unlock):'Ouvert dès le départ')+'</div></article>';
+  });
+  h+='</div>';
+  h+='<h2>Niveaux de difficulté</h2><p>Gagner un challenge au niveau N ouvre le niveau N+1, jusqu’à 5. Les niveaux sont cumulatifs.</p>'+table(['Niveau','Règle ajoutée'],[['1','Normal.'],['2','Les ennemis ont 15 % de PV en plus.'],['3','Un Shuffle de moins par run.'],['4','Les ennemis ont encore 15 % de PV en plus, et une graine de moins par manche.'],['5','Les fertilizers coûtent 1 Pollen de plus.']],[0]);
+  h+='<h2>Pledges</h2><p>Une fois Spring gagné au moins une fois, des défis facultatifs se cochent avant la run. Chacun est vérifié à la victoire. Le Core actuel ne leur attache pas de récompense chiffrée.</p>'+table(['Pledge','Règle'],D.pledges.map(function(p){return [esc(p.name),esc(p.desc)]}));
+  h+='<h2>Endless</h2><p>Après la manche 12, « Keep Growing » enchaîne sur la boutique puis les manches suivantes. Les rosters de l’Acte 2 tournent en boucle, avec ×'+S.EnemyHpGrowthPerRoundEndless+' de PV supplémentaires par manche. La victoire n’est comptée qu’une fois.</p>';
+  return h;
+};
+
+P.progression=function(){
+  var cnt=D.unlockCounts;
+  var h='<div class="crumb">Parties</div><h1>Progression et déblocages</h1><p class="lead">Un objet se débloque en jouant d’une certaine façon, comme dans Balatro. Pas de hasard, pas de monnaie.</p>';
+  h+='<div class="stats"><div class="stat"><b>'+cnt.Sprout+'</b><span>tile upgrades à débloquer</span></div><div class="stat"><b>'+cnt.Fertilizer+'</b><span>fertilizers à débloquer</span></div><div class="stat"><b>'+cnt.Challenge+'</b><span>challenges à débloquer</span></div></div>';
+  h+='<h2>Principes</h2><ul><li><b>Départ restreint</b> : 25 tile upgrades et 30 fertilizers sont disponibles dès la première partie. Le reste est caché de la boutique, des packs, de la Forge et du Compost.</li><li><b>Une condition par objet</b>, affichée en texte dans la Collection et sur la fiche de l’objet (voir <a href="#fertilizers">Fertilizers</a> et <a href="#sprouts">Tile upgrades</a>).</li><li><b>Au plus 8 déblocages par run</b> : le surplus attend dans une file et arrive au début des runs suivants.</li><li><b>Les seuils sont calibrés par simulation</b>. Avec le planner : environ 8 déblocages après la première run, 40 après 5, 80 après 10, 120 après 25 et 150 après 50. Un joueur humain ira plus lentement.</li><li>La fin de run annonce les nouveautés débloquées, et le menu principal affiche les prochains objectifs.</li></ul>';
+  h+='<h2>Challenges</h2>'+table(['Challenge','Condition'],D.challenges.map(function(c){return [esc(c.name),c.unlock?esc(c.unlock):'Ouvert dès le départ']}));
+  h+='<h2>Les conditions les plus fréquentes</h2><p>Elles reposent sur ce que le Core sait mesurer : un score en une pose, une taille de groupe, des lignes en une manche, des objets tenus à la fois, des manches gagnées sous une météo donnée, des ennemis vaincus au total, etc. Cherche une condition précise avec la barre de recherche : elle fouille aussi le texte des déblocages.</p>';
+  return h;
+};
+
+P.interface=function(){
+  var h='<div class="crumb">Production</div><h1>Interface et direction artistique</h1><p class="lead">Tout le jeu est dessiné comme un cahier : papier ligné, traits d’encre doublés ou triplés, aplats de crayon de couleur.</p>';
+  h+='<h2>Direction artistique</h2><ul><li><b>Style « notebook / scratch »</b> : contours à l’encre triples, remplissages décalés, hachures. Police manuscrite Patrick Hand.</li><li><b>Flipbook</b> : les ennemis, le logo, Sprig, le bouclier, l’icône de Pollen et le décor alternent trois dessins (0-1-2-1, toutes les 0,14 s) pour donner le tremblé des vieux dessins animés. Le mouvement réduit les fige.</li><li><b>Fertilizers</b> : cartes dont le cadre dit la rareté et le ruban la catégorie. <b>Sprouts</b> : pastilles à glyphe.</li><li><b>Sprig</b>, la mascotte : un pot de fleur en terre cuite avec une pousse, sans bras ni jambes ; il a quatre expressions (neutre, content, triste, en fête).</li><li><b>Transition de page</b> : après le choix d’un challenge et après Continue, une vague de gribouillis et de fleurs recouvre l’écran puis le découvre.</li></ul>';
+  h+='<h2>Écrans</h2><ul><li><b>Menu principal</b> : Play (doré), Continue (vert, avec « Spring - round N » ou « shop after round N »), « New run » et Collection, engrenage des réglages en haut à droite, ligne de progression (meilleur score, runs, prochain objectif). Fond animé.</li><li><b>Jeu</b> : colonne de gauche (score points × Mult, panneau Fertilizers, Seed Bag, Menu), grille au centre, main à droite, bande des ennemis et météo en haut.</li><li><b>Boutique</b> : deux étagères, bulle de Sprig, enseigne.</li><li><b>Collection</b> : fertilizers, upgrades, ennemis, météos et graines découverts, avec une barre de progression.</li><li><b>Fin de manche et de run</b> : résumé de manche ; records de la run (plus grosse pose, Mult maximal, plus gros groupe, lignes récoltées, fertilizer le plus déclenché).</li></ul>';
+  h+='<h2>Tactile d’abord</h2><p>Le jeu est testé sur iPad via des builds itch.io. Donc : un seul doigt, aucune interaction au survol, cibles d’au moins 56 unités, infobulles ouvertes par un appui et refermées par un appui ailleurs.</p>';
+  h+='<h2>Retours et accessibilité</h2><ul><li>Popups de score, animations de récolte, de déracinement, d’effritement et de vol des fertilizers ; sons.</li><li><b>Mouvement réduit</b> désactive toute animation décorative.</li><li>Textes agrandis de 25 %, halo clair sous les textes sur fond sombre.</li><li>Vie au repos : créatures et particules propres à chaque challenge, scintillements, reflet qui traverse le jardin après 8 secondes sans pose.</li></ul>';
+  h+='<h2>Plateformes</h2><p>iPad et tablette (cible principale), navigateur WebGL (écran de chargement redessiné dans le même style), desktop.</p>';
+  return h;
+};
+
+P.equilibrage=function(){
+  var h='<div class="crumb">Production</div><h1>Équilibrage</h1><p class="lead">Les chiffres sont mesurés avec un simulateur qui joue des milliers de parties, pas devinés.</p>';
+  h+='<h2>Victoires du planner (26 nov. 2026)</h2><p>Planner de profondeur 2, 400 parties, graine 1. Le bruit à 100 parties est de ±4 points : on mesure avec 400.</p><div class="bars">';
+  [['Spring',15],['Winter',12.5],['Summer',7],['Autumn',16],['Orchard',8],['Greenhouse',6.75]].forEach(function(r){h+='<div class="bar"><span>'+r[0]+'</span><i><u style="width:'+Math.min(100,r[1]*4)+'%"></u></i><b>'+r[1]+' %</b></div>'});
+  h+='</div><p>Le levier de réglage est <code>LateHpMultiplier</code> (PV des ennemis à partir de la manche 4).</p>';
+  h+='<h2>Spring, manche par manche</h2><p>Part des parties qui atteignent la manche N et la réussissent (planner, 400 parties).</p><div class="bars">';
+  [['Manche 1',100],['Manche 2',74],['Manche 3',90],['Manche 4',64],['Manche 5',84],['Manche 6',83]].forEach(function(r){h+='<div class="bar"><span>'+r[0]+'</span><i><u style="width:'+r[1]+'%"></u></i><b>'+r[1]+' %</b></div>'});
+  h+='</div>';
+  h+=callout('Le mur du Locker','<p>Les manches 2 et 4 (Bramble) coûtaient 31 % des parties chacune. Essais : second verrou toutes les 9 graines au lieu de 6 (aucun effet), Bramble à 450 PV au lieu de 600 (peu d’effet). Le goulot est le <b>nombre de graines</b>, parce que les verrous empêchent les lignes de se compléter. Retenu : +4 graines en manche 2 et +4 en manche 4.</p>','warn');
+  h+='<h2>Décisions de rythme récentes</h2><ul><li><b>Manche 1 raccourcie</b> : '+R.FirstRoundBudget+' graines (au lieu de 30), ennemi à 50 % de ses PV, prime de '+R.FirstRoundPollenBonus+' Pollen. Elle passe d’environ 17 poses à environ 10.</li><li><b>Le Mult n’est jamais arrondi</b> : ni dans le calcul ni dans l’affichage.</li><li><b>Événements</b> toutes les 3 manches : sans effet mesurable sur les victoires (Spring 13,0 %, Winter 11,3 % avec un bot qui répond au hasard).</li><li><b>Pas d’aide au joueur</b> : ni indice, ni tirage favorisé. Décision explicite de l’auteur.</li></ul>';
+  h+='<h2>Où vivent les chiffres</h2>'+table(['Quoi','Fichier'],[['Graines et quotas par manche','<code>Core/Run/RunConfig.cs</code>, <code>ChallengeCatalog.cs</code>'],['Ennemis par manche','<code>Core/Enemies/EncounterCatalog.cs</code>'],['PV, rôle, texte des ennemis','<code>Core/Enemies/EnemyCatalog.cs</code>'],['Constantes de score','<code>Core/Scoring/ScoringConstants.cs</code>'],['Prix et économie','<code>Core/Economy/*</code>'],['Effets des fertilizers','<code>Core/Grid/*</code>, <code>Core/Modifiers/ModifierDefinition.cs</code>']]);
+  h+='<h2>Mesurer avant de toucher</h2><div class="callout info"><code>cd Tools/Headless/RunSim &amp;&amp; PLAN_DEPTH=2 dotnet run -c Release -- --runs 400 --policy planner --seed 1 --challenge Spring</code></div><p>Le bot est plus faible qu’un bon joueur : ses chiffres servent à <b>comparer avant et après</b>, pas à estimer le niveau d’un humain.</p>';
+  return h;
+};
+
+P.outils=function(){
+  var h='<div class="crumb">Production</div><h1>Outils et conventions</h1><p class="lead">Le jeu est en C# sous Unity. Sa logique tourne aussi sans Unity, ce qui permet de la tester et de la simuler.</p>';
+  h+='<h2>Architecture</h2><ul><li><b>Core</b> : logique pure (pas de MonoBehaviour), testée sans Unity. Grille, score, boutique, upgrades, run, ennemis, événements.</li><li><b>Data</b> : défauts visuels (sprites, couleurs) liés aux ids du Core.</li><li><b>Presentation</b> : uGUI construit entièrement à l’exécution, sans prefab ni scène à la main. Seul le CI Unity la compile.</li></ul>';
+  h+='<h2>Commandes</h2>'+table(['But','Commande'],[['Tests du Core (environ 670)','<code>cd Tools/Headless/Tests &amp;&amp; dotnet test</code>'],['Simulateur','<code>cd Tools/Headless/RunSim &amp;&amp; dotnet run -- --check --runs N --policy random|planner --seed S</code>'],['Rythme de déblocage','<code>--locked</code>, <code>--coverage</code>, <code>--calibrate --calibration-out f.csv</code>'],['Audits de contenu','<code>python3 Tools/qa/content_audit.py</code>, <code>glyph_audit.py</code>'],['Pastilles des icônes','<code>python3 Tools/check_icon_tags.py</code> (dans le CI)']]);
+  h+='<h2>Conventions</h2><ul><li>Ids sauvegardés en entiers : on ne supprime jamais un membre d’enum (on le retire du catalogue et on le convertit à la reprise).</li><li>Toute animation décorative passe par <code>MotionSettings.Reduced</code>.</li><li>Tout nouvel asset ou <code>.cs</code> a besoin d’un <code>.meta</code> avec un nouveau guid.</li><li>Toute modification du texte ou d’un chiffre de fertilizer relance <code>check_icon_tags.py</code>.</li></ul>';
+  h+='<h2>Pipeline d’art</h2><p>Les SVG sont générés par les scripts de <code>Design/Notebook/</code> (encrage à la main avec <code>ink.py</code>, puis <code>inkify.py</code> pour les icônes), rendus en PNG avec Chromium et Playwright. Les variantes <code>_1</code> et <code>_2</code> alimentent les flipbooks.</p>';
+  h+='<h2>Points ouverts</h2><ul><li><b>Undo d’une pose</b> : non fait. Le Core n’a pas de copie profonde de l’état d’une manche ; un vrai Undo demande une décision de conception.</li><li>Bug mobile du bouton Seed bag jamais élucidé (soupçon : le bouton Sell le recouvre).</li><li>Build WebGL à régénérer pour rejouer les scénarios de QA, puis une passe QA sur les nouveautés.</li><li>Localisation : les textes sont en anglais.</li></ul>';
+  return h;
+};
+
+
+P.guide=function(){
+  function sw(name,hex,note){return '<div><i style="background:'+hex+'"></i><b>'+name+'</b><code>'+hex+'</code>'+(note?'<span style="display:block;padding:0 8px 6px;color:var(--ink-soft)">'+note+'</span>':'')+'</div>'}
+  var h='<div class="crumb"><a href="#accueil">Wiki</a> › Production</div><h1>Guide de style</h1><p class="lead">La source de vérité visuelle du wiki. Rien n’est inventé : chaque valeur vient du jeu (<code>UITheme</code>, <code>VisualDefaults</code>, les générateurs d’icônes). Une page du wiki n’utilise que ces variables.</p>';
+  h+='<h2>Principes</h2><ul><li><b>Le cahier du jardin.</b> Papier ligné, encre brune, aplats de crayon. Le wiki est une page du même cahier que le jeu.</li><li><b>Les images viennent du jeu.</b> Icônes de fertilizers, d’ennemis, de météo : les vrais PNG, jamais une illustration refaite pour le wiki.</li><li><b>Une couleur dit toujours la même chose.</b> Points en bleu, Mult en rouge, Pollen en or ; la rareté par la couleur du cadre ; la catégorie par la couleur du ruban.</li><li><b>Tactile.</b> Cibles d’au moins 40 px, aucun survol nécessaire.</li><li><b>On change le guide, pas les pages.</b> Une couleur ou un arrondi se corrige ici, à un seul endroit.</li></ul>';
+  h+='<h2>Surfaces et encre</h2><div class="sw">'+sw('Papier cahier','#ecdfc3','fond de page (<code>UITheme.Background</code>)')+sw('Carton crème','#fff7e8','cartes, boîtes, boutons (<code>Panel</code>)')+sw('Encre','#2a2420','texte et contours (<code>Ink</code>)')+sw('Moutarde','#ffc53d','sélection, bouton principal')+sw('Ciel','#65aed6','liens d’interface, Voisinage')+sw('Menthe','#a4ebcc','succès, bouton Continue')+sw('Coquelicot','#ff6b57','danger')+'</div>';
+  h+='<h2>Les quatre couleurs de graines</h2><div class="sw">'+sw('Poppy','#c8403f','Coral dans le code')+sw('Iris','#4f7fd0','Teal')+sw('Sunflower','#e8a82e','Violet')+sw('Fern','#5a9e45','Lime')+sw('Lavender','#8c63b0','Joker')+'</div>';
+  h+='<h2>Le score a une couleur par sorte</h2><div class="sw">'+sw('Points','#2f8fe0','bleu')+sw('Mult','#e84d45','rouge')+sw('Pollen','#e8a82e','or')+'</div><p><span class="chip pts">+120 points</span> <span class="chip mult">+2,6 Mult</span> <span class="chip pol">+8 Pollen</span></p>';
+  h+='<h2>Rareté : la couleur du cadre de la carte</h2><div class="sw">'+sw('Common','#d9cdb0','crème')+sw('Uncommon','#8fb8ee','bleu')+sw('Rare','#f2a56a','orange')+sw('Legendary','#f7cf4a','or')+'</div><p>'+['Common','Uncommon','Rare','Legendary'].map(rarChip).join(' ')+'</p>';
+  h+='<h2>Catégories : la couleur du ruban</h2><div class="sw">'+Object.keys(CAT_HEX).map(function(c){return sw(c,CAT_HEX[c])}).join('')+'</div><p>'+Object.keys(CAT_HEX).map(catChip).join(' ')+'</p><p>Le texte d’une pastille prend l’encre ou le crème selon la luminosité du fond : jamais de texte clair sur une couleur claire.</p>';
+  h+='<h2>Typographie</h2>'+table(['Rôle','Police','Taille','Exemple'],[['Titres','Patrick Hand','34 à 50 px','<span style="font:400 34px var(--font-head)">Fertilizers</span>'],['Sections','Patrick Hand','30 px, filet d’encre dessous','<span style="font:400 24px var(--font-head)">Maturation</span>'],['Texte','Source Sans 3','16 px, ligne 1,6, 65 caractères au plus','Un fertilizer se tient avec trois autres au plus.'],['Données','JetBrains Mono','0,86 em','<code>MegaChaine</code>']])+'<p>Le jeu agrandit tous ses textes de 25 % parce que la manuscrite est petite ; le wiki garde un texte courant à 16 px et réserve la manuscrite aux titres, ce qui garde les longues descriptions lisibles.</p>';
+  h+='<h2>Composants</h2><h3>Boutons et pastilles</h3><p><button class="btn gold" type="button">Play</button> <button class="btn green" type="button">Continue</button> <button class="btn" type="button">Collection</button> <span class="chip">neutre</span> '+chip('Pollen','sun')+'</p>';
+  h+='<h3>Carte d’objet</h3><div class="cards" style="max-width:360px"><article class="card"><div class="head">'+pic(['fert|Macon'],56)+'<h3><a href="#fertilizers-Macon">Mason</a><span class="chip sun">4 Pollen</span></h3></div><div class="meta">'+catChip('Destruction')+rarChip('Common')+'</div><p>+2 Mult when no row/column is completed.</p><div class="unl">Disponible dès le départ</div></article></div>';
+  h+='<h3>Boîtes</h3>'+callout('Information','<p>Pour une précision, un renvoi.</p>','info')+callout('Astuce','<p>Pour un conseil de jeu confirmé.</p>','tip')+callout('Attention','<p>Pour un piège ou une règle surprenante.</p>','warn')+callout('Note','<p>Pour une décision de conception.</p>');
+  h+='<h3>Contours</h3><p>Contour d’encre de 2 px, coins légèrement irréguliers (<code>12px 10px 13px 9px</code>), ombre portée dure de 2 à 3 px décalée vers le bas à droite. Pas de dégradé, pas de flou.</p>';
+  h+='<h2>À faire et à éviter</h2>'+table(['À faire','À éviter'],[['Utiliser les vraies icônes du jeu','Redessiner ou remplacer une icône'],['Une couleur = un sens (score, rareté, catégorie)','Une couleur décorative qui ressemble à une couleur de sens'],['Variables du guide partout','Une valeur de couleur codée à la main dans une page'],['Texte d’encre sur papier, crème sur fond foncé','Texte gris clair sur papier'],['Cartes à cadre d’encre et ombre dure','Ombres floues, dégradés violet-bleu, coins très ronds uniformes']]);
+  h+='<h2>Variables CSS</h2><pre style="background:var(--card);border:2px solid var(--ink);border-radius:10px;padding:12px;overflow-x:auto;font-size:13px">--paper:#ecdfc3; --card:#fff7e8; --ink:#2a2420;\n--poppy:#c8403f; --iris:#4f7fd0; --sun:#e8a82e; --fern:#5a9e45; --lavender:#8c63b0;\n--moutarde:#ffc53d; --ciel:#65aed6; --menthe:#a4ebcc; --coquelicot:#ff6b57;\n--pts:#2f8fe0; --mult:#e84d45; --pollen:#e8a82e;\n--r-common:#d9cdb0; --r-uncommon:#8fb8ee; --r-rare:#f2a56a; --r-legendary:#f7cf4a;</pre><p>Le mode sombre (« papier de nuit ») n’existe pas dans le jeu : il reprend les mêmes teintes, assombries, avec un texte crème. C’est le seul écart du wiki par rapport au guide du jeu.</p>';
+  return h;
+};
+
+P.glossaire=function(){
+  var h='<div class="crumb">Production</div><h1>Glossaire</h1><p class="lead">Les ids du code sont en français (historique). Les noms affichés sont en anglais.</p>';
+  h+='<h2>Couleurs</h2>'+table(['Code','Affiché'],COLORS.map(function(c){return [c[1],'<span class="chip '+c[2]+'"><i class="dot '+c[0]+'"></i>'+c[0]+'</span>']}).concat([['Joker','<span class="chip"><i class="dot Joker"></i>Joker</span>']]));
+  h+='<h2>Termes</h2>'+table(['Affiché','Sens','Ancien nom ou nom du code'],[['Plot','case de la grille','cell'],['Seed','pièce de la main','piece'],['Sprout','tuile posée','tile'],['Seed Bag','le deck','deck'],['Harvest','récolte d’une ligne ou colonne','line clear'],['Pollen','la monnaie','Lueur'],['Fertilizer','modificateur actif (4 au plus)','Modifier, Modificateur'],['Tile upgrade','amélioration d’une tuile','Trait, Grid upgrade, Sprout upgrade'],['Mult','multiplicateur','multiplier'],['Mastery','niveau de forme ou de couleur','Maîtrise'],['Blister','étagère d’achat direct','—'],['Workshop','packs et services','ex-Casino'],['Maturation','Bourgeon, Fleur, Fruit','FertilizerGrowth'],['Pledge','défi facultatif','—'],['Boss','roster de manche 4, 8 ou 12','—']]);
+  h+='<h2>Ids des fertilizers</h2><p>Chaque fiche de la page <a href="#fertilizers">Fertilizers</a> affiche son id de code. Exemple : <code>Macon</code> est affiché Mason, <code>Prisme</code> est affiché Prism.</p>';
+  return h;
+};
+
+/* ---------- Search ---------- */
+var INDEX=[];
+D.fert.forEach(function(f){INDEX.push({t:f.name,k:'Fertilizer',p:'fertilizers-'+f.id,x:f.name+' '+f.desc+' '+f.id+' '+(f.unlock||''),i:pic(['fert|'+f.id],30,ico(f.name,f.cat,f.rar,'sm'))})});
+D.sprouts.forEach(function(f){INDEX.push({t:f.name,k:'Tile upgrade',p:'sprouts-'+f.id,x:f.name+' '+f.desc+' '+(f.unlock||''),i:pic(['spr|'+f.id],30,ico(f.name,'',f.rar,'sm'))})});
+D.enemies.forEach(function(f){INDEX.push({t:f.name,k:'Ennemi',p:'ennemis-'+f.id,x:f.name+' '+f.desc+' '+f.lore+' '+f.id,i:pic(['misc|e:'+f.id],30,ico(f.name,'Enemies','Common','sm'))})});
+D.weather.forEach(function(f){INDEX.push({t:f.name,k:'Météo',p:'meteo',x:f.name+' '+f.desc,i:pic(['misc|w:'+f.id],30,ico(f.name,'Weather','Common','sm'))})});
+D.events.forEach(function(f){INDEX.push({t:f.title,k:'Événement',p:'evenements-'+f.id,x:f.title+' '+f.story,i:ico(f.title,'Wild','Common','sm')})});
+D.challenges.forEach(function(f){INDEX.push({t:f.name,k:'Challenge',p:'challenges-'+f.name,x:f.name+' '+f.desc,i:pic(['misc|c:'+f.name],30,ico(f.name,'Voisinage','Rare','sm'))})});
+D.other.concat(D.packs).forEach(function(f){INDEX.push({t:f.name,k:'Upgrade',p:'upgrades',x:f.name+' '+f.desc,i:pic(['spr|'+f.id,'misc|x:'+f.id],30,ico(f.name,'Upgrades','Uncommon','sm'))})});
+Object.keys(TITLES).forEach(function(k){INDEX.push({t:TITLES[k],k:'Page',p:k,x:TITLES[k],i:ico(TITLES[k],'Flat','Common','sm')})});
+function searchRes(q){
+  var words=q.toLowerCase().split(/\s+/).filter(Boolean);
+  var res=INDEX.filter(function(r){var x=(r.x||'').toLowerCase();return words.every(function(w){return x.indexOf(w)>=0})});
+  res.sort(function(a,b){var an=a.t.toLowerCase().indexOf(words[0])===0?0:1,bn=b.t.toLowerCase().indexOf(words[0])===0?0:1;return an-bn||a.t.localeCompare(b.t)});
+  return res;
+}
+function searchPage(q){
+  var res=searchRes(q);
+  var h='<div class="results"><div class="crumb"><a href="#accueil">Wiki</a> › Recherche</div><h1>« '+esc(q)+' »</h1><p class="count">'+res.length+' résultat'+(res.length>1?'s':'')+(res.length>80?' (80 premiers affichés)':'')+'</p>';
+  res.slice(0,80).forEach(function(r){h+='<a class="r" href="#'+r.p+'"><span class="nm">'+r.i+esc(r.t)+'</span><small>'+esc(r.k)+'</small></a>'});
+  if(!res.length)h+='<p>Rien trouvé. Essaie un nom de fertilizer, d’ennemi ou un mot de la description.</p>';
+  return h+'</div>';
+}
+
+/* ---------- Router ---------- */
+var pageEl=document.getElementById('page'),navEl=document.getElementById('nav'),rail=document.getElementById('rail'),sres=document.getElementById('sres');
+function buildNav(cur){
+  var h='';NAV.forEach(function(g){h+='<div class="navgroup"><h4>'+g[0]+'</h4>';g[1].forEach(function(p){h+='<a href="#'+p[0]+'"'+(p[0]===cur?' aria-current="page"':'')+'>'+esc(p[1])+(p[2]?'<small>'+p[2]+'</small>':'')+'</a>'});h+='</div>'});
+  navEl.innerHTML=h;
+}
+function navbox(){
+  var h='<details class="navbox"><summary>Toutes les pages</summary><div class="nbg">';
+  NAV.forEach(function(g){h+='<b>'+g[0]+'</b><div>'+g[1].map(function(p){return '<a href="#'+p[0]+'">'+esc(p[1])+'</a>'}).join('')+'</div>'});
+  return h+'</div></details>';
+}
+function addToc(){
+  var hs=pageEl.querySelectorAll('h2');
+  if(hs.length<4||pageEl.querySelector('.cards,.results'))return;
+  var lead=pageEl.querySelector('.lead');if(!lead)return;
+  var h='<nav class="toc" aria-label="Sur cette page"><b>Sur cette page</b><ol>';
+  Array.prototype.forEach.call(hs,function(el,i){el.id='sec'+i;h+='<li><a href="#" data-to="sec'+i+'">'+esc(el.textContent)+'</a></li>'});
+  var box=document.createElement('div');box.innerHTML=h+'</ol></nav>';
+  lead.insertAdjacentElement('afterend',box.firstChild);
+  pageEl.querySelector('.toc').addEventListener('click',function(e){var a=e.target.closest('a[data-to]');if(!a)return;e.preventDefault();document.getElementById(a.getAttribute('data-to')).scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'})});
+}
+var ITEMS={fertilizers:[D.fert,itemFert],sprouts:[D.sprouts,itemSprout],ennemis:[D.enemies,itemEnemy]};
+function route(){
+  var hash=location.hash.replace(/^#/,'')||'accueil';
+  var i=hash.indexOf('-'),pg=i<0?hash:hash.slice(0,i),item=i<0?'':hash.slice(i+1);
+  if(!P[pg]){pg='accueil';item=''}
+  buildNav(pg);
+  var body=null;
+  if(item&&ITEMS[pg]){var k=findBy(ITEMS[pg][0],item);if(k>=0){body=ITEMS[pg][1](ITEMS[pg][0][k]);document.title=ITEMS[pg][0][k].name+' · LASTBLOOM Wiki'}}
+  if(body===null){body=P[pg]();document.title=(TITLES[pg]||'LASTBLOOM')+' · LASTBLOOM Wiki'}
+  pageEl.innerHTML=body+navbox()+'<footer>LASTBLOOM · wiki de conception. Listes générées depuis le code du dépôt le 26 novembre 2026 ; le texte d’explication vient de <code>docs/</code>.</footer>';
+  if(P[pg].after&&!(item&&ITEMS[pg]&&findBy(ITEMS[pg][0],item)>=0))P[pg].after();
+  addToc();
+  rail.classList.remove('open');document.getElementById('menuBtn').setAttribute('aria-expanded','false');
+  var target=item&&!ITEMS[pg]?document.getElementById({evenements:'ev-',challenges:'c-'}[pg]+item):null;
+  if(target){target.scrollIntoView({block:'center'});if(target.classList.contains('card'))target.classList.add('hit')}
+  else window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',function(){closeSearch();route()});
+var q=document.getElementById('q'),sel=-1,cur=[];
+function closeSearch(){sres.innerHTML='';sres.hidden=true;navEl.hidden=false;sel=-1;cur=[]}
+function showSearch(){
+  var v=q.value.trim();
+  if(v.length<2){closeSearch();return}
+  cur=searchRes(v);var top=cur.slice(0,8);sel=top.length?0:-1;
+  var h=top.map(function(r,i){return '<a href="#'+r.p+'" class="'+(i===sel?'sel':'')+'">'+r.i+'<span>'+esc(r.t)+'<br><small>'+esc(r.k)+'</small></span></a>'}).join('');
+  if(!top.length)h='<p style="font-size:14px;color:var(--ink-soft);margin:4px 8px">Aucun résultat.</p>';
+  else if(cur.length>8)h+='<a href="#" class="all" data-all="1">Voir les '+cur.length+' résultats</a>';
+  sres.innerHTML=h;sres.hidden=false;navEl.hidden=true;
+}
+q.addEventListener('input',showSearch);
+q.addEventListener('keydown',function(e){
+  var links=sres.querySelectorAll('a:not(.all)');
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!links.length)return;sel=(sel+(e.key==='ArrowDown'?1:-1)+links.length)%links.length;Array.prototype.forEach.call(links,function(a,i){a.classList.toggle('sel',i===sel)})}
+  else if(e.key==='Enter'){if(links[sel]){location.hash=links[sel].getAttribute('href');q.value='';closeSearch();q.blur()}}
+  else if(e.key==='Escape'){q.value='';closeSearch()}
+});
+sres.addEventListener('click',function(e){
+  var a=e.target.closest('a');if(!a)return;
+  if(a.getAttribute('data-all')){e.preventDefault();var v=q.value.trim();pageEl.innerHTML=searchPage(v);window.scrollTo(0,0);rail.classList.remove('open');return}
+  q.value='';closeSearch();
+});
+document.addEventListener('keydown',function(e){if(e.key==='/'&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='SELECT'){e.preventDefault();rail.classList.add('open');q.focus()}});
+document.getElementById('menuBtn').addEventListener('click',function(){var o=rail.classList.toggle('open');this.setAttribute('aria-expanded',String(o))});
+var themeBtn=document.getElementById('themeBtn'),modes=['auto','clair','sombre'],mi=0;
+try{var m=localStorage.getItem('lb-theme');if(m)mi=Math.max(0,modes.indexOf(m))}catch(e){}
+function applyTheme(){var r=document.documentElement;if(modes[mi]==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',modes[mi]==='clair'?'light':'dark');themeBtn.textContent='Thème : '+modes[mi];try{localStorage.setItem('lb-theme',modes[mi])}catch(e){}}
+themeBtn.addEventListener('click',function(){mi=(mi+1)%3;applyTheme()});
+applyTheme();
+route();
+})();
+</script>
